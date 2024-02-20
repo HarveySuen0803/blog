@@ -10,7 +10,7 @@ export default defineConfig({
     attrs: {
       disable: true
     },
-    linkify: false
+    linkify: true
   },
   srcExclude: [
     './docs/Draft',
