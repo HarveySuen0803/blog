@@ -9,7 +9,8 @@ export default defineConfig({
   markdown: {
     attrs: {
       disable: true
-    }
+    },
+    linkify: false
   },
   srcExclude: [
     './docs/Draft',
