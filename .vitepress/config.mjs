@@ -6,6 +6,11 @@ export default defineConfig({
   description: 'Be a programming master',
   cleanUrls: true,
   srcDir: './',
+  markdown: {
+    attrs: {
+      disable: true
+    }
+  },
   srcExclude: [
     './docs/Draft',
     './docs/.DS_Store',
