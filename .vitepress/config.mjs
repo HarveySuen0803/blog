@@ -2,6 +2,16 @@ import {getAllSidebar} from '../utils/auto-sidebar.js'
 import {withMermaid} from 'vitepress-plugin-mermaid'
 
 export default withMermaid({
+  base: '/blog/',
+  head: [
+    [
+      "link",
+      {
+        rel: "icon",
+        href: "/blog/logo.png"
+      }
+    ]
+  ],
   title: 'Harvey\'s Blog',
   description: 'Be a programming master',
   cleanUrls: true,
