@@ -119,7 +119,7 @@ public void show(HttpServletRequest req) {
 }
 ```
 
-访问 http://localhost:8080/show?name=sun&age=18
+访问 `http://localhost:8080/show?name=sun&age=18`
 
 # req encoding
 

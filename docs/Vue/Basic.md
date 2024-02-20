@@ -42,7 +42,7 @@ Startup project
 npm run dev
 ```
 
-Access http://localhost:5173
+Access `http://localhost:5173`
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241755546.png)
 

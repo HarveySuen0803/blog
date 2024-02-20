@@ -84,7 +84,7 @@ public class EurekaApplication {
 }
 ```
 
-访问 http://localhost:9001, 查看 Eureka Server Kanban
+访问 `http://localhost:9001`, 查看 Eureka Server Kanban
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241752169.png)
   
@@ -160,7 +160,7 @@ DynamicServerListLoadBalancer 根据 Service ID 定时向 Eureka Server 拉取 S
 
 IRule 选择策略, 进行 Load Balanced, 返回一个 Service (eg. localhost:8001)
 
-RibbonLoadBalancerClient 替换 Server ID, 得到一个真实的 URL (eg. http://localhost:8001/user/1)
+RibbonLoadBalancerClient 替换 Server ID, 得到一个真实的 URL (eg. `http://localhost:8001/user/1`)
 
 # Load Balanced Rule
 

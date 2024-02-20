@@ -1412,8 +1412,8 @@ module.exports = {
 
 ## 配置代理
 
-- 如果没有配置代理, 我们在 http://localhost 下发送请求给 http://localhost:8080 会存在跨域问题
-- 通过 webpack-dev-server 配置一个代理服务器 http://localhost:8080, 此时发送请求到 http://localhost/api/show, 就会被代理服务器转发到 http://localhost:8080/api/show 解决了跨域问题
+- 如果没有配置代理, 我们在 `http://localhost` 下发送请求给 `http://localhost:8080` 会存在跨域问题
+- 通过 webpack-dev-server 配置一个代理服务器 `http://localhost:8080`, 此时发送请求到 `http://localhost/api/show`, 就会被代理服务器转发到 `http://localhost:8080/api/show` 解决了跨域问题
 
 ```js
 // webpack.config.js

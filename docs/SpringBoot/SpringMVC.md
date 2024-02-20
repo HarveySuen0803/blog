@@ -73,7 +73,7 @@ public void show(String name, Integer age) {
 }
 ```
 
-访问 http://localhost:8080/show?name=sun&age=18
+访问 `http://localhost:8080/show?name=sun&age=18`
 
 # Achieve JSON Param
 
@@ -86,7 +86,7 @@ public void show(@RequestBody User user) {
 }
 ```
 
-访问 http://localhost:8080/show, 携带 JSON 请求体
+访问 `http://localhost:8080/show`, 携带 JSON 请求体
 
 ```json
 {
@@ -110,7 +110,7 @@ public void show(@RequestBody List<String> names) {
 }
 ```
 
-访问 http://localhost:8080/show, 携带 Collection 请求体
+访问 `http://localhost:8080/show`, 携带 Collection 请求体
 
 ```json
 ["sun", "xue", "cheng"]
@@ -127,7 +127,7 @@ public void show(@DateTimeFormat(pattern = "yyyy.MM.dd_HH:mm:ss") LocalDateTime 
 }
 ```
 
-访问 http://localhost:8080/show?dateTime=2002.08.03_12:34:56
+访问 `http://localhost:8080/show?dateTime=2002.08.03_12:34:56`
 
 # Achieve Path Param
 
@@ -141,7 +141,7 @@ public void show(@PathVariable String name, @PathVariable Integer age) {
 }
 ```
 
-访问 http://localhost:8080/show/sun/18
+访问 `http://localhost:8080/show/sun/18`
 
 # Public Path
 
@@ -163,7 +163,7 @@ public class DeptController {
 
 # Param Attribute
 
-访问 http://localhost:8080/show?userName=sun&userAge=18, 将 userName 转成 name, 将 userAge 转成 age
+访问 `http://localhost:8080/show?userName=sun&userAge=18`, 将 userName 转成 name, 将 userAge 转成 age
 
 ```java
 @RequestMapping("/show")

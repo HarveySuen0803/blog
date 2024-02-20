@@ -19,7 +19,7 @@ management.endpoints.enabled-by-default=true
 management.endpoints.web.exposure.include=*
 ```
 
-访问 http://localhost:8080/actuator, 查看 Actuator
+访问 `http://localhost:8080/actuator`, 查看 Actuator
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241810719.png)
 
@@ -73,7 +73,7 @@ public class MyHealthIndicator extends AbstractHealthIndicator {
 }
 ```
 
-访问 http://localhost:8080/actuator/health, 查看 Health Endpoint
+访问 `http://localhost:8080/actuator/health`, 查看 Health Endpoint
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241810721.png)
 
@@ -99,11 +99,11 @@ public class MyComponent {
 }
 ```
 
-访问 http://localhost:8080/actuator/metrics, 查看 Metrics
+访问 `http://localhost:8080/actuator/metrics`, 查看 Metrics
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241810722.png)
 
-访问 http://localhost:8080/actuator/metrics/myComponent.test, 查看 myComponent.test Metrics
+访问 `http://localhost:8080/actuator/metrics/myComponent.test`, 查看 myComponent.test Metrics
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241810723.png)
 

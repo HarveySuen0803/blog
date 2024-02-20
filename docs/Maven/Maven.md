@@ -184,7 +184,7 @@ nexus stop
 nexus restart
 ```
 
-访问 http://localhost:8081
+访问 `http://localhost:8081`
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241747289.png)
 
