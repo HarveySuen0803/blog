@@ -1,0 +1,147 @@
+# RDB
+
+RDB 可以用于 Full Persistence, 定时存储 Snapshotting 到硬盘, 在 Redis 启动时, 加载 RDB 文件, 恢复数据. 还可以用于 Master-Slave Replication, Master 将 RDB 文件发送给 Slave, 用于初次全量复制和快速同步
+
+RDB 会在 Redis Server 服务结束前自动执行, 会在达到了保存条件时自动执行, 执行 `FLUSHALL`, `FLUSHDB`, `SHUTDOWN` 时也会触发 RDB, 还可以通过 `SAVE` 和 `BGSAVE` 手动触发
+
+Redis 进行 RDB Persistence 时, 会调用 fork() 创建一个子进程, 这个子进程不需要执行 exec(), 而是会直接复制一份父进程的 Directory Table 和 Page Table, Page Table 中记录了虚拟地址和物理地址的映射, 子进程就可以通过这个 Page Table 去读取数据进行持久化操作了, 主线程执行完 fork() 就可以继续去处理请求了, 两者想不干扰. 如果主线程想要修改数据, 就会采用 Copy-On-Write 的方式, 给内存中的原始数据加上 ReadOnly Lock, 然后复制一份出来进行修改, 修改完再去修改 Page Table 的指向
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401021948769.png)
+
+RDB 文件占用小, 加载速度快, 主线程不需要进行 IO, 性能极强
+
+RDB 执行间隔耗时较长, 两次 RDB 直接的数据有风险, 并且复制, 压缩, IO 都是比较耗时的
+
+RDB 适合做备份, 适合做灾难恢复, 适合数据完整性和一致性要求不高的场景
+
+开启 RDB 的 Auto Snapshotting
+
+```
+# After 3600 seconds (an hour) if at least 1 change was performed
+# save 3600 1
+
+# After 300 seconds (5 minutes) if at least 100 changes were performed
+# save 300 100
+
+# After 60 seconds if at least 10000 changes were performed
+# save 60 10000
+
+# Snapshotting can be completely disabled with a single empty string argumen
+save "" 
+```
+
+配置 RDB
+
+```
+# filename
+dbfilename dump.rdb
+
+# save path
+dir /data/redis/
+
+stop-writes-on-bgsave-error yes
+
+# Compress string objects using LZF when dump .rdb databases
+# rdbcompression yes
+
+rdbchecksum yes 
+```
+
+手动触发 RDB
+
+```
+# save with blocking
+SAVE
+
+# save without blocking (recommand)
+BGSAVE
+
+# get the timestamp of the last snappshotting
+LASTSAVE
+```
+
+通过 RDB 文件修复数据
+
+```shell
+redis-check-rdb /home/harvey/data/redis/dump.rdb
+```
+
+建议, 使用 RDB 做数据备份, RDB 占用非常小, 可以定期在一台压力比较小的 Slave 上手动执行 RDB 进行备份
+
+# AOF
+
+AOF (Append Only File) 会去追加写入所有的修改命令到 AOF 文件中, 类似于 MySQL 的 Redo Log, 在 Redis 重启时, 可以使用这些命令来重构数据
+
+AOF 丢失数据的风险会小很多, 并且通过追加的方式写入, 不存在 Path-Seeking 问题
+
+AOF 记录的命令多, 占用更大, 恢复也需要一条一条的执行, 恢复很慢, 占用的 CPU 资源也相当多
+
+开启 AOF
+
+```shell
+appendonly yes
+```
+
+配置 AOF
+
+```shell
+appendfilename "appendonly.aof"
+appenddirname "appendonlydir"
+```
+
+配置 AOF 的写入策略, 一般都采用 `everysec` 的策略, 每隔 1s 将 AOF Buffer 中的数据写入到 AOF 文件中, 最多丢失 1s 内的数据, 性能也适中
+
+```shell
+# appendfsync always
+# appendfsync no
+appendfsync everysec
+```
+
+修复 AOF 文件
+
+```shell
+redis-check-aof --fix /home/harvey/data/redis/appendonlydir/appendonly.aof.1.incr.aof
+```
+
+建议, 关闭 RDB Persitence, 开启 AOF Persistence, 因为 RDB 的刷盘频率太低, 不适合做 Persitence
+
+# Mixed
+
+如果 AOF 存在, 加载 AOF file, 如果 AOF 不存在, 加载 RDB file
+
+```shell
+aof-use-rdb-preamble yes
+```
+
+# Log Rewriting
+
+追加写入修改命令, 会有很多无用的操作 (eg: `set k1 v1`, `set k1 v2`, `set k1 v3 ` 这几条命令就等价于 `set k1 v3`), 所以很有必要定期对 AOF 文件进行重写, 这就是 Log Rewriting
+
+开启 Auto Rewriting 后, 子线程会去读取 Old AOF File, 然后分析命令, 压缩命令, 写入到一个临时文件中. 主线程一直累积命令在缓存中, 正常写入命令到 Old AOF File 中, 保证 Old AOF File 的可用性. 当子线程完成 Rewriting 后, 会发送一个信号给主线程, 主线程再将缓存中的累积的命令追加写入到 New AOF File 中, 再通过 New AOF File 代替 Old AOF File
+
+开启 Auto Log Rewriting
+
+```shell
+# Redis is able to automatically rewrite the log file implicitly calling
+# BGREWRITEAOF when the AOF log size grows by the specified percentage
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+```
+
+手动执行 Log Rewriting
+
+```shell
+BGREWRITEAOF
+```
+
+主线程执行完命令, 将命令写入 AOF Buffer 中, 子线程每隔 1s 就从 AOF Buffer 中读取命令, 进行刷盘, 即 fsync. 主线程写入完后, 会去判断上一次 fsync 耗时, 如果超过 2s, 主线程就会进入堵塞, 等待 fsync 结束, 因为刷盘出了问题, 必须要保证数据的安全
+
+在 Log Rewriting 期间, 进行 AOF, 就有可能因为 AOF 导致主线程堵塞, 可以禁止在 Log Rewriting 期间进行 AOF
+
+```shell
+no-appendfsync-on-rewrite yes
+```
+
+建议, 设置一个合理的 Log Rewriting 阈值, 避免频繁的 Log Rewriting, 太占用资源了
+
+建议, 预留足够的空间处理 Fork 和 Log Rewring
