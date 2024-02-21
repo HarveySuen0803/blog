@@ -19,7 +19,7 @@ reboot
 
 # which
 
-```shell
+```shell 
 # find the store location of nvim command
 which nvim
 ```
