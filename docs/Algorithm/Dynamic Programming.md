@@ -577,35 +577,18 @@ public static void main(String[] args) {
 [Explain p137, p138](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=137&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-public int longestCommonSubsequence(String text1, String text2) {
-    // Get the length of the two strings
-    int m = text1.length();
-    int n = text2.length();
-
-    // Initialize a 2D array to store the length of LCS for each pair of prefixes of text1 and text2
-    int[][] dp = new int[m + 1][n + 1];
-
-    // Iterate over the strings in reverse so that we are always comparing one character with all characters with greater index
-    for (int i = 1; i < m + 1; i++) {
-        for (int j = 1; j < n + 1; j++) {
-            // If the current characters of both strings are equal
-            if (text1.charAt(i - 1) == text2.charAt(j - 1)) {
-                // The length of LCS would be one plus the length of LCS till the previous index
+public int longestCommonSubsequence(String txt1, String txt2) {
+    int[][] dp = new int[txt1.length() + 1][txt2.length() + 1];
+    for (int i = 1; i < txt1.length() + 1; i++) {
+        for (int j = 1; j < txt2.length() + 1; j++) {
+            if (txt1.charAt(i - 1) == txt2.charAt(j - 1)) {
                 dp[i][j] = dp[i - 1][j - 1] + 1;
             } else {
-                // If not equal, the length of LCS would be the maximum length of two possibilities:
-                // 1. Removing the current character of text1
-                // 2. Removing the current character of text2
                 dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-            }
+            } 
         }
     }
-
-    // Print the dp array
-    print(dp, text2, text1);
-
-    // The bottom-right cell of dp array contains the length of LCS of both strings
-    return dp[m][n];
+    return dp[txt1.length()][txt2.length()];
 }
 ```
 
@@ -616,24 +599,22 @@ public int longestCommonSubsequence(String text1, String text2) {
 ```java
 public int minDistance(String word1, String word2) {
     char[] chs1 = word1.toCharArray();
-    int l1 = chs1.length;
     char[] chs2 = word2.toCharArray();
-    int l2 = chs2.length;
-    int[][] dp = new int[l1 + 1][l2 + 1];
+    int[][] dp = new int[chs1.length + 1][chs2.length + 1];
     
-    for (int i = 1; i < l1 + 1; i++) {
+    for (int i = 1; i < chs1.length + 1; i++) {
         char c1 = chs1[i - 1];
-        for (int j = 1; j < l2 + 1; j++) {
+        for (int j = 1; j < chs2.length + 1; j++) {
             char c2 = chs2[j - 1];
             if (c1 == c2) {
                 dp[i][j] = dp[i - 1][j - 1] + 1;
             } else {
                 dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-            }
+            } 
         }
     }
     
-    return l1 + l2 - dp[l1][l2] * 2;
+    return chs1.length + chs2.length - dp[chs1.length][chs2.length] * 2;
 }
 ```
 
@@ -641,7 +622,7 @@ public int minDistance(String word1, String word2) {
 
 [Problem Description](https://leetcode.cn/problems/longest-increasing-subsequence/description/)
 
-[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=140&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+[Explain p140, p141](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=140&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
 public int lengthOfLIS(int[] nums) {
@@ -683,39 +664,21 @@ public int catalan(int n) {
 [Explain p145, p146](https://www.bilibili.com/video/BV1rv4y1H7o6?p=145&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * Generates all combinations of well-formed parentheses for a given number.
- *
- * This method uses dynamic programming to build up a solution. The core idea is that a set of parentheses is a combination of smaller sets.
- * We start with the base cases: an empty set and a set with one pair of parentheses. Then, for larger sets, we iterate over smaller sets,
- * combining them in different ways to form larger sets.
- *
- * @param n the number of pairs of parentheses
- * @return a list of strings, where each string represents a valid combination of parentheses
- */
-public List<String> generateParenthesis(int n) {
-    // dp[i] will hold a list of all combinations of i pairs of parentheses
+public static List<String> generateParenthesis(int n) {
     ArrayList<String>[] dp = new ArrayList[n + 1];
-
-    // Base cases
-    dp[0] = new ArrayList(List.of("")); // An empty set
-    dp[1] = new ArrayList(List.of("()")); // A set with one pair of parentheses
-
-    // Build up the solution for larger sets
-    for (int j = 2; j < n + 1; j++) {
-        dp[j] = new ArrayList();
-        for (int i = 0; i < j; i++) {
-            // Iterate over smaller sets and combine them in different ways
-            for (String k1 : dp[i]) {
-                for (String k2 : dp[j - i - 1]) {
-                    // Add a new combination to the list for the current set
-                    dp[j].add("(" + k1 + ")" + k2);
+    dp[0] = new ArrayList<>(List.of(""));
+    dp[1] = new ArrayList<>(List.of("()"));
+    for (int i = 2; i < n + 1; i++) {
+        dp[i] = new ArrayList<>();
+        for (int j = 0; j < i; j++) {
+            for (String k1 : dp[j]) {
+                for (String k2 : dp[i - 1 - j]) {
+                    dp[i].add("(" + k1 + ")" + k2);
                 }
             }
         }
+        System.out.println(Arrays.toString(dp));
     }
-
-    // Return all combinations for the given number of pairs of parentheses
     return dp[n];
 }
 ```
@@ -727,38 +690,17 @@ public List<String> generateParenthesis(int n) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=147&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * The algorithm uses a dynamic programming (DP) approach where dp[i] represents 
- * the maximum amount that can be robbed up to house i. The transition function is 
- * dp[i] = max(dp[i - 2] + nums[i], dp[i - 1]), which means for each house, the robber 
- * can choose either to rob it (adding its value to the total of dp[i - 2]) or not rob it 
- * (inheriting the total from dp[i - 1]).
- *
- * @param nums an array of integers where each integer represents the amount of money 
- *             available in each house.
- * @return the maximum amount of money the robber can rob.
- */
-public int rob(int[] nums) {
-    // Initialize the DP array
-    int[] dp = new int[nums.length];
-
-    // If there's only one house, return its value
-    if (nums.length == 1) {
-        return nums[0];
+public static int rob(int[] vals) {
+    int[] dp = new int[vals.length];
+    if (vals.length == 1) {
+        return vals[0];
     }
-
-    // Initialize the first two values in the DP array
-    dp[0] = nums[0]; // The robber robs the first house
-    dp[1] = Math.max(nums[0], nums[1]); // The robber chooses the house with more money between the first two
-
-    // Iterate over the rest of the houses
-    for (int i = 2; i < nums.length; i++) {
-        // For each house, calculate the maximum amount that can be robbed
-        dp[i] = Math.max(dp[i - 2] + nums[i], dp[i - 1]);
+    dp[0] = vals[0];
+    dp[1] = Math.max(vals[0], vals[1]);
+    for (int i = 2; i < vals.length; i++) {
+        dp[i] = Math.max(dp[i - 1], vals[i] + dp[i - 2]);
     }
-
-    // Return the maximum amount that can be robbed from all houses
-    return dp[nums.length - 1];
+    return dp[vals.length - 1];
 }
 ```
 

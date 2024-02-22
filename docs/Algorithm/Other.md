@@ -266,46 +266,27 @@ public static void main(String[] args) {
 }
 ```
 
-# Stock
+# Stock I
 
 [Problem Description](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock/)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=195&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * The problem involves finding the best time to buy and sell a stock to maximize profit.
- * The algorithm iterates through the array of prices and keeps track of the minimum price encountered so far (buying point).
- * It calculates the profit for each subsequent day (selling point) and updates the maximum profit if a better selling point is found.
- * The algorithm uses two pointers, i and j, to represent the buying and selling points, respectively.
- * 
- * @param prices An array of stock prices where prices[i] is the price of the stock on the ith day.
- * @return The maximum profit that can be achieved from buying and selling the stock.
- */
 public static int maxProfit(int[] prices) {
-    // Initialize pointers i and j
-    int i = 0;
-    int j = 1;
-    // Initialize variable to store the maximum profit
-    int max = 0;
-
-    // Iterate through the array of prices
-    while (j < prices.length) {
-        // Calculate the profit for the current selling point (j)
-        int profit = prices[j] - prices[i];
-        // Update the maximum profit if a better selling point is found
+    int i1 = 0;
+    int i2 = 1;
+    int maxProfit = 0;
+    while (i2 < prices.length) {
+        int profit = prices[i2] - prices[i1];
         if (profit > 0) {
-            max = Math.max(max, profit);
+            maxProfit = Math.max(maxProfit, profit);
         } else {
-            // Update the buying point to the current day if the profit is not greater than 0
-            i = j;
+            i1 = i2;
         }
-        // Move the selling point to the next day
-        j++;
+        i2++;
     }
-
-    // Return the maximum profit calculated
-    return max;
+    return maxProfit;
 }
 ```
 
@@ -316,38 +297,96 @@ public static int maxProfit(int[] prices) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=196&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * The problem involves finding the maximum profit that can be achieved by buying and selling a stock multiple times.
- * Unlike the previous problem (Best Time to Buy and Sell Stock I), there is no restriction on the number of transactions.
- * The algorithm iterates through the array of prices and accumulates profits whenever a positive difference is encountered (sell-high, buy-low strategy).
- * The sum of all positive differences represents the maximum profit.
- * The algorithm uses two pointers, i and j, to represent the buying and selling points, respectively.
- * @param prices An array of stock prices where prices[i] is the price of the stock on the ith day.
- * @return The maximum profit that can be achieved by buying and selling the stock multiple times.
- */
-public int maxProfit(int[] prices) {
-    // Initialize pointers i and j
-    int i = 0;
-    int j = 1;
-    // Initialize variable to store the sum of profits
-    int sum = 0;
-
-    // Iterate through the array of prices
-    while (j < prices.length) {
-        // Calculate the profit for the current selling point (j)
-        int profit = prices[j] - prices[i];
-        // Accumulate the profit if it is greater than 0
+public static int maxProfit(int[] prices) {
+    int i1 = 0;
+    int i2 = 1;
+    int sumProfit = 0;
+    while (i2 < prices.length) {
+        int profit = prices[i2] - prices[i1];
         if (profit > 0) {
-            sum += profit;
+            sumProfit += profit;
         }
-        // Update the buying point to the current day
-        i++;
-        // Move the selling point to the next day
-        j++;
+        i1++;
+        i2++;
     }
+    return sumProfit;
+}
+```
 
-    // Return the sum of profits calculated
-    return sum;
+# Stock III
+
+[Problem Description](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iii/description/)
+
+[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=199&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+```java
+public static int maxProfit(int[] prices) {
+    int hold1 = Integer.MIN_VALUE;
+    int sell1 = 0;
+    int hold2 = Integer.MIN_VALUE;
+    int sell2 = 0;
+    for (int price : prices) {
+        hold1 = Math.max(hold1, -price);
+        sell1 = Math.max(sell1, hold1 + price);
+        
+        hold2 = Math.max(hold2, sell1 - price);
+        sell2 = Math.max(sell2, hold2 + price);
+    }
+    return sell2;
+}
+
+public static void main(String[] args) {
+    System.out.println(maxProfit(new int[]{3, 3, 5, 0, 0, 3, 1, 4})); // 6
+}
+```
+
+# Stock IV
+
+[Problem Description](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-iv/description/)
+
+[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=200&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+```java
+public static int maxProfit(int k, int[] prices) {
+    if (k > prices.length / 2) {
+        return maxProfit(prices);
+    }
+    
+    int[] hold = new int[k];
+    int[] sell = new int[k];
+    Arrays.fill(hold, Integer.MIN_VALUE);
+    for (int price : prices) {
+        hold[0] = Math.max(hold[0], -price);
+        sell[0] = Math.max(sell[0], hold[0] + price);
+        
+        for (int i = 1; i < k; i++) {
+            hold[i] = Math.max(hold[i], sell[i - 1] - price);
+            sell[i] = Math.max(sell[i], hold[i] + price);
+        }
+    }
+    return sell[k - 1];
+}
+
+public static int maxProfit(int[] prices) {
+    int i1 = 0;
+    int i2 = 1;
+    int sumProfit = 0;
+    while (i2 < prices.length) {
+        int profit = prices[i2] - prices[i1];
+        if (profit > 0) {
+            sumProfit += profit;
+        }
+        i1++;
+        i2++;
+    }
+    return sumProfit;
+}
+
+public static void main(String[] args) {
+    System.out.println(maxProfit(2, new int[]{3, 3, 5, 0, 0, 3, 1, 4})); // 6
+    System.out.println(maxProfit(4, new int[]{3, 3, 5, 0, 0, 3, 1, 4})); // 8
+    System.out.println(maxProfit(8, new int[]{3, 3, 5, 0, 0, 3, 1, 4})); // 8
+    System.out.println(maxProfit(4, new int[]{1, 2, 0, 1, 0, 3, 1, 4, 5})); // 9
 }
 ```
 
@@ -358,14 +397,14 @@ public int maxProfit(int[] prices) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=197&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-public int maxProfit(int[] prices, int fee) {
-    int[] buy = new int[prices.length];
+public static int maxProfit(int[] prices, int fee) {
+    int[] hold = new int[prices.length];
     int[] sell = new int[prices.length];
-    buy[0] = -prices[0];
+    hold[0] = -prices[0];
     sell[0] = 0;
     for (int i = 1; i < prices.length; i++) {
-        buy[i] = Math.max(buy[i - 1], sell[i - 1] - prices[i]);
-        sell[i] = Math.max(sell[i - 1], buy[i - 1] + prices[i] - fee);
+        hold[i] = Math.max(hold[i - 1], sell[i - 1] - prices[i]);
+        sell[i] = Math.max(sell[i - 1], hold[i - 1] + prices[i] - fee);
     }
     return sell[prices.length - 1];
 }
@@ -374,13 +413,13 @@ public int maxProfit(int[] prices, int fee) {
 # Stock with Fee (Two Variable)
 
 ```java
-public int maxProfit(int[] prices, int fee) {
-    int _buy = -prices[0];
+public static int maxProfit(int[] prices, int fee) {
+    int _hold = -prices[0];
     int _sell = 0;
     for (int i = 1; i < prices.length; i++) {
-        int buy = Math.max(_buy, _sell - prices[i]);
-        int sell = Math.max(_sell, _buy + prices[i] - fee);
-        _buy = buy;
+        int hold = Math.max(_hold, _sell - prices[i]);
+        int sell = Math.max(_sell, _hold + prices[i] - fee);
+        _hold = hold;
         _sell = sell;
     }
     return _sell;
@@ -390,14 +429,35 @@ public int maxProfit(int[] prices, int fee) {
 # Stock with Fee (Two Variable)
 
 ```java
-public int maxProfit(int[] prices, int fee) {
-    int buy = Integer.MIN_VALUE;
+public static int maxProfit(int[] prices, int fee) {
+    int hold = Integer.MIN_VALUE;
     int sell = 0;
     for (int price : prices) {
-        buy = Math.max(buy, sell - price);
-        sell = Math.max(sell, sell - fee);
+        hold = Math.max(hold, sell - price);
+        sell = Math.max(sell, hold + price - fee);
     }
     return sell;
+}
+```
+
+# Stock with Cooldown
+
+```java
+public static int maxProfit(int[] prices) {
+    if (prices.length == 1) {
+        return 0;
+    }
+    int[] hold = new int[prices.length];
+    int[] sell = new int[prices.length];
+    hold[0] = -prices[0];
+    hold[1] = Math.max(hold[0], -prices[1]);
+    sell[0] = 0;
+    sell[1] = Math.max(sell[0], hold[0] + prices[1]);
+    for (int i = 2; i < prices.length; i++) {
+        hold[i] = Math.max(hold[i - 1], sell[i - 2] - prices[i]);
+        sell[i] = Math.max(sell[i - 1], hold[i - 1] + prices[i]);
+    }
+    return sell[prices.length - 1];
 }
 ```
 

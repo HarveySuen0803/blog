@@ -81,6 +81,28 @@ import { RouterView, RouterLink } from 'vue-router'
 <style lang="scss" scoped></style>
 ```
 
+# Lazy Loading
+
+```ts
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
+
+export default createRouter({
+	history: createWebHistory(),
+	routes: [
+		{
+			name: 'home',
+			path: '/home',
+			component: () => import('@/pages/Home.vue')
+		},
+		{
+			name: 'user',
+			path: '/user',
+			component: () => import('@/pages/User.vue')
+		}
+	]
+})
+```
+
 # Router Mode
 
 Hash Mode: localhost:8080/#/home/message/detail
