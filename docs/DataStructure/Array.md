@@ -209,3 +209,57 @@ public void merge(int[] a1, int i, int iEnd, int j, int jEnd, int[] a2, int k) {
     }
 }
 ```
+
+# Remove Duplicates from Sorted Array
+
+```java
+public static int[] removeDuplicates(int[] nums) {
+    int i1 = 0;
+    int i2 = 1;
+    while (i2 < nums.length) {
+        if (nums[i1] != nums[i2]) {
+            i1++;
+            nums[i1] = nums[i2];
+        }
+        i2++;
+    }
+    return Arrays.copyOfRange(nums, 0, i1 + 1);
+}
+```
+
+# Find Pivot Index
+
+[Problem Description](https://leetcode.cn/problems/find-pivot-index/description/)
+
+```java
+public static int pivotIndex(int[] nums) {
+    int sum = Arrays.stream(nums).sum();
+    int sumLeft = 0;
+    for (int i = 0; i < nums.length; i++) {
+        if (sumLeft * 2 + nums[i] == sum) {
+            return i;
+        }
+        sumLeft += nums[i];
+    }
+    return -1;
+}
+```
+
+# Find Pivot Index
+
+[Explain](https://www.bilibili.com/video/BV1eg411w7gn?p=73&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+```java
+public static int pivotIndex(int[] nums) {
+    int sumR = Arrays.stream(nums).sum();
+    int sumL = 0;
+    for (int i = 0; i < nums.length; i++) {
+        sumR -= nums[i];
+        if (sumL == sumR) {
+            return i;
+        }
+        sumL += nums[i];
+    }
+    return -1;
+}
+```
