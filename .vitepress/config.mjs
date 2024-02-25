@@ -8,7 +8,7 @@ export default withMermaid({
       "link",
       {
         rel: "icon",
-        href: "/blog/twitter.png"
+        href: "/blog/vitepress-logo-mini.svg"
       }
     ]
   ],
@@ -34,7 +34,7 @@ export default withMermaid({
   ],
   themeConfig: {
     outline: [1, 6],
-    logo: '/twitter.png',
+    logo: '/vitepress-logo-mini.svg',
     nav: [
       {text: 'Home', link: '/'},
       {text: 'Java', link: '/docs/Java/Basic'},
