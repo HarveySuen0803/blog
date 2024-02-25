@@ -9,7 +9,7 @@
  * @param nums the array of integers to generate permutations for
  * @return a list of all permutations
  */
-public static List<List<Integer>> permutation(int[] nums) {
+public static List<List<Integer>> permute(int[] nums) {
     // Result list to store all permutations
     List<List<Integer>> res = new ArrayList<>();
     
@@ -25,13 +25,13 @@ public static List<List<Integer>> permutation(int[] nums) {
  *
  * @param nums the original array of integers
  * @param visited an array to keep track of which elements have been added to the current permutation
- * @param stack a stack to hold the current permutation
+ * @param stk a stk to hold the current permutation
  * @param res the result list to add the permutations to
  */
-public static void dfs(int[] nums, boolean[] visited, LinkedList<Integer> stack, List<List<Integer>> res) {
-    // Base case: if the size of the stack equals the length of nums, we have a complete permutation
-    if (stack.size() == nums.length) {
-        res.add(new ArrayList<>(stack));
+public static void dfs(int[] nums, boolean[] visited, LinkedList<Integer> stk, List<List<Integer>> res) {
+    // Base case: if the size of the stk equals the length of nums, we have a complete permutation
+    if (stk.size() == nums.length) {
+        res.add(new ArrayList<>(stk));
         return;
     }
 
@@ -40,23 +40,23 @@ public static void dfs(int[] nums, boolean[] visited, LinkedList<Integer> stack,
         // If the current element has not been visited
         if (!visited[i]) {
             // Add the element to the current permutation
-            stack.push(nums[i]);
+            stk.push(nums[i]);
             
             // Mark the element as visited
             visited[i] = true;
             
             // Recursively call 'dfs' to continue building the current permutation
-            dfs(nums, visited, stack, res);
+            dfs(nums, visited, stk, res);
             
             // After returning from the recursive call, unmark the element and remove it from the current permutation
             visited[i] = false;
-            stack.poll();
+            stk.poll();
         }
     }
 }
 
 public static void main(String[] args) {
-    List<List<Integer>> permutation = permutation(new int[]{1, 2, 3});
+    System.out.println(permute(new int[]{1, 2, 3}));
 }
 ```
 
@@ -65,17 +65,17 @@ public static void main(String[] args) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=166&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-public static List<List<Integer>> permutation(int[] nums) {
+public static List<List<Integer>> permute(int[] nums) {
     Arrays.sort(nums);
     List<List<Integer>> res = new ArrayList<>();
     dfs(nums, new boolean[nums.length], new LinkedList<>(), res);
     System.out.println(res);
     return res;
 }
-
-public static void dfs(int[] nums, boolean[] visited, LinkedList<Integer> stack, List<List<Integer>> res) {
-    if (stack.size() == nums.length) {
-        res.add(new ArrayList<>(stack));
+  
+public static void dfs(int[] nums, boolean[] visited, LinkedList<Integer> stk, List<List<Integer>> res) {
+    if (stk.size() == nums.length) {
+        res.add(new ArrayList<>(stk));
         return;
     }
     
@@ -86,17 +86,17 @@ public static void dfs(int[] nums, boolean[] visited, LinkedList<Integer> stack,
         }
         
         if (!visited[i]) {
-            stack.push(nums[i]);
+            stk.push(nums[i]);
             visited[i] = true;
-            dfs(nums, visited, stack, res);
+            dfs(nums, visited, stk, res);
             visited[i] = false;
-            stack.poll();
+            stk.poll();
         }
     }
 }
 
 public static void main(String[] args) {
-    List<List<Integer>> permutation = permutation(new int[]{1, 1, 3});
+    System.out.println(permute(new int[]{1, 2, 3}));
 }
 ```
 
@@ -107,55 +107,33 @@ public static void main(String[] args) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=168&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * This method generates all possible combinations of k numbers out of 1...n.
- *
- * @param n The upper limit of the range of numbers.
- * @param k The number of elements in each combination.
- * @return A list of all possible combinations.
- */
-public static List<List<Integer>> combine(int n, int k) {
-    // Initialize the result list
+public static List<List<Integer>> combine(int n, int len) {
     List<List<Integer>> res = new ArrayList<>();
-    
-    // Start the depth-first search from number 1
-    dfs(n, k, 1, new LinkedList<>(), res);
-    
-    // Return the result list
+    dfs(n, len, 0, new LinkedList<>(), new ArrayList<>());
     return res;
 }
 
-/**
- * This method performs a depth-first search to find all combinations.
- *
- * @param n     The upper limit of the range of numbers.
- * @param k     The number of elements in each combination.
- * @param start The number to start the search from.
- * @param stack A stack to hold the current combination.
- * @param res   A list to hold all combinations.
- */
-public static void dfs(int n, int k, int start, LinkedList<Integer> stack, List<List<Integer>> res) {
-    // If the current combination is of size k, add it to the result list
-    if (stack.size() == k) {
-        res.add(new ArrayList<>(stack));
+public static void dfs(int n, int len, int sta, LinkedList<Integer> stk, List<List<Integer>> res) {
+    // If the current combination is of size len, add it to the result list
+    if (stk.size() == len) {
+        res.add(new ArrayList<>(stk));
         return;
     }
     
-    // Iterate over the range of numbers
-    for (int i = start; i <= n; i++) {
+    for (int i = sta; i < n; i++) {
         // If the remaining numbers are not enough to complete a combination, skip the search
-        if (k - stack.size() > n - i + 1) {
+        if (len - stk.size() > n - i + 1) {
             continue;
         }
         
         // Add the current number to the current combination
-        stack.push(i);
+        stk.push(i);
         
         // Continue the depth-first search with the next number
-        dfs(n, k, i + 1, stack, res);
+        dfs(n, len, i + 1, stk, res);
         
         // Remove the current number from the current combination
-        stack.pop();
+        stk.pop();
     }
 }
 
@@ -172,7 +150,7 @@ public static void main(String[] args) {
 
 ```java
 /**
- * This method is the entry point of the algorithm. It initializes the result list and the stack,
+ * This method is the entry point of the algorithm. It initializes the result list and the stk,
  * and starts the depth-first search.
  *
  * @param cands The array of cand numbers.
@@ -193,13 +171,13 @@ public List<List<Integer>> combinationSum(int[] cands, int tar) {
  * @param srt The start index in the cand array.
  * @param tar The remaining target sum.
  * @param cands The array of cand numbers.
- * @param stack The stack that holds the current combination.
+ * @param stk The stk that holds the current combination.
  * @param res The result list.
  */
-public static void dfs(int srt, int tar, int[] cands, LinkedList<Integer> stack, List<List<Integer>> res) {
+public static void dfs(int srt, int tar, int[] cands, LinkedList<Integer> stk, List<List<Integer>> res) {
     // If the remaining target sum is zero, add the current combination to the result list.
     if (tar == 0) {
-        res.add(new ArrayList<>(stack));
+        res.add(new ArrayList<>(stk));
         return;
     }
     // Try to extend the current combination by adding a cand number.
@@ -210,11 +188,11 @@ public static void dfs(int srt, int tar, int[] cands, LinkedList<Integer> stack,
             continue;
         }
         // Add the current cand number to the current combination.
-        stack.push(cand);
+        stk.push(cand);
         // Continue the depth-first search with the updated remaining target sum.
-        dfs(i, tar - cand, cands, stack, res);
+        dfs(i, tar - cand, cands, stk, res);
         // Backtrack by removing the current cand number from the current combination.
-        stack.pop();
+        stk.pop();
     }
 }
 ```
@@ -234,9 +212,9 @@ public static List<List<Integer>> combinationSum2(int[] cands, int tar) {
     return res;
 }
 
-public static void dfs(int srt, int tar, int[] cands, boolean[] visited, LinkedList<Integer> stack, List<List<Integer>> res) {
+public static void dfs(int srt, int tar, int[] cands, boolean[] visited, LinkedList<Integer> stk, List<List<Integer>> res) {
     if (tar == 0) {
-        res.add(new ArrayList<>(stack));
+        res.add(new ArrayList<>(stk));
         return;
     }
     
@@ -252,10 +230,10 @@ public static void dfs(int srt, int tar, int[] cands, boolean[] visited, LinkedL
         }
         
         visited[i] = true;
-        stack.push(cand);
-        dfs(i + 1, tar - cand, cands, visited, stack, res);
+        stk.push(cand);
+        dfs(i + 1, tar - cand, cands, visited, stk, res);
         visited[i] = false;
-        stack.pop();
+        stk.pop();
     }
 }
 
@@ -275,56 +253,29 @@ public static void main(String[] args) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=172&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * This method is the entry point to find all combinations.
- *
- * @param len The number of elements in each combination.
- * @param tar The target sum of each combination.
- * @return A list of all combinations.
- */
-public static List<List<Integer>> combinationSum3(int len, int tar) {
+public List<List<Integer>> combinationSum3(int len, int tar) {
     List<List<Integer>> res = new ArrayList<>();
-    
-    // Start the depth-first search from 1
-    dfs(1, tar, len, new LinkedList<>(), res);
-    
+    dfs(len, tar, 1, new LinkedList<>(), res);
     return res;
 }
 
-/**
- * This method performs a depth-first search to find all combinations.
- *
- * @param srt The starting number for the search.
- * @param tar The target sum of each combination.
- * @param len The number of elements in each combination.
- * @param stack The current combination.
- * @param res The result list.
- */
-public static void dfs(int srt, int tar, int len, LinkedList<Integer> stack, List<List<Integer>> res) {
-    // If the target sum is reached and the combination has the required length
-    if (tar == 0 && stack.size() == len) {
-        // Add the combination to the result list
-        res.add(new ArrayList<>(stack));
+public static void dfs(int len, int tar, int srt, LinkedList<Integer> stk, List<List<Integer>> res) {
+    if (stk.size() == len && tar == 0) {
+        res.add(new ArrayList<>(stk));
         return;
     }
-
-    // Iterate through the numbers from the starting number to 9
+    
+    
     for (int i = srt; i <= 9; i++) {
-        // If the target sum is less than the current number, skip the rest of the loop
-        if (tar < i) {
-            continue;
+        if (i > tar) {
+            return;
         }
-        // If the combination already has the required length, skip the rest of the loop
-        if (stack.size() == len) {
-            continue;
+        if (stk.size() == len) {
+            return;
         }
-
-        stack.push(i);
-        
-        // Continue the depth-first search with the next number and the reduced target sum
-        dfs(i + 1, tar - i, len, stack, res);
-        
-        stack.pop();
+        stk.push(i);
+        dfs(len, tar - i, i + 1, stk, res);
+        stk.pop();
     }
 }
 
@@ -472,7 +423,7 @@ private static boolean dfs(int i, int j, char[][] board, boolean[][] ca, boolean
 }
 ```
 
-# Two Sum II - Input Array Is Sorted
+# Two Sum II
 
 [Problem Description](https://leetcode.cn/problems/two-sum-ii-input-array-is-sorted/description/)
 
@@ -549,14 +500,14 @@ public static List<List<Integer>> nSum(int tar, int n, int[] nums) {
  * @param nums  The input array of integers.
  * @param i     The start index for the search.
  * @param j     The end index for the search.
- * @param stack A stack to keep track of the current combination of integers.
+ * @param stk A stk to keep track of the current combination of integers.
  * @param res   The result list of lists of integers.
  */
-public static void dfs(int tar, int n, int[] nums, int i, int j, LinkedList<Integer> stack, List<List<Integer>> res) {
+public static void dfs(int tar, int n, int[] nums, int i, int j, LinkedList<Integer> stk, List<List<Integer>> res) {
     // If there are only two numbers left to find
     if (n == 2) {
         // Perform a two-sum search
-        twoSum(tar, nums, i, j, stack, res);
+        twoSum(tar, nums, i, j, stk, res);
         return;
     }
 
@@ -566,12 +517,12 @@ public static void dfs(int tar, int n, int[] nums, int i, int j, LinkedList<Inte
         if (k > i && nums[k] == nums[k - 1]) {
             continue;
         }
-        // Add the current number to the stack
-        stack.push(nums[k]);
+        // Add the current number to the stk
+        stk.push(nums[k]);
         // Recursively search for the remaining numbers
-        dfs(tar - nums[k], n - 1, nums, k + 1, j, stack, res);
-        // Remove the current number from the stack
-        stack.pop();
+        dfs(tar - nums[k], n - 1, nums, k + 1, j, stk, res);
+        // Remove the current number from the stk
+        stk.pop();
     }
 }
 
@@ -582,10 +533,10 @@ public static void dfs(int tar, int n, int[] nums, int i, int j, LinkedList<Inte
  * @param nums  The input array of integers.
  * @param i     The start index for the search.
  * @param j     The end index for the search.
- * @param stack A stack to keep track of the current combination of integers.
+ * @param stk A stk to keep track of the current combination of integers.
  * @param res   The result list of lists of integers.
  */
-public static void twoSum(int tar, int[] nums, int i, int j, LinkedList<Integer> stack, List<List<Integer>> res) {
+public static void twoSum(int tar, int[] nums, int i, int j, LinkedList<Integer> stk, List<List<Integer>> res) {
     // While the start index is less than the end index
     while (i < j) {
         // Calculate the sum of the two numbers
@@ -597,11 +548,11 @@ public static void twoSum(int tar, int[] nums, int i, int j, LinkedList<Integer>
         } else if (sum > tar) { // If the sum is greater than the target, decrement the end index
             j--;
         } else { // If the sum is equal to the target
-            // Add the two numbers to the stack
-            stack.add(nums[i]);
-            stack.add(nums[j]);
+            // Add the two numbers to the stk
+            stk.add(nums[i]);
+            stk.add(nums[j]);
             // Add the current combination to the result
-            res.add(new ArrayList<>(stack));
+            res.add(new ArrayList<>(stk));
 
             // Skip duplicates
             do {

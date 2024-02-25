@@ -27,7 +27,7 @@ export const useUserStore= defineStore('user', {
     }
   ),
   getters: {
-    msg: (state):string => state.name + " " + state.age
+    msg: (state): string => state.name + " " + state.age
   },
   actions: {
     incrAge(val: number) {

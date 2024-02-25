@@ -452,11 +452,11 @@ concatArr = arr1.concat(arr2); // concatArr: [10, 20, 30, 40, 50, 60]
 
 let arr = [10, 20, 30, 40, 50, 60];
 
-// 从 index = 2 开始, 获取 3 个元素
-sliceArr = arr.slice(1, 3); // sliceArr: [30, 40, 50]; arr: [10, 20, 30, 40, 50, 60]
+// 获取 [2, 3) 的元素
+sliceArr = arr.slice(2, 3);
 
-// 从 index = 1 开始, 删除 3 个元素, 并返回删除后的元素
-spliceArr = arr.splice(2, 3); // spliceArr:  [30, 40, 50]; arr: [10, 20, 60]
+// 从 idx = 2 开始, 删除 3 个元素
+arr.splice(2, 3);
 ```
 
 ## forEach(), map(), filter(), some(), every(), find()

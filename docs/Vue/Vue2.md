@@ -85,6 +85,10 @@ v-bind 模拟实现 v-model 的效果
 </template>
 ```
 
+```html
+<input type="text" @input="msg01 = $event.target.value">
+```
+
 # el配置项
 
 ```html

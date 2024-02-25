@@ -253,3 +253,114 @@ router.push({ path: '/register', query: { plan: 'private' } })
 router.push({ path: '/about', hash: '#team' })
 ```
 
+# beforeEach()
+
+router.beforeEach() is called a "global beforeEach guard". It is the most commonly used navigation guard that will be called when the routing starts. It takes three parameters: ﻿to, ﻿from, and ﻿next.
+
+```ts
+router.beforeEach((to, from, next) => {
+  // `to` and `from` are Route Objects
+  // `next` is a function that should be called when your hook is done.
+})
+```
+
+For example, you can use ﻿beforeEach() to set the page title.
+
+```ts
+router.beforeEach((to, from, next) => {
+  document.title = to.meta.title || 'Default Title';
+  next();
+})
+```
+
+Or to check for authentication.
+
+```ts
+router.beforeEach((to, from, next) => {
+  if (to.matched.some(record => record.meta.requiresAuth)) {
+    // This route requires authentication, if not logged in, redirect to login page
+    if (!auth.loggedIn()) {
+      next({
+        path: '/login',
+        query: { redirect: to.fullPath }
+      });
+    } else {
+      next(); // always make sure to call next()!
+    }
+  } else {
+    next(); // if does not require authentication, always make sure to call next()
+  }
+})
+```
+
+# afterEach()
+
+router.afterEach() is called a "global afterEach hook," and it is called after the route is entered. It differs from ﻿beforeEach because it doesn't have a ﻿next function and can't change the navigation itself.
+
+```ts
+router.afterEach((to, from) => {
+  // This hook does not get next function and can't change the navigation itself
+})
+```
+
+You can use it to execute some actions that need to be performed after the route transition, such as data analysis, ending the progress bar, etc.
+
+```ts
+router.afterEach((to, from) => {
+  // ending the progress bar
+  NProgress.done();
+})
+```
+
+# Auth
+
+You can use Vue Router's navigation guards to determine if a user has permission to access a specific route.
+
+You need a way to store the user's permission information. This could be a token obtained when the user logs in, or a list of user roles. The actual implementation kwill vary depending on your backend implementation.
+
+```ts
+export const useUserStore = defineStore('user', {
+  state: () => ({
+    userName: '',
+    role: ''
+  })
+})
+```
+
+When defining the route, you can use the meta field to denote which permissions are required to access the route
+
+```ts
+export default createRouter({
+  history: createWebHistory(),
+  routes: [
+    {
+      name: 'Admin',
+      path: '/admin',
+      component: () => import('@/views/AdminVue.vue'),
+      meta: {
+        isRequireAuth: true,
+        role: 'admin'
+      }
+    }
+  ]
+})
+```
+
+Then you can use the global beforeEach guard in Vue Router to check if the user has the required permissions for the route.
+
+```ts
+const userStore = useUserStore()
+
+router.beforeEach((to, from, next) => {
+  if (to.meta.isRequireAuth) {
+    if (userStore.role == to.meta.role) {
+      next()
+    } else {
+      next('/')
+    }
+  } else {
+    next()
+  }
+})
+```
+

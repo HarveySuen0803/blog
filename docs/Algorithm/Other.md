@@ -309,7 +309,7 @@ public static int getPrimeCount(int n) {
 }
 ```
 
-# Sqrt(x)
+# My Sqrt
 
 [Problem Description](https://leetcode.cn/problems/sqrtx/description/)
 
@@ -332,5 +332,72 @@ public static int mySqrt(int x) {
     }
     
     return res;
+}
+```
+
+# My Sqrt
+
+[Explain](https://www.bilibili.com/video/BV1eg411w7gn?p=75&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+```java
+public static int mySqrt(int x) {
+    if (x == 0) {
+        return 0;
+    }
+    double res = x;
+    while (Math.abs(res * res - x) > 0.1) {
+        res = (res + x / res) / 2;
+    }
+    return (int) res;
+}
+```
+
+# Maximum Product of Three Numbers
+
+[Problem Description](https://leetcode.cn/problems/maximum-product-of-three-numbers/description/)
+
+[Explain](https://www.bilibili.com/video/BV1eg411w7gn?p=76&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+```java
+public static int maximumProduct(int[] nums) {
+    Arrays.sort(nums);
+    int len = nums.length;
+    return Math.max(
+        nums[0] * nums[1] * nums[len - 1],
+        nums[len - 1] * nums[len - 2] * nums[len - 3]
+    );
+}
+```
+
+# Maximum Product of Three Numbers
+
+[Explain](https://www.bilibili.com/video/BV1eg411w7gn?p=76&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+```java
+public static int maximumProduct(int[] nums) {
+    int min1 = Integer.MAX_VALUE, min2 = Integer.MAX_VALUE;
+    int max1 = Integer.MIN_VALUE, max2 = Integer.MIN_VALUE, max3 = Integer.MIN_VALUE;
+    
+    for (int num : nums) {
+        if (num < min1) {
+            min2 = min1;
+            min1 = num;
+        } else if (num < min2) {
+            min2 = num;
+        }
+        
+        if (num > max1) {
+            max3 = max2;
+            max2 = max1;
+            max1 = num;
+        } else if (num > max2) {
+            max3 = max2;
+            max2 = num;
+        } else if (num > max3) {
+            max3 = num;
+        }
+    }
+    
+    return Math.max(min1 * min2 * max1, max1 * max2 * max3);
 }
 ```
