@@ -6,7 +6,7 @@ Subjective Down, 单个 Sentinel 发送心跳给 Master, 一定时间内没有�
 
 Objective Down, 超过指定数量的 Sentinel 都主观认为下线时, 就客观认定 master 不可用
 
-Sentinel 认定 Master 为 Objective Down, 所有 Sentinel 根据 Raft Algo 选举一个 Sentinel 成为 Lear, 执行 Failover. Leader 根据 down-after-milliseconds, replica-priority, replication offset, run id 选择一个 Slave 成为 New Master. 等 Old Master 和 Slave 重启后, 会添加配置到 redis.conf 中, 让他们服从 New Master
+Sentinel 认定 Master 为 Objective Down, 所有 Sentinel 根据 Raft Algo 选举一个 Sentinel 成为 Leader, 执行 Failover. Leader 根据 down-after-milliseconds, replica-priority, replication offset, run id 选择一个 Slave 成为 New Master. 等 Old Master 和 Slave 重启后, 会添加配置到 redis.conf 中, 让他们服从 New Master
 
 - down-after-milliseconds 表示该 Slave 和 Master 失联的时长, 超过一定数值后, 直接排除
 - replica-priority 越小, 优先级越高

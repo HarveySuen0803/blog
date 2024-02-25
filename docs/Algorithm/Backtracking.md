@@ -317,7 +317,7 @@ public static void dfs(int i, int n, char[][] tbl, boolean[] ca, boolean[] cb, b
         dfs(i + 1, n, tbl, ca, cb, cc);
         
         // Backtrack, remove the queen at (i, j).
-        tbl[i][j] = '.';
+        tbl[i][j] = ' ';
         
         // Unmark the column, right slash, left slash.
         ca[j] = cb[i + j] = cc[n - 1 - (i - j)] = false;
@@ -328,13 +328,13 @@ public static void main(String[] args) {
     int n = 4;
     
     // Mark the column, right slash, left slash.
-    boolean[] ca = new boolean[n];
-    boolean[] cb = new boolean[2 * n - 1];
-    boolean[] cc = new boolean[2 * n - 1];
+    boolean[] ca = new boolean[n]; // column conflict
+    boolean[] cb = new boolean[2 * n - 1]; // left slash conflict
+    boolean[] cc = new boolean[2 * n - 1]; // right slash conflict
     
     char[][] tbl = new char[n][n];
     for (char[] t : tbl) {
-        Arrays.fill(t, '.');
+        Arrays.fill(t, ' ');
     }
     
     dfs(0, n, tbl, ca, cb, cc);
@@ -349,18 +349,18 @@ public static void main(String[] args) {
 /**
  * This method is the entry point to solve the Sudoku puzzle.
  *
- * @param board The Sudoku board to be solved.
+ * @param tbl The Sudoku tbl to be solved.
  */
-public static void solveSudoku(char[][] board) {
+public static void solveSudoku(char[][] tbl) {
     // Initialize the boolean arrays to keep track of the numbers used in each row, column and box
-    boolean[][] ca = new boolean[9][9];
-    boolean[][] cb = new boolean[9][9];
-    boolean[][] cc = new boolean[9][9];
+    boolean[][] ca = new boolean[9][9]; // row conflict
+    boolean[][] cb = new boolean[9][9]; // column conflict
+    boolean[][] cc = new boolean[9][9]; // box conflict
 
-    // Iterate through the board and update the boolean arrays for the numbers already placed on the board
+    // Iterate through the tbl and update the boolean arrays for the numbers already placed on the tbl
     for (int i = 0; i < 9; i++) {
         for (int j = 0; j < 9; j++) {
-            char ch = board[i][j];
+            char ch = tbl[i][j];
             if (ch == '.') {
                 continue;
             }
@@ -371,10 +371,10 @@ public static void solveSudoku(char[][] board) {
     }
 
     // Start the depth-first search to solve the Sudoku puzzle
-    dfs(0, 0, board, ca, cb, cc);
+    dfs(0, 0, tbl, ca, cb, cc);
 
-    // Print the solved Sudoku board
-    print(board);
+    // Print the solved Sudoku tbl
+    print(tbl);
 }
 
 /**
@@ -382,15 +382,15 @@ public static void solveSudoku(char[][] board) {
  *
  * @param i The row index.
  * @param j The column index.
- * @param board The Sudoku board to be solved.
+ * @param tbl The Sudoku tbl to be solved.
  * @param ca The boolean array for the numbers used in each row.
  * @param cb The boolean array for the numbers used in each column.
  * @param cc The boolean array for the numbers used in each box.
  * @return A boolean indicating whether the Sudoku puzzle has been solved.
  */
-private static boolean dfs(int i, int j, char[][] board, boolean[][] ca, boolean[][] cb, boolean[][] cc) {
+private static boolean dfs(int i, int j, char[][] tbl, boolean[][] ca, boolean[][] cb, boolean[][] cc) {
     // Find the next empty cell
-    while (board[i][j] != '.') {
+    while (tbl[i][j] != '.') {
         if (++j >= 9) {
             j = 0;
             if (++i >= 9) {
@@ -405,21 +405,36 @@ private static boolean dfs(int i, int j, char[][] board, boolean[][] ca, boolean
         if (ca[i][x - 1] || cb[j][x - 1] || cc[i / 3 * 3 + j / 3][x - 1])
             continue;
 
-        // Place the number on the board and update the boolean arrays
-        board[i][j] = (char) (x + '0');
+        // Place the number on the tbl and update the boolean arrays
+        tbl[i][j] = (char) (x + '0');
         ca[i][x - 1] = cb[j][x - 1] = cc[i / 3 * 3 + j / 3][x - 1] = true;
 
         // Continue the depth-first search with the next cell
-        if (dfs(i, j, board, ca, cb, cc))
+        if (dfs(i, j, tbl, ca, cb, cc))
             return true;
 
-        // If the depth-first search did not lead to a solution, remove the number from the board and backtrack
-        board[i][j] = '.';
+        // If the depth-first search did not lead to a solution, remove the number from the tbl and backtrack
+        tbl[i][j] = '.';
         ca[i][x - 1] = cb[j][x - 1] = cc[i / 3 * 3 + j / 3][x - 1] = false;
     }
 
     // If no number can be placed in the current cell, return false
     return false;
+}
+
+public static void main(String[] args) {
+    char[][] tbl = {
+        {'5', '3', ' ', ' ', '7', ' ', ' ', ' ', ' '},
+        {'6', ' ', ' ', '1', '9', '5', ' ', ' ', ' '},
+        {' ', '9', '8', ' ', ' ', ' ', ' ', '6', ' '},
+        {'8', ' ', ' ', ' ', '6', ' ', ' ', ' ', '3'},
+        {'4', ' ', ' ', '8', ' ', '3', ' ', ' ', '1'},
+        {'7', ' ', ' ', ' ', '2', ' ', ' ', ' ', '6'},
+        {' ', '6', ' ', ' ', ' ', ' ', '2', '8', ' '},
+        {' ', ' ', ' ', '4', '1', '9', ' ', ' ', '5'},
+        {' ', ' ', ' ', ' ', '8', ' ', ' ', '7', '9'}
+    };
+    solveSudoku(tbl);
 }
 ```
 
@@ -430,43 +445,20 @@ private static boolean dfs(int i, int j, char[][] board, boolean[][] ca, boolean
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=177)
 
 ```java
-/**
- * This solution uses a two-pointer approach to find the pair of numbers.
- * The pointers start from both ends of the array and move towards each other.
- * If the sum of the current pair is less than the target, the left pointer is
- * moved to the right. If the sum is greater than the target, the right pointer
- * is moved to the left. If the sum equals the target, the solution is found.
- * 
- * @param nums An array of integers sorted in ascending order.
- * @param target The target sum that the pair of numbers should add up to.
- * @return An array containing the indices (1-based) of the two numbers that
- * add up to the target. It is guaranteed that there is exactly one solution.
- */
-public int[] twoSum(int[] nums, int target) {
-    // Initialize two pointers, one at the beginning and one at the end.
-    int i = 0;
-    int j = nums.length - 1;
-    
-    // Iterate until the two pointers meet.
-    while (i < j) {
-        // Calculate the sum of the current pair.
-        int sum = nums[i] + nums[j];
-        
-        // Compare the sum with the target.
-        if (sum < target) {
-            // If the sum is less than the target, move the left pointer to the right.
-            i++;
-        } else if (sum > target) {
-            // If the sum is greater than the target, move the right pointer to the left.
-            j--;
+public int[] twoSum(int[] nums, int tar) {
+    int l = 0;
+    int r = nums.length - 1;
+    while (l < r) {
+        int sum = nums[l] + nums[r];
+        if (sum < tar) {
+            l++;
+        } else if (sum > tar) {
+            r--;
         } else {
-            // If the sum equals the target, the solution is found. Break out of the loop.
-            break;
-        }
+            return new int[]{l, r};
+        } 
     }
-    
-    // Return the indices (1-based) of the two numbers that add up to the target.
-    return new int[]{i + 1, j + 1};
+    return new int[]{-1, -1};
 }
 ```
 
@@ -475,98 +467,50 @@ public int[] twoSum(int[] nums, int target) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=178&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * This method finds all unique quadruplets in the array which gives the sum of target.
- *
- * @param tar  The target sum.
- * @param n    The number of elements to consider for the sum.
- * @param nums The input array of integers.
- * @return A list of lists of integers where each list represents a unique quadruplet.
- */
-public static List<List<Integer>> nSum(int tar, int n, int[] nums) {
-    // Sort the array
+public static List<List<Integer>> nSum(int[] nums, int tar, int n) {
     Arrays.sort(nums);
     List<List<Integer>> res = new ArrayList<>();
-    // Start the depth-first search
-    dfs(tar, n, nums, 0, nums.length - 1, new LinkedList<>(), res);
+    dfs(nums, tar, n, 0, nums.length - 1, new LinkedList<>(), res);
     return res;
 }
 
-/**
- * This method performs a depth-first search to find all unique quadruplets.
- *
- * @param tar   The target sum.
- * @param n     The number of elements to consider for the sum.
- * @param nums  The input array of integers.
- * @param i     The start index for the search.
- * @param j     The end index for the search.
- * @param stk A stk to keep track of the current combination of integers.
- * @param res   The result list of lists of integers.
- */
-public static void dfs(int tar, int n, int[] nums, int i, int j, LinkedList<Integer> stk, List<List<Integer>> res) {
-    // If there are only two numbers left to find
+public static void dfs(int[] nums, int tar, int n, int l, int r, LinkedList<Integer> stk, List<List<Integer>> res) {
     if (n == 2) {
-        // Perform a two-sum search
-        twoSum(tar, nums, i, j, stk, res);
+        twoSum(nums, tar, l, r, stk, res);
         return;
     }
-
-    // For each number in the array
-    for (int k = i; k < j - (n - 2); k++) {
-        // Skip duplicates
-        if (k > i && nums[k] == nums[k - 1]) {
+    
+    for (int i = l; i < r - (n - 2); i++) {
+        if (i > l && nums[i] == nums[i - 1]) {
             continue;
         }
-        // Add the current number to the stk
-        stk.push(nums[k]);
-        // Recursively search for the remaining numbers
-        dfs(tar - nums[k], n - 1, nums, k + 1, j, stk, res);
-        // Remove the current number from the stk
+        
+        stk.push(nums[i]);
+        dfs(nums, tar - nums[i], n - 1, i + 1, r, stk, res);
         stk.pop();
     }
 }
 
-/**
- * This method performs a two-sum search.
- *
- * @param tar   The target sum.
- * @param nums  The input array of integers.
- * @param i     The start index for the search.
- * @param j     The end index for the search.
- * @param stk A stk to keep track of the current combination of integers.
- * @param res   The result list of lists of integers.
- */
-public static void twoSum(int tar, int[] nums, int i, int j, LinkedList<Integer> stk, List<List<Integer>> res) {
-    // While the start index is less than the end index
-    while (i < j) {
-        // Calculate the sum of the two numbers
-        int sum = nums[i] + nums[j];
-
-        // If the sum is less than the target, increment the start index
+public static void twoSum(int[] nums, int tar, int l, int r, LinkedList<Integer> stk, List<List<Integer>> res) {
+    while (l < r) {
+        int sum = nums[l] + nums[r];
         if (sum < tar) {
-            i++;
-        } else if (sum > tar) { // If the sum is greater than the target, decrement the end index
-            j--;
-        } else { // If the sum is equal to the target
-            // Add the two numbers to the stk
-            stk.add(nums[i]);
-            stk.add(nums[j]);
-            // Add the current combination to the result
+            l++;
+        } else if (sum > tar) {
+            r--;
+        } else {
+            stk.add(nums[l]);
+            stk.add(nums[r]);
             res.add(new ArrayList<>(stk));
-
-            // Skip duplicates
-            do {
-                i++;
-            } while (i < j && nums[i] == nums[i - 1]);
-
-            do {
-                j--;
-            } while (i < j && nums[j] == nums[j + 1]);
+            while (l++ < r && nums[l] == nums[l - 1]);
+            while (l < r-- && nums[r] == nums[r + 1]);
+            stk.removeLast();
+            stk.removeLast();
         }
     }
 }
 
 public static void main(String[] args) {
-    System.out.println(nSum(0, 4, new int[]{-2, 0, 1, 1, 2}));
+    List<List<Integer>> res = nSum(new int[]{1, 0, -1, 0, -2, 2}, 0, 4); // [[-1, -2, 1, 2], [0, -2, 0, 2], [0, -1, 0, 1]]
 }
 ```
