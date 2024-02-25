@@ -39,6 +39,8 @@ let clickHandle = async () => {
 import axios from 'axios'
 import {StorageConstant} from '@/common/constant.ts'
 
+api.defaults.withCredentials = true;
+
 const api = axios.create({
   baseURL: '/api',
   timeout: 5000
@@ -61,6 +63,9 @@ api.interceptors.response.use(
       return Promise.reject(response)
     }
     return response.data
+  },
+  error => {
+    return Promise.reject(error)
   }
 )
 

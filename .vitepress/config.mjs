@@ -8,7 +8,7 @@ export default withMermaid({
       "link",
       {
         rel: "icon",
-        href: "/blog/logo.png"
+        href: "/blog/twitter.png"
       }
     ]
   ],
@@ -34,7 +34,7 @@ export default withMermaid({
   ],
   themeConfig: {
     outline: [1, 6],
-    logo: '/logo.png',
+    logo: '/twitter.png',
     nav: [
       {text: 'Home', link: '/'},
       {text: 'Java', link: '/docs/Java/Basic'},

@@ -27,4 +27,16 @@
 - 通过 RabbitMQ 的 Delayed Queue 实现超时订单, 分为 10s, 20s, 30s, 40s, 50s, 1m, 5m, 10m 去检查订单状态, 如果支付, 直接退出, 如果超过 10m 也未支付, 则直接恢复库存, 允许其他用户下单
 - 通过 XXL-JOB 每隔 10s 进行一次分页查询, 处理一部分超时订单, 总共在 10m 内完成一次全表扫描, 不仅可以兜底, 也可以防止 MQ 消息丢失和 MQ 宕机的问题
 
+权限校验
 
+- SpringSecurity
+- AOP
+
+记录请求日志, 记录请求耗时
+
+- AOP
+
+用户状态
+
+- UserHolder
+- RequestContextHolder
