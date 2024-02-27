@@ -165,8 +165,9 @@ private Integer id;
 
 # IdType.ASSIGN_ID
 
+基于 Snowflake Algo 生成唯一, 自增, 且不连续的 ID
+
 ```java
-// generate id by Snowflake algo
 @TableId(type = IdType.ASSIGN_ID)
 private Integer id;
 ```

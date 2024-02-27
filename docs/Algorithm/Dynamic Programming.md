@@ -280,7 +280,7 @@ public static void main(String[] args) {
         new Item(4, 1, 10_000),
     };
     
-    select(items, 10);
+    select(items, 10); // 12400
 }
 ```
 
@@ -360,6 +360,17 @@ public static int select(Item[] items, int cap) {
 
     return dp[items.length - 1][cap];
 }
+
+public static void main(String[] args) {
+    Item[] items = new Item[]{
+        new Item(1, 4, 1600),
+        new Item(2, 8, 2400),
+        new Item(3, 5, 30),
+        new Item(4, 1, 10_000),
+    };
+    
+    select(items, 10); // 100000
+}
 ```
 
 # Knapsack Complete (1D Array)
@@ -390,7 +401,7 @@ public static int select(Item[] items, int cap) {
 }
 ```
 
-# Coin Change
+# Coin Change (2D Array)
 
 [Problem Description](https://leetcode.cn/problems/coin-change/description/)
 
@@ -427,16 +438,22 @@ public static int coinChange(int[] coins, int amount) {
     
     return dp[coins.length - 1][amount];
 }
+
+public static void main(String[] args) {
+    int[] coins = {1, 2, 5};
+    int amount = 11;
+    System.out.println(coinChange(coins, amount)); // 3
+}
 ```
 
-# Coin Change
+# Coin Change (1D Array)
 
 [Problem Description](https://leetcode.cn/problems/coin-change/description/)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=131&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-public static int coinChange2(int[] coins, int amount) {
+public static int coinChange(int[] coins, int amount) {
     int[] dp = new int[amount + 1];
     
     for (int j = 1; j < amount + 1; j++) {
@@ -463,6 +480,12 @@ public static int coinChange2(int[] coins, int amount) {
     }
     
     return dp[amount];
+}
+
+public static void main(String[] args) {
+    int[] coins = {1, 2, 5};
+    int amount = 11;
+    System.out.println(coinChange(coins, amount)); // 3
 }
 ```
 
@@ -510,6 +533,12 @@ public int change(int amount, int[] coins) {
     // Return the total number of combinations for the amount using all types of coins
     return dp[coins.length - 1][amount];
 }
+
+public static void main(String[] args) {
+    int[] coins = {1, 2, 5};
+    int amount = 5;
+    System.out.println(coinChange(coins, amount)); // 4
+}
 ```
 
 # Cut Rod
@@ -539,34 +568,24 @@ public static int cut(int[] vals, int len) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=136&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-public static int lcs(String a, String b) {
-    int[][] dp = new int[a.length()][b.length()];
+public static int longestCommonSubsequence(String txt1, String txt2) {
+    int[][] dp = new int[txt1.length() + 1][txt2.length() + 1];
     int maxLen = 0;
-
-    for (int i = 0; i < a.length(); i++) {
-        dp[i][0] = 1;
-    }
-
-    for (int j = 0; j < b.length(); j++) {
-        dp[0][j] = 1;
-    }
-
-    for (int i = 1; i < a.length(); i++) {
-        for (int j = 1; j < b.length(); j++) {
-            if (a.charAt(i) == b.charAt(j)) {
+    for (int i = 1; i < txt1.length() + 1; i++) {
+        for (int j = 1; j < txt2.length() + 1; j++) {
+            if (txt1.charAt(i - 1) == txt2.charAt(j - 1)) {
                 dp[i][j] = 1 + dp[i - 1][j - 1];
+                maxLen = Math.max(maxLen, dp[i][j]);
             } else {
                 dp[i][j] = 0;
             }
-            maxLen = Math.max(maxLen, dp[i][j]);
         }
     }
-
-    return maxLen;
+    return dp[txt1.length()][txt2.length()];
 }
 
 public static void main(String[] args) {
-    System.out.println(lcs("harvey", "eyharv"));
+    System.out.println(longestCommonSubsequence("harvey", "eyharv")); // 4
 }
 ```
 
@@ -597,7 +616,7 @@ public int longestCommonSubsequence(String txt1, String txt2) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=139)
 
 ```java
-public int minDistance(String word1, String word2) {
+public static int minDistance(String word1, String word2) {
     char[] chs1 = word1.toCharArray();
     char[] chs2 = word2.toCharArray();
     int[][] dp = new int[chs1.length + 1][chs2.length + 1];
@@ -625,17 +644,21 @@ public int minDistance(String word1, String word2) {
 [Explain p140, p141](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=140&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-public int lengthOfLIS(int[] nums) {
+public static int lengthOfLIS(int[] nums) {
     int[] dp = new int[nums.length];
     Arrays.fill(dp, 1);
     for (int i = 1; i < nums.length; i++) {
         for (int j = 0; j < i; j++) {
             if (nums[i] > nums[j]) {
-                dp[i] = Math.max(dp[i], dp[j] + 1);
+                dp[i] = Math.max(dp[i], 1 + dp[j]);
             }
         }
     }
     return Arrays.stream(dp).max().getAsInt();
+}
+
+public static void main(String[] args) {
+    System.out.println(lengthOfLIS(new int[] { 10, 9, 2, 5, 3, 7, 101, 18 })); // 4
 }
 ```
 
@@ -644,7 +667,7 @@ public int lengthOfLIS(int[] nums) {
 [Explain p142, p143](https://www.bilibili.com/video/BV1rv4y1H7o6?p=142)
 
 ```java
-public int catalan(int n) {
+public static int catalan(int n) {
     int[] dp = new int[n + 1];
     dp[0] = 1;
     dp[1] = 1;
@@ -803,6 +826,56 @@ public static int maxProfit(int[] prices) {
     }
     return maxProfit;
 }
+
+public static void main(String[] args) {
+    System.out.println(maxProfit(new int[]{7, 1, 5, 3, 6, 4})); // 5
+}
+```
+
+# Stock I
+
+```java
+public static int maxProfit(int[] prices) {
+    int[] hold = new int[prices.length];
+    int[] sell = new int[prices.length];
+    hold[0] = -prices[0];
+    sell[0] = 0;
+    for (int i = 1; i < prices.length; i++) {
+        hold[i] = Math.max(hold[i - 1], -prices[i]);
+        sell[i] = Math.max(sell[i - 1], hold[i - 1] + prices[i]);
+    }
+    return sell[prices.length - 1];
+}
+```
+
+# Stock I
+
+```java
+public static int maxProfit(int[] prices) {
+    int preHold = -prices[0];
+    int preSell = 0;
+    for (int i = 1; i < prices.length; i++) {
+        int curHold = Math.max(preHold, -prices[i]);
+        int curSell = Math.max(preSell, preHold + prices[i]);
+        preHold = curHold;
+        preSell = curSell;
+    }
+    return preSell;
+}
+```
+
+# Stock I
+
+```java
+public static int maxProfit(int[] prices) {
+    int hold = Integer.MIN_VALUE;
+    int sell = 0;
+    for (int price : prices) {
+        hold = Math.max(hold, -price);
+        sell = Math.max(sell, hold + price);
+    }
+    return sell;
+}
 ```
 
 # Stock II
@@ -825,6 +898,10 @@ public static int maxProfit(int[] prices) {
         i2++;
     }
     return sumProfit;
+}
+
+public static void main(String[] args) {
+    System.out.println(maxProfit(new int[]{7, 1, 5, 3, 6, 4})); // 7
 }
 ```
 
@@ -879,6 +956,7 @@ public static int maxProfit(int k, int[] prices) {
             sell[i] = Math.max(sell[i], hold[i] + price);
         }
     }
+    
     return sell[k - 1];
 }
 
@@ -923,21 +1001,25 @@ public static int maxProfit(int[] prices, int fee) {
     }
     return sell[prices.length - 1];
 }
+
+public static void main(String[] args) {
+    System.out.println(maxProfit(new int[] {1, 3, 2, 8, 4, 9}, 2)); // 8
+}
 ```
 
 # Stock with Fee (Two Variable)
 
 ```java
 public static int maxProfit(int[] prices, int fee) {
-    int _hold = -prices[0];
-    int _sell = 0;
+    int preHold = -prices[0];
+    int preSell = 0;
     for (int i = 1; i < prices.length; i++) {
-        int hold = Math.max(_hold, _sell - prices[i]);
-        int sell = Math.max(_sell, _hold + prices[i] - fee);
-        _hold = hold;
-        _sell = sell;
+        int curHold = Math.max(preHold, preSell - prices[i]);
+        int curSell = Math.max(preSell, preHold + prices[i] - fee);
+        preHold = curHold;
+        preSell = curSell;
     }
-    return _sell;
+    return preSell;
 }
 ```
 
@@ -957,6 +1039,10 @@ public static int maxProfit(int[] prices, int fee) {
 
 # Stock with Cooldown
 
+[Problem Description](https://leetcode.cn/problems/best-time-to-buy-and-sell-stock-with-cooldown/description/)
+
+[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6?p=198&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
 ```java
 public static int maxProfit(int[] prices) {
     if (prices.length == 1) {
@@ -973,6 +1059,10 @@ public static int maxProfit(int[] prices) {
         sell[i] = Math.max(sell[i - 1], hold[i - 1] + prices[i]);
     }
     return sell[prices.length - 1];
+}
+
+public static void main(String[] args) {
+    System.out.println(maxProfit(new int[]{1,2,3,0,2})); // 3
 }
 ```
 

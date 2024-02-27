@@ -1,6 +1,6 @@
 # Key
 
-推荐, Key 采用 `service name : data name : id` 的格式, 可读性强, 也可以避免冲突, 还可以用于 Hash Tag 指定 Slot
+推荐, Key 采用 `service name : data name : identify` 的格式, 可读性强, 也可以避免冲突, 还可以用于 Hash Tag 指定 Slot
 
 推荐, Key 尽量短一点, 缩短几个字符, 在一亿数据量里, 可以节省的内存非常可观
 
@@ -112,10 +112,7 @@ hash-max-ziplist-entries 500
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312301744902.png)
 
-
 # Batch Operation
-
-`MSET` 是 Redis 内置的原子性的命令, 执行这条命令的时候, 是不会被其他命令插队的, 而 `PIPELINE` 是多条命令整合在一起发给 Redis 的, 这么多条命令是要在队列中排队的, 这个过程就可能被插队, 所以 `PIPELINE` 要比 `MSET` 稍微慢一点
 
 如果不采用批处理来处理 100 条命令, 就是需要进行 100 次网络传输, 进行 100 次 IO, 执行 100 条命令. 如果采用批处理, 就只需要进行 1 次网络传输, 进行 1 次 IO, 执行 100 条命令, 大大提高了效率
 
@@ -125,11 +122,11 @@ Cluster Env 下执行批处理, 一般分为 Serial Slot Operation, Parallel Slo
 
 Serial Slot Operation, 计算每个 Key 的 Hash, 分配到不同的 Slot 中, 每次就通过 Pipeline 的方式操作一个 Slot, 串行执行每一个批处理操作, 需要进行多次网络传输
 
-Parallel Slot Operation, 和 Serial Slot Operatioin 相同, 并行执行每一个批处理操作, 只需要进行 1 次网络传输, 效率非常高
+Parallel Slot Operation, 与 Serial Slot Operatioin 相同, 并行执行每一个批处理操作, 只需要进行 1 次网络传输, 效率非常高
 
 Hash Tag Operation, 所有的 Key 都设置相同的 Hash Tag 全部分配到同一个 Slot 中, 直接操作这一个 Slot 即可, 只需要进行 1 次网络传输, 效率高, 但是容易导致数据倾斜, 不推荐
 
-这里计算所有 Entry 的 Hash, 分配到不同的 Slot 中, 每次操作一个 Slot
+Jedis 需要手动分配 Slot, 这里计算所有 Entry 的 Hash, 分配到不同的 Slot 中, 每次操作一个 Slot
 
 ```java
 Map<String, String> map = new HashMap<>();
@@ -160,7 +157,7 @@ for (List<Map.Entry<String, String>> list : slotMap.values()) {
 }
 ```
 
-SpringBoot Redis 在进行 Cluster Env 的批处理时, 自动采用 Parallel Slot Operation, 计算所有 Key 的 Hash 分配到不同的 Slot 中, 并且通过异步的方式进行操作, 效率非常高, 非常方便
+RedisTemplate 在集群环境下, 会自动采用 Parallel Slot Operation, 计算所有 Key 的 Hash 分配到不同的 Slot 中, 并且通过异步的方式进行操作, 效率非常高, 非常方便
 
 ```java
 Map<String, String> map = new HashMap<>();
@@ -240,9 +237,9 @@ Process Memory, Redis 服务本身需要占用的内存, 比较固定, 往往就
 
 Buffer Memory, 主要包括 Client Buffer, AOF Buffer, Replication Buffer, 这部分内存波动非常大, 可能导致内存溢出
 
-- Replication Buffer 用于 Master-Slave Replication, 如果设置的太小, 会影响性能
 - Client Buffer 包括 Input Buffer 和 Output Buffer. Input Buffer 最大 1G, 只要不是大量的 Slow Query, 一般不会有太大影响. Output Buffer 是处理完命令后, 存放返回结果的位置, 可以设置大小
 - AOF Buffer 用于 fsync 和 Log Rewriting, 无法设置上限, 因为 AOF 速度非常快, 而且频率很固定, 所以一般不会有大波动
+- Replication Buffer 用于 Master-Slave Replication, 如果设置的太小, 会影响性能
 
 ```shell
 # client-output-buffer-limit <class> <hard limit> <soft limit> <soft seconds>

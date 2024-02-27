@@ -5,45 +5,25 @@ import denpendency
 ```xml
 <dependency>
     <groupId>com.github.xiaoymin</groupId>
-    <artifactId>knife4j-spring-boot-starter</artifactId>
-    <version>3.0.3</version>
+    <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+    <version>4.4.0</version>
 </dependency>
 ```
 
 set Knife4j Docket generator
 
-```java
-@Bean
-public Docket docket() {
-    ApiInfo apiInfo = new ApiInfoBuilder()
-            .title("Knife4j Docket")
-            .version("2.0")
-            .description("Knife4j Ddocket description")
-            .build();
-    Docket docket = new Docket(DocumentationType.SWAGGER_2)
-            .groupName("user Controller")
-            .apiInfo(apiInfo)
-            .select()
-            .apis(RequestHandlerSelectors.basePackage("com.harvey.controller.user"))
-            .paths(PathSelectors.any())
-            .build();
-    return docket;
-}
+```properties
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.swagger-ui.tags-sorter=alpha
+springdoc.swagger-ui.operations-sorter=alpha
+springdoc.api-docs.path=/v3/api-docs
+springdoc.group-configs[0].group=default
+springdoc.group-configs[0].paths-to-match=/**
+springdoc.group-configs[0].packages-to-scan=com.harvey.oj.controller
+knife4j.enable=true
 ```
 
-set static resource handler
-
-```java
-@Configuration
-public class WebMvcConfiguration extends WebMvcConfigurationSupport {
-    protected void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
-        registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
-    }
-}
-```
-
-access http://host/doc.html
+access `http://127.0.0.1:8080/doc.html`
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241810208.png)
 

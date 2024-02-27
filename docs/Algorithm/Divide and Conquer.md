@@ -36,9 +36,9 @@ public static double quickPow(double x, int n) {
 
 public static double myPow(double x, int n) {
     if (n < 0) {
-        return 1 / quickPowPositive(x, -n);
+        return 1 / quickPow(x, -n);
     }
-    return quickPowPositive(x, n);
+    return quickPow(x, n);
 }
 ```
 

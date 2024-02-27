@@ -1,23 +1,21 @@
-# pipeline
+# Pipeline
 
-pipeline
+PIPELINE 是 Redis 提供的 Batch Operation, 可以将多个命令一次性发送给 Server, Server 通过 Queue 保证命令顺序, 按顺序执行所有命令, 并将结果一次性返回给 Client, 避免每执行完一条命令就返回一次结果来减少网络开销
 
-- 类似于 batch operation (eg. mset, mget), 可以一次发送 multi commands 给 server, server 依次执行完 command, 返回一个 response, 减少 communication time, 降低 communication postpone, 通过 queue, 保证 command 的 execution order
-- 如果 execution process 发生 exception, 会继续执行 command, 不保证 atomic
-- client 发送过多 command, 会导致 server block, server 需要回复一个 queue message, 占用太多, 建议控制在 10k 以内的 command
+PIPELINE 不保证原子性, 执行命令遇到异常, 会继续执行后续的命令, 当命令过多时, 可能引起较大的网络延迟, CPU 也有一定消耗, 需要对每一个命令进行单独解析和执
 
-pipeline VS batch operation VS transaction
+PIPELINE VS MSET
 
-- pipeline 是 non-atomic, batch operation 是 atomic
-- pipeline 可以执行 multi-type command, batch operation 只能执行 single-type command
+- PIPELINE 是 Non Atomic, MSET 是 Atomic
+- MSET 和 PIPELINE 执行命令不会被插队, 一旦开始执行, 就会连续执行到结束, 中间不会插入其他命令
+- PIPELINE 可以执行多类型命令, MSET 只能执行单类型命令
 
-pipeline VS transaction
+PIPELINE VS Transaction
 
-- pipeline 是 non-atomic, transaction 是 atomic
-- pipeline 是 multi-command execution, transaction 是 single-commmand execution
-- pipeline 不会堵塞 other command, transaction 会堵塞 other command
+- PIPELINE 是 Non Atomic, Transaction 是 Atomic
+- PIPELINE 不会堵塞其他命令, Transaction 会堵塞其他命令
 
-set command file (file. cmd.txt)
+Set command file (file. cmd.txt)
 
 ```shell
 set k1 100
@@ -25,7 +23,7 @@ set k2 200
 set k3 300
 ```
 
-execute command file by pipeline
+Execute command file by pipeline
 
 ```shell
 cat ./redis-test | redis-cli -h 192.168.10.11 -p 6379 -a 111 --pipe

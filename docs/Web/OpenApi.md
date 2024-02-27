@@ -14,7 +14,7 @@ Use the ﻿openapi command to generate TypeScript code
 # --input designates your OpenAPI file (eg: JSON, YAML)
 # --output is the output directory for your generated files
 # --client specifies the HTTP client you want to use (eg: ﻿fetch, ﻿axios, ﻿xhr)
-openapi --input http://127.0.0.1:10100/api/v2/api-docs --output ./src/api --client axios
+openapi --input http://127.0.0.1:8080/v3/api-docs --output ./src/api --client axios
 ```
 
 Configure OpenApi
