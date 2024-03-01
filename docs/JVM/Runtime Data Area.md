@@ -603,15 +603,15 @@ Object Structure 包括 Header, Instance Data 和 Padding
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241742843.png)
 
+Heap 中是不存储 Class Info 的, 只存储 Instance Data, 通过 ClassPointer 指向当前对象对应的 Klass 查询 Class Info
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402292302358.png)
+
 # Object Memory Allcation
 
-64 bit OS 中, Mark Word 占 8 B, Class Pointer 占 8 B, 共占 16 B, Pointer Compression 会将 Class Pointer 压缩成 4 B
+64 bit OS 中, Mark Word 占 8B, Class Pointer 占 8B, 共占 16B, Pointer Compression 会将 Class Pointer 压缩成 4B, 可以通过 `-XX:-UseCompressedOops` 禁用 Pointer Compression
 
-禁用 Pointer Compression, 忽略 Pointer Compression 的影响
-
-```
--XX:-UseCompressedOops
-```
+直接通过 `new Object()` 创建一个空对象, 就是 MarkWord 占 8B, Class Pointer 占 4B, Padding 占 4B, 共 16B
 
 通过 JOL 查看 Memory Allcation
 
@@ -630,25 +630,36 @@ public class Main {
     }
 }
 
-class MyObject { // MarkWord 8 + 8 B
-    int id; // 4 B
-    boolean flag = false; // 1 B
-    Object obj; // 4 B, reference
-}
-
-// 总共 8 + 8 + 4 + 1 + 4 = 25 B, 向上对齐到 32 B (8 的整数倍)
+class MyObject { // MarkWord 8B, ClassPointer 4B
+    int i; // 4B
+    long l; // 8B
+    boolean b; // 1B
+    Object o; // 4B
+} // 8 + 4 + 4 + 8 + 1 + 4 + 3 = 32B
 ```
 
 ```
-OFF  SZ   TYPE DESCRIPTION
-  0   8   (object header: mark)
-  8   4   (object header: class)
- 12   4   int MyObject.id
- 16   1   boolean MyObject.flag
- 17   7   (alignment/padding gap)
- 24   8   java.lang.Object MyObject.obj
+OFF  SZ    TYPE DESCRIPTION
+  0   8    (object header: mark)
+  8   4    (object header: class)
+ 12   4    int MyObject.i
+ 16   8    long MyObject.l
+ 24   1    boolean MyObject.b
+ 25   3    (alignment/padding gap)   
+ 28   4    java.lang.Object MyObject.o
 Instance size: 32 bytes
+Space losses: 3 bytes internal + 0 bytes external = 3 bytes total
 ```
+
+# Object Reference
+
+JVM 进行对象定位时, 有句柄引用 和 直接引用 (def) 两种方式
+
+直接引用 是 引用 -> 对象
+
+句柄引用 是 引用 -> 句柄 -> 对象, 在堆中维护一个句柄池, 想要定位对象, 就得先定位到句柄池里的某一个句柄, 再通过该句柄定位到具体的对象. 在 GC SweepCompact 时, 需要频繁改变对象的位置, 就只需要调整句柄的引用即可, 不需要去调整栈帧的引用
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402292305667.png)
 
 # Direct Memory
 

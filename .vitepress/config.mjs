@@ -38,12 +38,13 @@ export default withMermaid({
     nav: [
       {text: 'Home', link: '/'},
       {text: 'Java', link: '/docs/Java/Basic'},
+      {text: 'JVM', link: '/docs/JVM/Basic'},
+      {text: 'JUC', link: '/docs/JUC/Basic'},
       {text: 'SpringBoot', link: '/docs/SpringBoot/Basic'},
       {text: 'SpringCloud', link: '/docs/SpringCloud/Basic'},
       {text: 'MySQL', link: '/docs/MySQL/Basic'},
       {text: 'Redis', link: '/docs/Redis/Basic'},
-      {text: 'RabbitMQ', link: '/docs/RabbitMQ/Basic'},
-      {text: 'Docker', link: '/docs/Docker/Basic'}
+      {text: 'RabbitMQ', link: '/docs/RabbitMQ/Basic'}
     ],
     sidebar: getAllSidebar(),
     socialLinks: [

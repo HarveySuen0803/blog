@@ -58,7 +58,7 @@ public abstract class AbstractQueuedSynchronizer {
 }
 ```
 
-,# Source Code
+# Source Code
 
 ReentrantLock 的 Sync 作为 Inner Class 继承了 AbstractQueuedSynchronizer. NonfairSync 和 FairSync 作为 ReentrantLock 的不同实现类
 

@@ -25,6 +25,8 @@
 - Reflect
   - performance
 - String, StringBuffer, StringBuilder
+- final
+- JDK's Dynamic Proxy, CGLib's Dynamic Proxy
 
 # Redis
 
@@ -127,6 +129,9 @@
 
 - JVM Structure
 - PC Register
+- Object Strcuture
+- 对象怎么分配内存, `new Object()` 占用多少内存
+- 对象如何定位的
 
 # Service
 

@@ -72,6 +72,24 @@ public static void postOrder(TreeNode node) {
     postOrder(node.right);
     System.out.println(node);
 }
+
+public static void main(String[] args) {
+    /*
+             1
+           /   \
+          2     3
+         / \   / \
+        4  5  6   7
+     */
+    TreeNode root = new TreeNode(1);
+    root.left = new TreeNode(2);
+    root.right = new TreeNode(3);
+    root.left.left = new TreeNode(4);
+    root.left.right = new TreeNode(5);
+    root.right.left = new TreeNode(6);
+    root.right.right = new TreeNode(7);
+    preOrder(root);
+}
 ```
 
 # Binary Tree Traversal (Iteration)
@@ -423,6 +441,23 @@ public static int maxDepth(TreeNode root) {
         depth++;
     }
     return depth;
+}
+```
+
+# Minimum Depth of Binary Tree
+
+```java
+public static int minDepth(TreeNode node) {
+    if (node == null) {
+        return 0;
+    }
+    if (node.left == null) {
+        return minDepth(node.right) + 1;
+    }
+    if (node.right == null) {
+        return minDepth(node.left) + 1;
+    }
+    return Math.min(minDepth(node.left), minDepth(node.right)) + 1;
 }
 ```
 

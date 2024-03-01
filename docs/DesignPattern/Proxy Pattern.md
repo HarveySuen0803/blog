@@ -4,60 +4,82 @@
 
 # Static Proxy Pattern
 
-Static Proxy Pattern 的 proxy object 是在 Compile Stage 生成的
+Static Proxy Pattern 的 Proxy Object 是在 Compile Stage 生成的, 
 
 ```java
-class TrainStation {
-    void sellTickets() {}
+public class Main {
+    public static void main(String[] args) {
+        new TrainStationProxy(new TrainStation()).sellTickets();
+    }
 }
 
-class TrainStationProxy {
-    TrainStation trainStation = new TrainStation();
-    
+interface Ticket {
+    void sellTickets();
+}
+
+class TrainStation implements Ticket {
+    @Override
     public void sellTickets() {
-        TrainStation.sellTickets();;
+        System.out.println("sell tickets");
+    }
+}
+
+class TrainStationProxy implements Ticket {
+    private TrainStation trainStation;
+    
+    public TrainStationProxy(TrainStation trainStation) {
+        this.trainStation = trainStation;
+    }
+    
+    @Override
+    public void sellTickets() {
+        System.out.println("Before static proxy");
+        trainStation.sellTickets();
+        System.out.println("After static proxy");
     }
 }
 ```
 
 # Dynamic Proxy Pattern
 
-Dynamic Proxy Pattern 的 proxy object 是在 Runtime Stage 生成的, 当 interface 的 method 过多时, 可以通过 InvocationHandler.invoke() 统一处理, 不需要再去单独配置 method 作 proxy
+Dynamic Proxy Pattern 的 Proxy Object 是在 Runtime Stage 生成的, 当 Interface 的 Method 过多时, 可以通过 InvocationHandler.invoke() 统一处理, 不需要再去单独配置 Method 作 Proxy
 
 通过 JDK 实现 Dynamic Proxy Pattern
 
 ```java
 public class Main {
-    public static void main(String[] args) throws Exception {
-        new TrainStationProxy().sellTickets("window 1", "harvey"); // window 1 sells a ticket to harvey
+    public static void main(String[] args) {
+        Ticket trainStation = new TrainStation();
+        Ticket trainStationProxy = (Ticket) Proxy.newProxyInstance(
+            trainStation.getClass().getClassLoader(),
+            trainStation.getClass().getInterfaces(),
+            new InvocationHandler() {
+                @Override
+                public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                    System.out.println("Before method invoked");
+                    Object result = method.invoke(trainStation, args);
+                    System.out.println("After method invoked");
+                    return result;
+                }
+            }
+        );
+        trainStationProxy.sellTickets();
     }
 }
 
 interface Ticket {
-    void sellTickets(String window, String username);
+    void sellTickets();
 }
 
 class TrainStation implements Ticket {
-    public void sellTickets(String window, String username) {
-        System.out.println(window + " sells a ticket to " + username);
-    }
-}
-
-class TrainStationProxy {
-    TrainStation trainStation = new TrainStation();
-    
-    public void sellTickets(String window, String username) {
-        // Object newProxyInstance(ClassLoader loader, Class<?>[] interfaces, InvocationHandler h)
-        Ticket proxyObject = (Ticket) Proxy.newProxyInstance(TrainStation.getClass().getClassLoader(), TrainStation.getClass().getInterfaces(), (proxy, method, args) -> {
-            return method.invoke(trainStation, args);
-        });
-        
-        proxyObject.sellTickets(window, username);
+    @Override
+    public void sellTickets() {
+        System.out.println("sell tickets");
     }
 }
 ```
 
-Proxy.newProxyInstance() 的底层是创建一个 anonymous inner class 继承 Proxy, 实现 interface, 通过 reflect 调用 method
+Proxy.newProxyInstance() 的底层是创建一个 Anonymous Inner class 继承 Proxy, 实现 Interface, 通过 Reflect 调用 Method
 
 ```java
 public class Proxy {
@@ -84,4 +106,3 @@ public class $Proxy0 extends Proxy implements Ticket {
     }
 }
 ```
-

@@ -52,11 +52,11 @@ Active 是指 TRX 正在执行.
 
 Partially Committed 是指 TRX 已经执行了最后一个提交, 操作的都是内存中的数据, 还没有进行刷盘.
 
+Committed 是指 TRX 在 Partially Committed 后, 成功进行了刷盘.
+
 Failed 是指 TRX 在 Active 和 Partially Committed 阶段遇到了某些错误, 而无法继续执行.
 
 Aborted 是指 TRX 在 Failed 阶段后, 进行回滚, 恢复了到 TRX 最初的状态.
-
-Committed 是指 TRX 在 Partially Committed 后, 成功进行了刷盘.
 
 # Concurrency Issue
 
@@ -113,6 +113,10 @@ select @@transaction_isolation;
 ```sql
 set session transaction_isolation = 'read-uncommitted';
 ```
+
+# Bin Log
+
+Bin Log 是 MySQL 的二进制日志, 用于记录所有的 DDL 和 DML, 以达到重放 SQL 语句的目的, 主要用于数据库回滚、复制、数据恢复
 
 # Redo Log
 
@@ -190,7 +194,7 @@ Undo Log 的存储是离散的, 要回收非常麻烦, 所以 TRX 提交后, 不
 
 # MVCC
 
-MVCC 可以在不加锁的情况下, 采用非堵塞的方式解决读写冲突.
+MVCC (Multi Version Concurrency Control) 可以在不加锁的情况下, 采用非堵塞的方式解决读写冲突.
 
 MVCC 主要有 Undo Log 和 Page View 实现的, 通过 Undo Log 构成一个 Version Linked List, 通过 Page View 选择一个 Version 供访问.
 

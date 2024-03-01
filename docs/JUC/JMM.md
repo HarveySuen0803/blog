@@ -177,16 +177,8 @@ DCL 是一种在单例模式中使用的延迟加载策略, 它尝试通过检�
 
 Object Creation 包含 Memory Allocation, Object Initialization, Reference Points to Memory 三个步骤, 在多线程环境下, 由于指令重排序的存在导致了 NullPointException
 
-1. Situation
-
 - T1 进行 Object Creation 时, JVM 将 Reference Points to Memory 重排序到了 Object Initialization 之前
 - T2 又来访问, 发现 Reference 不为 null, 就会直接拿走, 但是此时 T1 还没有执行 Object Initialization, T2 直接访问就会导致 NullPointException
-
-2. Situation
-
-- T1 完成 Object Creation 后, T2 未察觉到 instance 已经创建好了, 还会去创建 instance
-- T2 进行 Object Creation 时, JVM 将 Reference Points to Memory 重排序到了 Object Initialization 之前, 此时原先已经创建好的 instance 已经被 null 覆盖了
-- T1 后续又访问了该 instance, 导致 NullPointException
 
 通过 volatile 修饰 singleton, 禁止重排序, 避免 NullPointException
 

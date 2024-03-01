@@ -90,7 +90,7 @@ Directory Page 的一条 Directory Record 指向一个 Data Page. Directory Reco
 Root Page 的一条 Directory Record 指向一个 Directory Page.
 
 当 Directory Page 太多时, 直接对所有的 Data Page 进行 Binary Search, 非常低效. 可以先对 Root Page 进行 Binary Search, 确定 Directory Page 后, 再对 Directory Page 进行 Binary Search.
-
+ 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241727310.png)
 
 MySQL 为了减少 IO, 采用动态加载硬盘的方式, 不会一次就加载整个 Index Tree, 而是一次加载一个 Page, 一个 Page 对应一个 Node, 这就相当于对 Tree 进行搜索.
@@ -135,7 +135,7 @@ InnoDB 的 Root Page 是固定不动的, 只会改变内部 Record 的指向, �
 
 InnoDB 的 Non Clustered Index 会联合 Primary Key 来保证唯一性, 这里的 Primary Key 仅仅用于区分 Record. 所以不推荐使用过长的 Field 作为 Primary Key, 会导致 Directory Record 过大.
 
-InnoDB 支持 Adaptive Hash Index, 类似于 Hot Code, 将常用数据的地址, 直接存放到 Hash Table 中, 下次查询时, 直接通过 Hash Table 访问
+InnoDB 支持 Adaptive Hash Index, 类似于 Hot Code, 将常用数据的地址, 直接存放到 Hash Table 中, 下次查询时, 直接通过 Hash Table 访问.
 
 查看 Adaptive Hash Index 状态
 
@@ -295,9 +295,9 @@ create table emp (id int) row_format = compact;
 alter table emp row_format = compact;
 ```
 
-# Area
+# Extent
 
-1 个 Area 包含 64 个 Page, 占 16 * 64 KB = 1 MB.
+1 个 Extent 包含 64 个 Page, 占 16 * 64 KB = 1 MB.
 
 如果 Data 存储在 Memory 中, 从 Memory 读取 1 个 Page 到 Buffer 中只需要 1ms.
 
@@ -305,23 +305,23 @@ alter table emp row_format = compact;
 
 如果 Page 和 Page 紧挨着, 对 Disk 进行 Sequence IO, 一次读取一大堆 Page, 那么平均读取 1 个 Page 甚至可以比 Memory 还快.
 
-在 Disk 上, 无法保证所有的 Page 都能按顺序存储, 但是可以保证一个 Area 中的 64 个 Page 都是按照顺序存储的, 那么就可以对该 Area 进行 Sequenece IO.
+在 Disk 上, 无法保证所有的 Page 都能按顺序存储, 但是可以保证一个 Extent 中的 64 个 Page 都是按照顺序存储的, 那么就可以对该 Extent 进行 Sequenece IO.
 
-Area 包括 FREE Area, FREE_FRAG Area, FULL_FRAG Area, FSEG Area.
+Extent 包括 FREE Extent, FREE_FRAG Extent, FULL_FRAG Extent, FSEG Extent.
 
-# Fragment Area
+# Fragment Extent
 
-InnoDB 创建一个 Table, 就需要建立一个 Clustered Index, 立马生成 1 个 Data Segment 和 1 个 Index Segment, 如果 Segment 中只能以 Area 为单位进行存储的话, 立马就消耗掉了 2 MB, 如果这个 Table 存储的数据很少的话, 就显得非常浪费.
+InnoDB 创建一个 Table, 就需要建立一个 Clustered Index, 立马生成 1 个 Data Segment 和 1 个 Index Segment, 如果 Segment 中只能以 Extent 为单位进行存储的话, 立马就消耗掉了 2 MB, 如果这个 Table 存储的数据很少的话, 就显得非常浪费.
 
-Fragment Area 就类似于一个 Public Area, 不归属于任何 Segment, 而是归属于 Tablespace. Fragment Area 中的 Fragment Page 可以用于任何 Segment.
+Fragment Extent 就类似于一个 Public Extent, 不归属于任何 Segment, 而是归属于 Tablespace. Fragment Extent 中的 Fragment Page 可以用于任何 Segment.
 
-当一个 Segment 已经用到了 32 个 Fragment Page 时, 就会为这 32 个 Fragment Page 单独开辟一个 Area, 后续的 Page 都存储在该 Area 中. 尽量减少浪费.
+当一个 Segment 已经用到了 32 个 Fragment Page 时, 就会为这 32 个 Fragment Page 单独开辟一个 Extent, 后续的 Page 都存储在该 Extent 中. 尽量减少浪费.
 
 # Segment
 
-InnoDB 的所有数据都存储在 Leaf Node 中, 进行范围查找时, 可以通过 Linked List 实现, 所以无需连续 Parent Node. 那么就可以将 Leaf Node 所在 Area 存储到一个 Segment 中, 称为 Data Segment. 将 Non Leaf Node 所在 Area 存储到一个 Segment 中, 称为 Index Segment.
+InnoDB 的所有数据都存储在 Leaf Node 中, 进行范围查找时, 可以通过 Linked List 实现, 所以无需连续 Parent Node. 那么就可以将 Leaf Node 所在 Extent 存储到一个 Segment 中, 称为 Data Segment. 将 Non Leaf Node 所在 Extent 存储到一个 Segment 中, 称为 Index Segment.
 
-Segment 中存储的是 Node 所在 Area 和一些 Fragment Page.
+Segment 中存储的是 Node 所在 Extent 和一些 Fragment Page.
 
 # Tablespace
 
