@@ -1,11 +1,3 @@
-# IOC
-
-IOC: 容器管理 Cls, 容器提供 Obj
-
-Bean: 容器创建的 Obj
-
-DI: 容器提供 Obj
-
 # create Bean
 
 pom.xml

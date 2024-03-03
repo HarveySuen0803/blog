@@ -589,7 +589,7 @@ Object Structure 包括 Header, Instance Data 和 Padding
 
 1. Header: 包括 Mark Word, Class Pointer 和 Array Length
 
-- Mark Word: 存储 HashCode, GC Age, Lock, Lock State, Thread Id, Thread Stamp
+- Mark Word: 存储 HashCode, GC Age (4B, 所以 GC Age 最大 15), Lock, Lock State, Thread Id, Thread Stamp
 - Class Pointer: 指向 Method Area 中对应 Class 的 Klass Class Info
 - Array Length: 如果 Object 是 Array, 则会记录 Array Length
 

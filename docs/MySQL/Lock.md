@@ -34,7 +34,9 @@ unlock tables;
 
 # Intention Lock
 
-InnoDB 下, 给 Row 添加 Exclusive Lock (X) 后, 就需要给当前 Page 所属的 Table 添加 Intention Exclusive Lock (IX). 给 Row 添加 Shared Lock (S) 后, 就会给当前 Page 所属的 Table 添加 Intention Shared Lock (IS). 这样就不需要一行一行的的遍历判断是否添加了 Lock
+InnoDB 下, 给 Row 添加 Exclusive Lock (X) 后, 就需要给当前 Page 所属的 Table 添加 Intention Exclusive Lock (IX). 给 Row 添加 Shared Lock (S) 后, 就会给当前 Page 所属的 Table 添加 Intention Shared Lock (IS)
+
+TRX 尝试获取 Row Lock 时, 可以先检查该 Table 的 Intention Lock, 看看是否和自己的 IS 或 IX 冲突, 不需要一行一行的的遍历判断是否添加了 Row Lock, 大大提高效率
 
 默认不会给读操作添加 Shared Lock, 这里手动添加 Shared Lock, 给 Row 添加了 S 后, 也会自动给 Table 添加 IS
 

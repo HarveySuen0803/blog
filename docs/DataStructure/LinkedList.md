@@ -338,16 +338,38 @@ ic class CycleLinkedList {
     list1               list2
     null                4 -> 3 -> 2 -> 1
  */
-public static ListNode reverseList(ListNode head) { // ListNode with no sentinel, head is the first node
-    ListNode node = null;
-    ListNode temp = head; 
-    
-    while (temp != null) {
-        node = new ListNode(temp.val, node);
-        temp = temp.next;
+public static ListNode reverseList(ListNode head) {
+    ListNode nil = new ListNode(-1, null);
+    ListNode cur = head;
+    while (cur != null) {
+        ListNode nxt = cur.next;
+        cur.next = nil.next;
+        nil.next = cur;
+        cur = nxt;
     }
-    
-    return node;
+    return nil.next;
+}
+
+public static void main(String[] args) {
+    ListNode head = new ListNode(1);
+    head.next = new ListNode(2);
+    head.next.next = new ListNode(3);
+    ListNode result = reverseList(head);
+    System.out.println(result);
+}
+```
+
+# Reverse List
+
+```java
+public static ListNode reverseList(ListNode head) {
+    ListNode nil = new ListNode(-1, null);
+    ListNode cur = head;
+    while (cur != null) {
+        nil.next = new ListNode(cur.val, nil.next);
+        cur = cur.next;
+    }
+    return nil.next;
 }
 ```
 
@@ -642,24 +664,19 @@ public static ListNode removeNthFromEnd(ListNode head, int n) {
     }
  */
 public static ListNode removeNthFromEnd(ListNode head, int n) {
-    ListNode s = new ListNode(-1, head);
-    recursion(s, n);
-    return s.next;
+    ListNode nil = new ListNode(-1, head);
+    rec(nil, n);
+    return nil.next;
 }
 
-public static int recursion(ListNode node, int n) {
-    if (node == null) {
+public static int rec(ListNode cur, int n) {
+    if (cur == null) {
         return 0;
     }
-    
-    // Return the nth of the node.next
-    int nth = recursion(node.next, n);
-    
-    // If the next node is to be removed
+    int nth = rec(cur.next, n);
     if (nth == n) {
-        node.next = node.next.next;
+        cur.next = cur.next.next;
     }
-    
     return nth + 1;
 }
 ```

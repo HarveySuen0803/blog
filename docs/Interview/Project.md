@@ -60,3 +60,6 @@
 OJ 重复提交表单 (重复提交订单)
 
 Auto Increment ID -> UUID -> Snowflake ID
+
+ThreadPool + AOP + Strategy Pattern 实现异步日志记录, 代码无侵入, 满足开闭原则
+

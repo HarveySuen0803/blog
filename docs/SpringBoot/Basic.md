@@ -1,8 +1,10 @@
 # SpringBoot
 
-SpringBoot makes it easy to create stand-alone, production-grade Spring based Applications that we can just run
+SpringBoot 是基于 Spring Framework 的 Development Framework, 通过 Auto Configuration 基于约定大于配置原则, 提供了更加简单, 快速的开发体验.
 
-we can get started with minimum fuss, most SpringBoot applications need minimal Spring configuration
+SpringBoot 集成了很多第三方库和工具 (eg: Spring Data, Spring Security Thymeleaf, Logback), 可以极大地提高开发效率.
+
+SpringBoot  内置了 Tomcat、Undertow 等服务器, 不用 像传统 SSM 一样自己去搭 Tomcat 等环境了, 简化了开发.
 
 # project structure
 
@@ -261,4 +263,3 @@ configure sub module (file: user-service/pom.xml)
     </build>
 </project>
 ```
-

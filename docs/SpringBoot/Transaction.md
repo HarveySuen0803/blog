@@ -1,3 +1,14 @@
+# Transaction
+
+Service 开启一个新的 Transaction 后, TransactionSynchronizationManager 会将 Metadata (eg: DB Connection, Transaction Status) 存储到一个 ThreadLocal Obj 中.
+
+Transaction 涉及的所有操作, 应该都是基于同一个 DB Connection 下, 所以后续该线程的 DAO 操作都会使用这个 ThreadLocal Var 存储的 Metadata.
+
+```java
+private static final ThreadLocal<Map<Object, Object>> resources =
+    new NamedThreadLocal<>("Transactional resources");
+```
+
 # Transaction with Manual
 
 ```java

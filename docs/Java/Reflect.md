@@ -1,5 +1,12 @@
 # Reflect
 
+Reflect 可以在程序运行时动态的获取类信息和对象信息
+
+Reflect 的应用
+
+- Dynamic Proxy: 因为不确定需要代理的类, 所以需要通过反射动态的获取
+- RPC: RPC 框架就是动态的生成类对象, 然后调用方法的
+
 ClassLoader 会将 class 封装成一个 Class object, 收集 class member 封装到 Class object
 
 - 将 field 封装成 Field object 放到 Field[] fields

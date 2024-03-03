@@ -1,5 +1,7 @@
 # SpringMVC
 
+SpringMVC 是 Spring 一部分, 是基于 MVC Design Pattern 的 Web Framework, 用于构建 Web App, 提供了 Controller, View Parser, Exception Handling 等功能, 使得开发 Web App 变得更加简单.
+
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>

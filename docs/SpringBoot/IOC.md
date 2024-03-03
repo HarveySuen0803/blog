@@ -1,274 +1,10 @@
-# Auto Configuration
-
-导入 Dependency 的 starter pkg 后, 会自动导入该 Dependency 的 autoconfigure pkg (eg. 导入 spring-boot-stater 后, 会自动导入 spring-boot-autoconfigure)
-
-App.java 的 @EnableAutoConfiguration 底层包含 @Import({AutoConfigurationImportSelector.class}), 根据 SPI 访问 META-INF/spring/%s.imports (eg. META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports), 动态加载 Component
-
-%s.imports 包含该 Dependency 提供的所有 Configuration (eg. xxx.AutoConfiguration.imports 包含 xxx.aop.AopAutoConfiguration, xxx.amqp.RabbitAutoConfiguration), Configuration 包含 @Import({xxxSelector.class}) 通过 @Condition 按条件导入 Bean, 实现 Auto Configuration
-
-通过 Auto Configuration 导入的 Configuration 用到的 Properties Obj 可以在 application.properties 中配置
-
-```properties
-# SpringMVC config
-spring.mvc.*
-
-# Web config
-spring.web.*
-
-# upload file config
-spring.servlet.multipart.*
-
-# server config
-server.*
-```
-
-# Three-Level Cache
-
-Spring 的 DefaultSingletonBeanRegistry Cls 中声明了 singletonObjects, earlySingletonObjects 和 singletonFactories 用于实现 Three-Level Cache
-
-- singletonObjects 是 Lv1 Cache, 存放经历了完整 Life Cycle 的 Bean Obj
-    - singletonObjects 本质是一个 Map, Key 为 Bean Name, Val 为 Bean Obj, 通过 applicationContext.getBean() 获取 Bean 就是访问 singletonObjects 这个 Map, 根据 Bean Name 获取 Bean Obj
-- earlySingletonObjects 是 Lv2 Cache, 存放未经历完整 Life Cycle 的 Bean Obj
-- singletonFactories 是 Lv3 Cache, 存放各种 Bean 的 ObjectFactory, 可以用来创建 Normal Obj 或 Proxy Obj
-
-```java
-public class DefaultSingletonBeanRegistry {
-    // Lv1 Cache
-    private final Map<String, Object> singletonObjects = new ConcurrentHashMap(256);
-    // Lv2 Cache
-    private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap(16);
-    // Lv3 Cache
-    private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap(16);
-}
-```
-
-Spring 通过 Three-Level Cache 解决了大部分的 Circular Reference, 需要使用 A 时, 会执行下面的步骤
-
-- 调用 getBean() 获取 A, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 未查询到 A Cache, 调用 getSingleton() 创建 A
-    - 调用 beforeSingletonCreation() 添加 A 到 singletonsCurrentlyInCreation 中, 表示 A 正在创建过程中
-    - 调用 singleFactory.getObject() 通过 Reflect 创建 A Obj, 此时 A Obj 的成员都是空的, 即 A 引用的 B 也是空的
-    - 生成 A 的 ObjectFactory 存入 singletonFactories, ObjectFactory 本质是一个 Lambda, 可用于动态创建 A 的 Normal Obj 或 Proxy Obj
-    - 通过 BeanPostProcessor 发现 A 依赖 B, 需要去创建 B
-- 调用 getBean() 获取 B, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 未查询到 B Cache, 调用 getSingleton() 创建 B
-    - 调用 beforeSingletonCreation() 添加 B 到 singletonsCurrentlyInCreation 中
-    - 调用 singleFactory.getObject() 通过 Reflect 创建 B Obj, 此时 B Obj 的成员都是空的, 即 B 引用的 A 也是空的
-    - 生成 B 的 ObjectFactory 存入 singletonFactories
-    - 通过 BeanPostProcessor 发现 B 依赖 A, 并发现 A 也在 singletonsCurrentlyInCreation 中, 说明 A 和 B 存在 Circular Reference, 需要去处理 Circular Reference
-- 调用 getBean() 获取 A, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 从 singletonFactories 中获取到 A 的 OpenFactory, 执行 Lambda 创建 A Obj 放入 earlySingletonObjects, 并移除 singletonFactories 中 A 的 OpenFactory
-    - 如果 C 引用了 A, 直接从 earlySingletonObjects 获取 A 即可, 不需要再通过 A 的 OpenFactory 获取 A Obj 了
-- 调用 populateBean() 填充 B 依赖的 A, 此时 B 创建完成, 向 singleObjects 添加 B, 从 singletonsCurrentlyInCreation 和 singletonFactories 移除 B
-    - 如果再使用 B, 就可以直接从 singleObjects 中获取
-- 调用 populateBean() 填充 A 依赖的 B, 此时 A 创建完成, 向 singleObjects 添加 A, 从 singletonsCurrentlyInCreation 和 earlySingletonObjects 移除 A
-
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401152302912.png)
-
-# Circular Reference
-
-这里 A Bean 的初始化阶段需要调用 populateBean() 去填充 B Bean, 需要去创建 B Bean, 而 B Bean 的初始化阶段需要调用 populateBean() 去填充 A Bean 产生 Circular Reference
-
-```java
-@Component
-public class A {
-    @Autowired
-    private B b;
-}
-```
-
-```java
-@Component
-public class B {
-    @Autowired
-    private A a;
-}
-```
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401151818697.png)
-
-# Circular Reference (Constructor)
-
-Three-Level Cache 无法解决 Constructor 引起的 Circular Reference, 这里 A 和 B 在 Constructor 中相互引用, 会产生 Circular Reference
-
-```java
-@Component
-public class A {
-    private B b;
-
-    public A(B b) {
-        this.b = b;
-    }
-}
-```
-
-```java
-@Component
-public class B {
-    private A a;
-
-    public B(A a) {
-        this.a = a;
-    }
-}
-```
-
-通过 @Lazy 延迟加载 A 或 B, 可以解决这个 Circular Reference
-
-```java
-@Component
-public class A {
-    private B b;
-
-    public A(@Lazy B b) {
-        this.b = b;
-    }
-}
-```
-
 # IOC
 
-Bean 默认是 Singleton 的. 如果 Bean 是不可变状态的 (eg: Service, Mapper), 那么可以保证线程安全. 如果 Bean 内部使用了可修改的成员变量, 就需要考虑线程安全, 可以修改 @Scope 为 Property 保证线程安全, 可以添加 Lock 保证线程安全
+IOC (Inversion of Control) 一种设计原则, 用于减小计算机程序中各模块之间的依赖关系. 我们只需要定义一个 Bean 的创建过程, 而真正的创建, 初始化, 装配, 生命周期都由 Container (eg: ApplicationContext, BeanFactory) 管理. 通过 DI 注入对象, 只需要关注自己的核心逻辑, 而不需要关注如何获取其他对象.
 
-annotation/MyComponent.java
+IOC 最佳实践了 Singleton 和 Fast Fail, 不仅可以节省大量不必要的对象创建, 防止 GC, 还在项目启动时, 就实例化所有的 Bean, 可以将 Bean 的创建由运行期提前至启动期, 在启动时期就可以检测出问题, 而不是在运行时遇到问题停机. Singleton 是不可变状态, 可以保证线程安全.
 
-```java
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface MyComponent {}
-```
-
-annotation/MyAutoWired.java
-
-```java
-@Target({ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface MyAutoWired {}
-```
-
-MyApplicationContext.java
-
-```java
-public interface MyApplicationContext {
-    Object getBean(Class cls);
-}
-```
-
-MyAnnotationApplicationContext.java
-
-```java
-public class MyAnnotationApplicationContext implements MyApplicationContext {
-    private Map<Class, Object> beanMap = new HashMap<>();
-
-    @Override
-    public Object getBean(Class cls) {
-        return beanMap.get(cls);
-    }
-
-    public MyAnnotationApplicationContext(String pkgUrl) {
-        try {
-            pkgUrl = pkgUrl.replaceAll("\\.", "/");
-            // get absolute urls
-            Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(pkgUrl);
-            while (urls.hasMoreElements()) {
-                URL url = urls.nextElement();
-                String dirPath = URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8); // eg. project/target/classes/com/harvey
-                String baseDirPath = dirPath.substring(0, dirPath.length() - pkgUrl.length()); // eg. project/target/classes/
-                loadBean(new File(dirPath), baseDirPath);
-            }
-            loadAutoWired();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // add Class with @MyComponent Annotation to the beanMap
-    public void loadBean(File dir, String baseDirPath) throws Exception {
-        if (!dir.isDirectory()) {
-            return;
-        }
-        File[] files = dir.listFiles();
-        if (files == null) {
-            return;
-        }
-        for (File file : files) {
-            if (file.isDirectory()) {
-                loadBean(file, baseDirPath);
-                continue;
-            }
-            String filePath = file.getAbsolutePath().substring(baseDirPath.length()); // eg. com/harvey/bean/UserServiceImpl.class
-            if (!filePath.contains(".class")) {
-                continue;
-            }
-            String fullClassName = filePath.replaceAll("/", "\\.").replace(".class", ""); // eg. com.harvey.bean.UserServiceImpl.class
-            Class<?> cls = Class.forName(fullClassName);
-            if (cls.isInterface()) {
-                continue;
-            }
-            if (cls.getAnnotation(MyComponent.class) == null) {
-                continue;
-            }
-            Object obj = cls.getConstructor().newInstance();
-            if (cls.getInterfaces().length > 0) {
-                // key is Interface, value is  Object
-                beanMap.put(cls.getInterfaces()[0], obj);
-            } else {
-                // key is Class, value is Object
-                beanMap.put(cls, obj);
-            }
-        }
-    }
-
-    // inject Object to the Field with @MyAutoWired Annotation
-    public void loadAutoWired() throws IllegalAccessException {
-        for (Map.Entry<Class, Object> entry : beanMap.entrySet()) {
-            Class cls = entry.getKey();
-            Object obj = entry.getValue();
-            // set cls to obj's Class to get Field
-            if (cls.isInterface()) {
-                cls = obj.getClass();
-            }
-            Field[] fields = cls.getDeclaredFields();
-            for (Field field : fields) {
-                if (field.getAnnotation(MyAutoWired.class) == null) {
-                    continue;
-                }
-                field.setAccessible(true);
-                field.set(obj, beanMap.get(field.getType()));
-            }
-        }
-    }
-}
-```
-
-UserService.java
-
-```java
-public interface UserService {
-    void show();
-}
-```
-
-UserServiceImpl.java
-
-```java
-@MyComponent
-public class UserServiceImpl implements UserService {
-    @MyAutoWired
-    private UserDao userDao;
-
-    @Override
-    public void show() {
-        System.out.println(userDao);
-    }
-}
-```
-
-App.java
-
-```java
-MyApplicationContext applicationContext = new MyAnnotationApplicationContext("com.harvey");
-UserService userService = (UserService) applicationContext.getBean(UserService.class);
-userService.show();
-```
+IOC 最佳实践了 DIP (Dependence Inversion Principle), 高层模块不直接依赖低层模块, 而是依赖低层模块的抽象, 低层模块去实现抽象 (eg: Controller 通过 Service 访问 ServcieImpl), 实现 Decoupling.
 
 # @SpringBootApplication
 
@@ -296,6 +32,46 @@ EnableAutoConfiguration.java
 @Import(AutoConfigurationImportSelector.class)
 public @interface EnableAutoConfiguration {}
 ```
+
+# BeanFactory
+
+BeanFactory 是 SpringBoot 框架中的一个核心接口, 表示 IOC 的 Container, 负责实例化, 管理和配置应用程序中定义的 Bean.
+
+通过 BeanFactory 获取 Bean.
+
+```java
+ClassPathResource resource = new ClassPathResource("beanfactory-example.xml");
+BeanFactory factory = new XmlBeanFactory(resource);
+ExampleBean exampleBean = (ExampleBean) factory.getBean("exampleBean");
+System.out.println(exampleBean.getMessage());
+```
+
+# ApplicationContext
+
+ApplicationContext 是 BeanFactory 的扩展, 也表示 IOC 的 Container, 但提供了更多的功能 (eg: i18n, AOP, Publish Event).
+
+通过 ApplicationContext 获取 Bean.
+
+```java
+MyBean myBean = applicationContext.getBean(MyBean.class);
+```
+
+通过 ApplicationContext 获取 Enviroment.
+
+```java
+Environment environment = applicationContext.getEnvironment();
+String property = environment.getProperty("my.property");
+```
+
+通过 ApplicationContext 发布 Event.
+
+```java
+applicationContext.publishEvent(new MyEvent(this, "TestEvent"));
+```
+
+BeanFactory 采用延迟加载, 在获取 Bean 时才会进行实例化, 可以减少系统资源的占用, 而 ApplicationContext 在启动时会立即加载所有的 Bean, 导致启动时间较⻓.
+
+BeanFactory 是 Singleton, 整个 App 只有一个 BeanFactory Instance, 而 ApplicationContext 是 Multiton, 并且可以通过父子容器的方式组织起来, 方便模块化开发.
 
 # Profile
 
@@ -400,6 +176,50 @@ UserService userService;
 @Autowired
 public UserController(UserService userService) {
     this.userService = userService;
+}
+```
+
+# DI Conflict
+
+如果 UserServiceImplA, UserServiceImplB 都实现了 UserService, 那么 Container 创建 UserService Obj 时, 就会冲突
+
+```java
+@Service
+public class UserServiceImplA implements UserService {}
+```
+
+```java
+@Service
+public class UserServiceImplB implements UserService {}
+```
+
+```java
+@RestController
+public class UserController {
+    // 创建 UserService Obj 时, 发生冲突
+    @Autowired
+    private UserService userService;
+}
+```
+
+通过 @Primary 解决 DI Conflict
+
+```java
+// 创建 UserServiceImplA Obj
+@Primary
+@Service
+public class UserServiceImplA implements UserService {}
+```
+
+通过 @Qualifier 解决 DI Conflict
+
+```java
+@RestController
+public class UserController {
+    // 创建 UserServiceImplA Obj
+    @Qualifier("userServiceImplA")
+    @Autowired
+    private UserService userService;
 }
 ```
 
@@ -645,15 +465,18 @@ public interface EmpMapper {}
 Spring 创建 Bean 的过程
 
 - 调用 loadBeanDefinitions() 扫描 XML 或 Annotation 声明的 Bean, 封装成 BeanDefinition Obj 放入 beanDefinitionMap 中, 再遍历 beanDefinitionMap, 通过 createBean() 创建 Bean
-- 调用 createBeanInstance() 构建 Bean Instance, 去获取 Constructor, 准备 Constructor 需要的 Parameter, 再执行 Constructor
+- 调用 createBeanInstance() 构建 Bean Instance, 去获取 Constructor, 先准备 Constructor 需要的 Parameter, 再执行 Constructor
 - 调用 populateBean() 填充 Bean, 通过 Three-Level Cache 去注入当前 Bean 所依赖的 Bean (通过 @Autowired 注入的 Bean)
+
+Spring 初始化 Bean 的过程
+
 - 调用 initializeBean() 初始化 Bean
-- 调用 invokeAwareMethods() 去填充 Bean 实现的 Aware 信息, Bean 有可能实现了 BeanNameAware, BeanFactoryAware 或 ApplicationContextAware 去扩展 Bean
+- 调用 invokeAwareMethods() 去填充 Bean 实现的 Aware 信息, Bean 有可能实现了 BeanNameAware, BeanFactoryAware 或 ApplicationContextAware 去扩展 Bean (类似于 Neddle, 可以感知到 Bean Lifecycle 中的信息)
 - 调用 applyBeanProcessorsBeforeInitialization() 去处理 Bean 实现的 BeanPostProcessor 的 postProcessBeforeInitialization()
 - 调用 Bean 中添加了 @PostConstruct 的 Init Method
 - 调用 Bean 实现的 InitializingBean 的 afterPropertiesSet()
 - 调用 Bean 中添加了 @Bean(initMethod = "initMethod") 的 Init Method
-- 调用 applyBeanProcessorsAfterInitialization() 去处理 Bean 实现的 BeanPostProcessor 的 postProcessAfterInitialization(), AOP 就是动态代理该 Processor 实现的
+- 调用 applyBeanProcessorsAfterInitialization() 去处理 Bean 实现的 BeanPostProcessor 的 postProcessAfterInitialization(), AOP 动态代理就是由该 Processor 实现的
 - 调用 registerDisposableBean() 注册实现了 Disposable 的 Bean, 这样销毁时, 就会自动执行 destroy()
 - 调用 addSingleton() 将 Bean 放入 singletonObjects 中, 后续使用 Bean 都是从 singletonObjects 中获取
 
@@ -795,7 +618,68 @@ public class AliOSSUtils {
 }
 ```
 
+# CommandLineRunner
+
+CommandLineRunner 用于在 SpringBoot 应用启动后执行一些代码, 这个时候应用上下文已经完全载入, 所有 Bean 都已经创建和初始化完毕, 通常用于在应用启动后执行一些应用外部的, 非关键的或者长时间运行的任务.
+
+```java
+@Component
+public class MyRunner implements CommandLineRunner {
+    @Override
+    public void run(String...args) throws Exception {
+        System.out.println("Application has been started.");
+    }
+}
+```
+
+
+通过 CommandLineRunner 在 App 启动后, 开启一个异步任务定期收集和发送统计报告.
+
+```java
+@Component
+public class DailyReportRunner implements CommandLineRunner {
+    @Autowired
+    private ReportGenerator reportGenerator;
+
+    @Override
+    public void run(String... args) {
+        new Thread(() -> reportGenerator.generateDailyReport()).start();
+    }
+}
+```
+
+通过 @Order 规定 Runner 的执行顺序.
+
+```java
+@Order(0)
+@Component
+public class ARunner implements CommandLineRunner {
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("A Runner is running");
+    }
+}
+```
+
+```java
+@Order(1)
+@Component
+public class BRunner implements CommandLineRunner {
+    @Override
+    public void run(String... args) throws Exception {
+        System.out.println("B Runner is running");
+    }
+}
+```
+
+```txt
+A Runner is running
+B Runner is running
+```
+
 # @PostConstructor
+
+@PostConstruct 用于在依赖注入完成后, 进行一些初始化操作, 这个注解的方法在 Bean 初始化 (构造函数执行之后) 立即执行.
 
 ```java
 @RestController
@@ -804,6 +688,23 @@ public class UserController {
     @PostConstruct
     private static void init() {
         System.out.println("...");
+    }
+}
+```
+
+通过 @PostConstruct 在 Bean 初始化时, 就从 DB 中查询数据存储到 Cache 中.
+
+```java
+@Component
+public class UserCache {
+    private List<DataRecord> cache;
+
+    @Autowired
+    private DataRecordRepository repository;
+
+    @PostConstruct
+    public void init() {
+        cache = repository.findAll();
     }
 }
 ```
@@ -841,239 +742,258 @@ public Emp emp() {
 @ConditionalOnProperty(name = "sun", age = "18")
 ```
 
-# DI Conflict
+# My IOC
 
-如果 UserServiceImplA, UserServiceImplB 都实现了 UserService, 那么 Container 创建 UserService Obj 时, 就会冲突
+annotation/MyComponent.java
 
 ```java
-@Service
-public class UserServiceImplA implements UserService {}
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MyComponent {}
 ```
 
-```java
-@Service
-public class UserServiceImplB implements UserService {}
-```
+annotation/MyAutoWired.java
 
 ```java
-@RestController
-public class UserController {
-    // 创建 UserService Obj 时, 发生冲突
+@Target({ElementType.FIELD})
+@Retention(RetentionPolicy.RUNTIME)
+public @interface MyAutoWired {}
+```
+
+MyApplicationContext.java
+
+```java
+public interface MyApplicationContext {
+    Object getBean(Class cls);
+}
+```
+
+MyAnnotationApplicationContext.java
+
+```java
+public class MyAnnotationApplicationContext implements MyApplicationContext {
+    private Map<Class, Object> beanMap = new HashMap<>();
+
+    @Override
+    public Object getBean(Class cls) {
+        return beanMap.get(cls);
+    }
+
+    public MyAnnotationApplicationContext(String pkgUrl) {
+        try {
+            pkgUrl = pkgUrl.replaceAll("\\.", "/");
+            // get absolute urls
+            Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(pkgUrl);
+            while (urls.hasMoreElements()) {
+                URL url = urls.nextElement();
+                String dirPath = URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8); // eg. project/target/classes/com/harvey
+                String baseDirPath = dirPath.substring(0, dirPath.length() - pkgUrl.length()); // eg. project/target/classes/
+                loadBean(new File(dirPath), baseDirPath);
+            }
+            loadAutoWired();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    // add Class with @MyComponent Annotation to the beanMap
+    public void loadBean(File dir, String baseDirPath) throws Exception {
+        if (!dir.isDirectory()) {
+            return;
+        }
+        File[] files = dir.listFiles();
+        if (files == null) {
+            return;
+        }
+        for (File file : files) {
+            if (file.isDirectory()) {
+                loadBean(file, baseDirPath);
+                continue;
+            }
+            String filePath = file.getAbsolutePath().substring(baseDirPath.length()); // eg. com/harvey/bean/UserServiceImpl.class
+            if (!filePath.contains(".class")) {
+                continue;
+            }
+            String fullClassName = filePath.replaceAll("/", "\\.").replace(".class", ""); // eg. com.harvey.bean.UserServiceImpl.class
+            Class<?> cls = Class.forName(fullClassName);
+            if (cls.isInterface()) {
+                continue;
+            }
+            if (cls.getAnnotation(MyComponent.class) == null) {
+                continue;
+            }
+            Object obj = cls.getConstructor().newInstance();
+            if (cls.getInterfaces().length > 0) {
+                // key is Interface, value is  Object
+                beanMap.put(cls.getInterfaces()[0], obj);
+            } else {
+                // key is Class, value is Object
+                beanMap.put(cls, obj);
+            }
+        }
+    }
+
+    // inject Object to the Field with @MyAutoWired Annotation
+    public void loadAutoWired() throws IllegalAccessException {
+        for (Map.Entry<Class, Object> entry : beanMap.entrySet()) {
+            Class cls = entry.getKey();
+            Object obj = entry.getValue();
+            // set cls to obj's Class to get Field
+            if (cls.isInterface()) {
+                cls = obj.getClass();
+            }
+            Field[] fields = cls.getDeclaredFields();
+            for (Field field : fields) {
+                if (field.getAnnotation(MyAutoWired.class) == null) {
+                    continue;
+                }
+                field.setAccessible(true);
+                field.set(obj, beanMap.get(field.getType()));
+            }
+        }
+    }
+}
+```
+
+UserService.java
+
+```java
+public interface UserService {
+    void show();
+}
+```
+
+UserServiceImpl.java
+
+```java
+@MyComponent
+public class UserServiceImpl implements UserService {
+    @MyAutoWired
+    private UserDao userDao;
+
+    @Override
+    public void show() {
+        System.out.println(userDao);
+    }
+}
+```
+
+App.java
+
+```java
+MyApplicationContext applicationContext = new MyAnnotationApplicationContext("com.harvey");
+UserService userService = (UserService) applicationContext.getBean(UserService.class);
+userService.show();
+```
+
+# Three-Level Cache
+
+Spring 的 DefaultSingletonBeanRegistry Cls 中声明了 singletonObjects (ConcurrentHashMap), earlySingletonObjects (ConcurrentHashMap) 和 singletonFactories (HashMap) 用于实现 Three-Level Cache
+
+- singletonObjects 是 Lv1 Cache, 存放经历了完整 Life Cycle 的 Bean Obj
+  - singletonObjects 的 Key 为 Bean Name, Val 为 Bean Obj
+  - 通过 applicationContext.getBean() 获取 Bean 就是访问 singletonObjects 这个 Map
+- earlySingletonObjects 是 Lv2 Cache, 存放未经历完整 Life Cycle 的 Bean Obj
+- singletonFactories 是 Lv3 Cache, 存放各种 Bean 的 ObjectFactory, 可以用来创建 Normal Obj 或 Proxy Obj
+  - singletonFactories 是 HashMap, 而不是 ConcurrentHashMap, 因为 singletonFactories 通常只在 Bean 的创建过程中使用, 一旦 Bean 创建完成, 即使有多线程对创建好的 Bean 进行访问, 访问的是 singletonObjects, 而不是 singletonFactories, 不存在线程安全问题.
+
+```java
+public class DefaultSingletonBeanRegistry {
+    // Lv1 Cache
+    private final Map<String, Object> singletonObjects = new ConcurrentHashMap(256);
+    // Lv2 Cache
+    private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap(16);
+    // Lv3 Cache
+    private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap(16);
+}
+```
+
+Spring 通过 Three-Level Cache 解决了大部分的 Circular Reference, 需要使用 A 时, 会执行下面的步骤
+
+- 调用 getBean() 获取 A, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 未查询到 A Cache, 调用 getSingleton() 创建 A
+
+  - 调用 beforeSingletonCreation() 添加 A 到 singletonsCurrentlyInCreation 中, 表示 A 正在创建过程中
+  - 调用 singleFactory.getObject() 通过 Reflect 创建 A Obj, 此时 A Obj 的成员都是空的, 即 A 引用的 B 也是空的
+  - 生成 A 的 ObjectFactory 存入 singletonFactories, ObjectFactory 本质是一个 Lambda, 可用于动态创建 A 的 Normal Obj 或 Proxy Obj
+  - 通过 BeanPostProcessor 发现 A 依赖 B, 需要去创建 B
+
+- 调用 getBean() 获取 B, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 未查询到 B Cache, 调用 getSingleton() 创建 B
+
+  - 调用 beforeSingletonCreation() 添加 B 到 singletonsCurrentlyInCreation 中
+  - 调用 singleFactory.getObject() 通过 Reflect 创建 B Obj, 此时 B Obj 的成员都是空的, 即 B 引用的 A 也是空的
+  - 生成 B 的 ObjectFactory 存入 singletonFactories
+  - 通过 BeanPostProcessor 发现 B 依赖 A, 并发现 A 也在 singletonsCurrentlyInCreation 中, 说明 A 和 B 存在 Circular Reference, 需要去处理 Circular Reference
+
+- 调用 getBean() 获取 A, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 从 singletonFactories 中获取到 A 的 OpenFactory, 执行 Lambda 创建 A Obj 放入 earlySingletonObjects, 并移除 singletonFactories 中 A 的 OpenFactory
+
+  - 如果 C 引用了 A, 直接从 earlySingletonObjects 获取 A 即可, 不需要再通过 A 的 OpenFactory 获取 A Obj 了
+
+- 调用 populateBean() 填充 B 依赖的 A, 此时 B 创建完成, 向 singleObjects 添加 B, 从 singletonsCurrentlyInCreation 和 singletonFactories 移除 B
+
+  - 如果再使用 B, 就可以直接从 singleObjects 中获取
+
+- 调用 populateBean() 填充 A 依赖的 B, 此时 A 创建完成, 向 singleObjects 添加 A, 从 singletonsCurrentlyInCreation 和 earlySingletonObjects 移除 A
+
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401152302912.png)
+
+# Circular Reference
+
+这里 A Bean 的初始化阶段需要调用 populateBean() 去填充 B Bean, 需要去创建 B Bean, 而 B Bean 的初始化阶段需要调用 populateBean() 去填充 A Bean 产生 Circular Reference
+
+```java
+@Component
+public class A {
     @Autowired
-    private UserService userService;
+    private B b;
 }
 ```
 
-通过 @Primary 解决 DI Conflict
-
 ```java
-// 创建 UserServiceImplA Obj
-@Primary
-@Service
-public class UserServiceImplA implements UserService {}
-```
-
-通过 @Qualifier 解决 DI Conflict
-
-```java
-@RestController
-public class UserController {
-    // 创建 UserServiceImplA Obj
-    @Qualifier("userServiceImplA")
+@Component
+public class B {
     @Autowired
-    private UserService userService;
+    private A a;
 }
 ```
 
-# Aliyun OSS Starter
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401151818697.png)
 
-> aliyun-oss-spring-boot-autoconfigure
+# Circular Reference (Constructor)
 
-project structor
-
-```
-aliyun-oss-spring-boot-autoconfigure
-├── pom.xml
-└── src
-    └── main
-        ├── java
-        │   └── com
-        │       └── aliyun
-        │           └── oss
-        │               ├── AliOSSAutoConfiguration.java
-        │               ├── AliOSSProperties.java
-        │               └── AliOSSUtils.java
-        └── resources
-            └── META-INF
-                └── spring
-                    └── org.springframework.boot.autoconfigure.AutoConfiguration.imports
-```
-
-pom.xml
-
-```xml
-<!-- Spring Boot -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter</artifactId>
-</dependency>
-
-<!-- Spring Boot Web -->
-<dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter</artifactId>
-</dependency>
-
-<!-- Aliyun OSS SDK -->
-<dependency>
-    <groupId>com.aliyun.oss</groupId>
-    <artifactId>aliyun-sdk-oss</artifactId>
-    <version>3.16.1</version>
-</dependency>
-
-<!-- Java supplement -->
-<dependency>
-    <groupId>javax.xml.bind</groupId>
-    <artifactId>jaxb-api</artifactId>
-    <version>2.4.0-b180830.0359</version>
-</dependency>
-<dependency>
-    <groupId>javax.activation</groupId>
-    <artifactId>activation</artifactId>
-    <version>1.1.1</version>
-</dependency>
-<dependency>
-    <groupId>org.glassfish.jaxb</groupId>
-    <artifactId>jaxb-runtime</artifactId>
-    <version>4.0.2</version>
-</dependency>
-
-<!-- Lombok -->
-<dependency>
-    <groupId>org.projectlombok</groupId>
-    <artifactId>lombok</artifactId>
-</dependency>
-```
-
-AliOSSProperties.java
+Three-Level Cache 无法解决 Constructor 引起的 Circular Reference, 这里 A 和 B 在 Constructor 中相互引用, 会产生 Circular Reference
 
 ```java
-@Data
-@ConfigurationProperties(prefix = "aliyun.oss")
-public class AliOSSProperties {
-    private String endpoint;
-    private String accessKeyId;
-    private String accessKeySecret;
-    private String bucketName;
-}
-```
+@Component
+public class A {
+    private B b;
 
-AliOSSUtils.java
-
-```java
-public class AliOSSUtils {
-    private AliOSSProperties aliOSSProperties;
-
-    public void setAliOSSProperties(AliOSSProperties aliOSSProperties) {
-        this.aliOSSProperties = aliOSSProperties;
-    }
-
-    // 工具类的方法
-    public String upload(MultipartFile file) throws IOException {
-        // ...
+    public A(B b) {
+        this.b = b;
     }
 }
 ```
 
-AliOSSAutoConfiguration.java
-
 ```java
-@Configuration
-// 声明 AliOSSProperties Bean, 下面在参数列表中可以调用 AliOSSProperties Bean
-@EnableConfigurationProperties(AliOSSProperties.class)
-public class AliOSSAutoConfiguration {
-    // 配置 AliOSSUtils Bean
-    @Bean
-    public AliOSSUtils aliOSSUtils(AliOSSProperties aliOSSProperties) {
-        // 封装 AliOSSUtils obj
-        AliOSSUtils aliOSSUtils = new AliOSSUtils();
-        // AliOSSProperties Bean 仅仅作用于 AliOSSAutoConfiguration, 所以需要通过 setter() 给 AliOSSUtils 提供 AliOSSProperties
-        aliOSSUtils.setAliOSSProperties(aliOSSProperties);
-        // 返回 AliOSSUtils obj
-        return aliOSSUtils;
+@Component
+public class B {
+    private A a;
+
+    public B(A a) {
+        this.a = a;
     }
 }
 ```
 
-META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports, 导出 AliOSSAutoConfiguration
-
-```
-com.aliyun.oss.AliOSSAutoConfiguration
-```
-
-> aliyun-oss-spring-boot-starter
-
-project structure
-
-```
-aliyun-oss-spring-boot-starter
-└── pom.xml
-```
-
-pom.xml, 导入 aliyun-oss-spring-boot-autoconfigure
-
-```xml
-<dependencies>
-    <!-- spring-boot-starter -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter</artifactId>
-    </dependency>
-
-    <!-- aliyun-oss-spring-boot-autoconfigure -->
-    <dependency>
-        <groupId>com.aliyun.oss</groupId>
-        <artifactId>aliyun-oss-spring-boot-autoconfigure</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
-    </dependency>
-</dependencies>
-```
-
-> spring-boot-test
-
-pom.xml, 导入 spring-boot-starter, 相当于导入了 autoconfigure 的 imports, Spring 就可以扫描到 imports 中的 AliOSSAutoConfiguration, 容器就会管理 AliOSSUtils Bean
-
-```xml
-<dependency>
-    <groupId>com.aliyun.oss</groupId>
-    <artifactId>aliyun-oss-spring-boot-starter</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-</dependency>
-```
-
-application.properties, 配置参数
-
-```properties
-aliyun.oss.endpoint=https://oss-cn-shanghai.aliyuncs.com
-aliyun.oss.accessKeyId=LTAI5tJEbyyMC2QJ4TgAFjFL
-aliyun.oss.accessKeySecret=d0t7VhBADa0OMb6QQHLPO2v7bcrQji
-aliyun.oss.bucketName=demo-sun
-```
-
-UploadController.java
+通过 @Lazy 延迟加载 A 或 B, 可以解决这个 Circular Reference
 
 ```java
-@RestController
-public class UploadController {
-    @Autowired
-    AliOSSUtils aliOSSUtils;
+@Component
+public class A {
+    private B b;
 
-    @PostMapping("/upload")
-    public String upload(MultipartFile file) throws Exception {
-        return aliOSSUtils.upload(file);
+    public A(@Lazy B b) {
+        this.b = b;
     }
 }
 ```
-
-
-

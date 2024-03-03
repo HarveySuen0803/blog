@@ -53,7 +53,7 @@ SpringBoot 通过 DelegatingFilterProxyRegistrationBean 注册 springSecurityFil
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031744402.png)
 
-SecurityContextHolder 存储当前用户的安全上下文, 通常是一个 LocalThread, 包含了 SecurityContext
+SecurityContextHolder 存储当前用户的安全上下文, 通常是一个 ThreadLocal, 包含了 SecurityContext
 
 SecurityContext 存储了当前请求所属用户的相关信息 (eg: Authentication Obj)
 
@@ -132,7 +132,28 @@ SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Except
 
 User 认证后, 会将 User 的 Username, Password, Authority 分别封装到 Authentication 的 Principal, Credentials, Authorities 中, 再将 Authentication 存储到 SecurityContext 中
 
+
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401041101964.png)
+
+SpringSecurity 通过SecurityContextHolder 将 Authentication Obj 存储在一个 ﻿ThreadLocal Obj 中，这样在一个线程内的任何地方, 都可以通过﻿ SecurityContextHolder 获取到当前用户的信息.
+
+```java
+public class SecurityContextHolder {
+    public static final String MODE_THREADLOCAL = "MODE_THREADLOCAL";
+    private static String strategyName = System.getProperty("spring.security.strategy");
+    public static final SecurityContextImpl emptyContext = new SecurityContextImpl();
+ 
+    private static ThreadLocal<SecurityContext> contextHolder;
+
+    public static void setContext(SecurityContext context) {
+        contextHolder.set(context);
+    }
+ 
+    public static SecurityContext getContext() {
+        return contextHolder.get();
+   }
+}
+```
 
 直接封装一个 Authentication 对象存储到 SecurityContext, 再将 SecurityContext 存储到 SecurityContextHolder 中, 就可以完成对一个 User 的认证
 

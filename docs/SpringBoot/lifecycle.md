@@ -1,26 +1,32 @@
 # Lifecycle
 
-Lifecycle
+Starting: 通过 BootstrapContext 启动 Application, 发布 ﻿ApplicationStartingEvent
 
-1. starting
-2. environmentPrepared
-3. contextPrepared
-4. contextLoaded
-5. started
-6. ready
-7. running
+Environment Prepared: 准备 ﻿Environment Obj, 会发布 ﻿ApplicationEnvironmentPreparedEvent
 
-listener/MySpringApplicationRunListener.java, 配置 lifecycle
+Context Prepared: 准备 SpringApplication Obj, 加载 Source, 创建 ApplicationContext Obj, 发布 ApplicationContextInitializedEvent
+
+Context Loaded: 刷新 ApplicationContext, 初始化 Bean 的依赖关系, 发布 ApplicationPreparedEvent
+
+Started: 在启动 CommandLineRunner 和 ApplicationRunner 之前, 此时 ApplicationContext 已经被刷新并且所有的 ﻿Spring Bean 都已经被创建, 发布 ApplicationStartedEvent
+
+Ready: 在启动 CommandLineRunner 和 ApplicationRunner 之后, 已经完全启动并准备好接受 HTTP 请求, 发布 ApplicationReadyEvent
+
+Shutdown: 关闭 Application, 完成一些清理工作或者关闭应用所用的资源, 发布 ﻿ContextClosedEvent
+
+Failed: 启动过程中出现错误或异常, 就会发布 ApplicationFailedEvent 表示启动失败
+
+# SpringApplicationRunListener
+
+通过 SpringApplicationRunListener 监听 Spring Lifecycle
 
 ```java
 public class MySpringApplicationRunListener implements SpringApplicationRunListener {
-    // app 启动过程中调用, 通过 BootstrapContext 启动 app
     @Override
     public void starting(ConfigurableBootstrapContext bootstrapContext) {
         System.out.println("starting()");
     }
 
-    // env 准备好后调用
     @Override
     public void environmentPrepared(ConfigurableBootstrapContext bootstrapContext, ConfigurableEnvironment environment) {
         System.out.println("environmentPrepared()");
@@ -32,25 +38,25 @@ public class MySpringApplicationRunListener implements SpringApplicationRunListe
         System.out.println("contextPrepared()");
     }
 
-    // IOC Container 加载后调用, 此前, 导入了 Configuration
+    // IOC Container 加载后调用, 此前导入了 Configuration
     @Override
     public void contextLoaded(ConfigurableApplicationContext context) {
         System.out.println("contextLoaded()");
     }
 
-    // app 启动后调用, 此前, 刷新了 IOC Container, 创建了 Bean
+    // App 启动后调用, 此前刷新了 IOC Container, 创建了 Bean
     @Override
     public void started(ConfigurableApplicationContext context, Duration timeTaken) {
         System.out.println("started()");
     }
 
-    // app 准备好后调用, 此前, 调用了 runner 运行 app, 可以接受 req
+    // App 准备好后调用, 此前调用了 CommandLineRunner 运行 App, 可以接受 Http Request 了
     @Override
     public void ready(ConfigurableApplicationContext context, Duration timeTaken) {
         System.out.println("ready()");
     }
 
-    // app 启动失败后调用, 作用于 environmentPrepared, contextPrepared, contextLoaded, started, ready, running
+    // App 启动失败后调用, 作用于 Environment Prepared, Context Prepared, Context Loaded, Started, Ready, Running
     @Override
     public void failed(ConfigurableApplicationContext context, Throwable exception) {
         System.out.println("failed()");
@@ -58,125 +64,19 @@ public class MySpringApplicationRunListener implements SpringApplicationRunListe
 }
 ```
 
-META-INF/spring.factories, 注册 lifecycle
-
-- Listener 会读取 classpath:/META-INF/spring.factories 配置 SpringBoot
+注册 Spring Lifecycle, Listener 会读取 classpath:/META-INF/spring.factories 配置 SpringBoot
 
 ```properties
 org.springframework.boot.SpringApplicationRunListener=com.harvey.listener.MyApplicationListener
 ```
 
-# Listener
+# Custom Listener
 
-- BootstrapRegistryInitializer: 监听 starting stage
-- ApplicationContextInitializer: 监听 contextPrepared stage
-- ApplicationListener: 监听 event
-- SpringApplicationRunListener: 监听 lifecycle
-- ApplicationRunner: 监听 ready stage
-- CommandLineRunner: 监听 ready stage
-
-# Event
-
-Event + Lifecycle
-
-1. ApplicationStartingEvent
-2. starting
-3. ApplicationEnvironmentPreparedEvent
-4. environmentPrepared
-5. ApplicationContextInitializedEvent
-6. contextPrepared
-7. ApplicationPreparedEvent
-8. contextLoaded
-9. ApplicationStartedEvent
-10. started
-11. AvailabilityChangeEvent: 配置 LivenessState.CORRECT 表示 app started
-12. ApplicationReadyEvent
-13. ready
-14. AvailabilityChangeEvent: 配置 ReadinessState.ACCEPTING_TRAFFIC 表示 app ready
-16. running
-
-listener/MyApplicationListener.java, 配置 Event
+通过 Custom Listener 监听 Spring LifeCycle 中发布的 Event, 从而实现监听 Spring Lifecycle
 
 ```java
-public class MyApplicationListener implements ApplicationListener<ApplicationEvent> {
-    @Override
-    public void onApplicationEvent(ApplicationEvent event) {
-        System.out.println(event);
-    }
-}
-```
-
-# publish Event
-
-event/EventPublisher.java, 配置 Event Publisher
-
-```java
-@Service
-public class EventPublisher implements ApplicationEventPublisherAware {
-    ApplicationEventPublisher applicationEventPublisher;
-
-    public void publishEvent(ApplicationEvent event) {
-        applicationEventPublisher.publishEvent(event);
-    }
-
-    // IOC 自动 DI applicationEventPublisher
-    @Override
-    public void setApplicationEventPublisher(@NotNull ApplicationEventPublisher applicationEventPublisher) {
-        this.applicationEventPublisher = applicationEventPublisher;
-    }
-}
-```
-
-event/SigninSuccessEvent.java, 配置 Event
-
-```java
-public class SigninSuccessEvent extends ApplicationEvent {
-    public SigninSuccessEvent(User source) {
-        super(source);
-    }
-}
-```
-
-UserController.java, 发布 Event
-
-```java
-@GetMapping("/signin")
-public void signin() {
-    SigninSuccessEvent event = new SigninSuccessEvent(new User(1, "sun", 18, "F"));
-    eventPublisher.publishEvent(event);
-}
-```
-
-UserService.java, 监听 Event, 根据 Event 调用 Method
-
-```java
-@Service
-public class UserService implements ApplicationListener<SigninSuccessEvent> {
-    @Override
-    public void onApplicationEvent(SigninSuccessEvent event) {
-        show((User) event.getSource());
-    }
-
-    public void show(User user) {
-        System.out.println("hello world");
-    }
-}
-```
-
-# @EventListener
-
-通过 @EventListener 代替 ApplicationListener 监听 Event
-
-```java
-@Service
-public class UserService {
-    @EventListener
-    public void onEvent(SigninSuccessEvent event) {
-        show((User) event.getSource());
-    }
-
-    public void show(User user) {
-        System.out.println("hello world");
-    }
+@EventListener
+public void onApplicationEvent(ApplicationEvent event) {
+    System.out.println(event);
 }
 ```

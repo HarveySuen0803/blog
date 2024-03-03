@@ -27,6 +27,10 @@
 - String, StringBuffer, StringBuilder
 - final
 - JDK's Dynamic Proxy, CGLib's Dynamic Proxy
+- Reflect
+- JDK8
+  - StampedLock + LockSupport
+  - Stream API
 
 # Redis
 
@@ -49,12 +53,17 @@
 
 # MySQL
 
+- Transaction ACID
 - Slow Query
 - SQL Optimization
 - Explain
 - Index
 - Clustered Index
+- Unified Index
+- Covering Index
+- Index Invalidation
 - Replication
+- Storage Engine
 - Canal
 - Split DB
 - Split DB and Table
@@ -67,6 +76,10 @@
 - AOP
 - MVC Process
 - Auto Configuration
+- Design Pattern
+- Spring or SpringMVC or SpringBoot
+- Multi Thread (sychronized, Lock, ThreadLocal (SpringSecurity, Transaction))
+- BeanFactory or ApplicationContext
 
 # MyBatis
 

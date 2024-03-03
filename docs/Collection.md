@@ -28,9 +28,7 @@
 | TreeMap       | 8 (0.75)  | 2 * x + 1 | ✗        | ○                 | ✗    |
 | Properties    | 16 (0.75) | 2         | \        | ✗                 | ✗    |
 
-# Interation
-
-## iterator()
+# Intertation (iterator)
 
 Collection 实现了 Iterable, 可以使用 iterator() 完成遍历
 
@@ -62,7 +60,7 @@ while (iterator.hasNext()) {
 }
 ```
 
-## for()
+# Intertation (for)
 
 ```java
 Collection col = new ArrayList();
@@ -86,10 +84,6 @@ for (int num : nums) {
 
 # Collection
 
-## Collection
-
-Collection 单列集合
-
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202206170912678.png)
 
 ```java
@@ -102,103 +96,7 @@ arrayList.add("cheng");
 System.out.println(arrayList); // [sun, xue, cheng]
 ```
 
-### add()
-
-```java
-Collection col = new ArrayList();
-
-col.add("jack"); 
-col.add(10);
-col.add(true);
-col.add(new Dog());
-
-// 返回一个 Boolean, 表示是否添加成功
-System.out.println(col.add(1)); // true
-```
-
-### remove()
-
-```java
-// 删除 索引 0 的元素
-col.remove(0); 
-
-// 删除"jack"对象
-col.remove("jack"); 
-```
-
-### contains()
-
-```java
-// 判断 "jack" 是否存在
-boolean b = col.contains("jack");
-```
-
-### isEmpty()
-
-```java
-// 判断 col 是否为空
-boolean b = col.isEmpty();
-```
-
-### clear()
-
-```java
-// 清空 col
-col.clear();
-```
-
-### addAll()
-
-```java
-Collection col1 = new ArrayList();
-Collection col2 = new ArrayList();
-Collection col3 = new ArrayList();
-
-col1.add("aaa");
-col2.add("bbb");
-col2.add("ccc");
-col3.add("eee");
-col3.add("fff");
-
-// 在 col1 末尾, 添加 col3 的所有元素
-col1.addAll(col3); 
-```
-
-### cotainsAll()
-
-```java
-Collection col1 = new ArrayList();
-Collection col2 = new ArrayList();
-
-col1.add("aaa");
-col1.add("bbb");
-col1.add("ccc");
-col2.add("bbb");
-col2.add("ccc");
-
-// 判断 col1 是否有 col2 的所有元素
-Boolean b = col1.containsAll(col2);
-```
-
-### removeAll() 
-
-```java
-Collection col1 = new ArrayList();
-Collection col2 = new ArrayList();
-
-col1.add("aaa");
-col1.add("bbb");
-col1.add("ccc");
-col2.add("bbb");
-col2.add("ccc");
-
-// 删除 col1 中, 所有和 col2 相同的数据
-col1.removeAll(col2);
-```
-
-## List
-
-### List
+# List
 
 List 的实现类的集合, 存储的元素有序, 支持索引, 可以存储重复元素, 可以存储 null
 
@@ -223,92 +121,7 @@ ArrayList, Vector, LinkedList
 - 增删结点多, 使用 LinkedList
 - 多线程, 使用 Vector
 
-#### get()
-
-List 的实现类可以通过 get() 访问元素
-
-```java
-List list = new ArrayList();
-
-list.add("sun");
-list.add("xue");
-list.add("cheng");
-
-for (int i = 0; i < list.size(); i++) {
-    System.out.println(list.get(i));
-}
-```
-
-#### add()
-
-```java
-List list = new ArrayList();
-
-list.add("aa");
-list.add("bb");
-list.add("cc");
-
-// 在 索引 1 处, 插入 "AA"
-list.add(1, "AA"); 
-
-System.out.println(list); // [aa, AA, bb, cc]
-```
-
-#### addAll()
-
-```java
-List list1 = new ArrayList();
-List list2 = new ArrayList();
-
-list1.add("aa");
-list1.add("bb");
-list1.add("cc");
-list2.add("AA");
-list2.add("BB");
-
-// 在 list1 的索引 1 处, 插入 list2 的所有元素
-list1.addAll(1, list2); 
-
-System.out.println(list1); // [aa, AA, BB, bb, cc]
-```
-
-#### indexOf()
-
-```java
-List list = new ArrayList();
-
-list.add("sun");
-list.add("xue");
-list.add("cheng");
-list.add("sun");
-list.add("xue");
-
-// 返回 "sun" 首次出现的索引
-int firstIndex = list.indexOf("sun"); // 0
-```
-
-#### lastIndexOf()
-
-```java
-// 返回 "sun" 最后出现的索引
-int lastIndex = list.lastIndexOf("sun"); // 3
-```
-
-#### set()
-
-```java
-// 将 索引 1 的元素替换为 "AA"
-list.set(1, "AA");
-```
-
-#### subList()
-
-```java
-// 返回 [2, 3) 的元素
-List returnList = list.subList(2, 3);
-```
-
-### ArrayList
+# ArrayList
 
 ArrayList 线程不安全, 数据存储在 Object[] elementData 中
 
@@ -322,7 +135,7 @@ elementData 扩容机制
     - 初始容量为指定参数大小
     - 后续扩容, 每次扩容 1.5 倍
 
-### Vector
+# Vector
 
 Vector 线程安全, 数据存储在 Object[] elementData 中
 
@@ -336,11 +149,11 @@ elementData 扩容机制
     - 初始容量为指定参数大小
     - 后续扩容, 每次扩容 2 倍
 
-### LinkedList
+# LinkedList
 
 LinkedList 线程不安全, 数据存储在双向链表中
 
-## Set
+# Set
 
 Set 的实现类, 存储的元素无序, 不支持索引, 不可以存储重复元素, 可以存储一个 null
 
@@ -393,15 +206,15 @@ class Person {
 }
 ```
 
-### HashSet
+# HashSet
 
 HashSet 数据存储在数组中, 数组存储单向链表, 采用 HashMap 的存储机制, 扩容机制
 
-### LinkedHashSet
+# LinkedHashSet
 
 HashSet 数据存储在数组中, 数组存储双向链表, 采用 HashMap 的存储机制
 
-### TreeSet
+# TreeSet
 
 TreeSet 存储的数据可以通过 Comparator 排序
 
@@ -441,166 +254,7 @@ final int compare(Object k1, Object k2) {
 }
 ```
 
-## Collections
-
-Collections 工具类, 可以操作 Set, List, Map
-
-### reverse()
-
-```java
-// 反转元素顺序, List 有序, 可以反转, Set 无序, 没有意义
-Collections.reverse(arrayList); // [cc, bb, aa]
-```
-
-### shuffle()
-
-```java
-// 随机排序
-Collections.shuffle(arrayList);
-```
-
-### sort()
-
-自然排序: 根据字符大小, 数值大小排序
-
-```java
-Collections.sort(arrayList); // [aa, bb, cc, dd, ee, ff]
-```
-
-定制排序
-
-```java
-Collections.sort(arrayList, new Comparator<Object>() {
-    @Override
-    public int compare(Object o1, Object o2) {
-        return ((String)o1).length() - ((String)o2).length();
-    }
-});
-```
-
-手动定制排序
-
-```java
-@SuppressWarnings("all")
-public class Main {
-    public static void main(String[] args) throws Exception {
-        List<Person> list = new ArrayList();
-        list.add(new Person("sun", 18));
-        list.add(new Person("xue", 16));
-        list.add(new Person("cheng", 20));
-        sort(list);
-    }
-
-    public static void sort(List list) {
-        for (int i = 0; i < list.size() - 1; i++) {
-            for (int j = 0; j < list.size() - 1 - i; j++) {
-                Person p1 = (Person) list.get(j);
-                Person p2 = (Person) list.get(j + 1);
-                if (p1.age > p2.age) {
-                    list.set(j, p2);
-                    list.set(j + 1, p1);
-                }
-            }
-        }
-    }
-}
-
-class Person {
-    public String name;
-    public int age;
-
-    public Person(String name, int age) {
-        this.name = name;
-        this.age = age;
-    }
-
-    @Override
-    public String toString() {
-        return "Person{" +
-                "name='" + name + '\'' +
-                ", age=" + age +
-                '}';
-    }
-}
-```
-
-### swap()
-
-```java
-// 交换 索引 0 和 索引 1 的元素
-Collections.swap(arrayList, 0, 1);
-```
-
-### max()
-
-根据自然排序, 返回最大的元素
-
-```java
-// 
-Object maxObj1 = Collections.max(arrayList);
-```
-
-通过定制排序, 返回最小的元素
-
-```java
-Object maxObj2 = Collections.max(arrayList, new Comparator<Object>() {
-    @Override
-    public int compare(Object o1, Object o2) {
-        return ((String)o1).length() - ((String)o2).length();
-    }
-});
-```
-
-### min()
-
-根据自然排序, 返回最小的元素
-
-```java
-Object minobj1 = Collections.min(arrayList);
-```
-
-通过定制排序, 返回最大的元素
-
-```java
-Object minobj2 = Collections.min(arrayList, new Comparator<Object>() {
-    @Override
-    public int compare(Object o1, Object o2) {
-        return ((String)o2.length()) - ((String)o1).length();
-    }
-});
-```
-
-### requency()
-
-```java
-// 返回 "aa" 出现的次数
-int count = Collections.frequency(arrayList, "aa");
-```
-
-### copy()
-
-```java
-ArrayList destList = new ArrayList();
-
-// 需要 destList.size() >= sourceList.size(), 直接进行 Collections.copy(), 会报 IndexOutOfBoundsException
-for (int i = 0; i < sourceList.size(); i++) {
-    destList.add("");
-}
-
-// 拷贝 sourceList 到 destList
-Collections.copy(destList, sourceList);
-```
-
-### replaceAll()
-
-```java
-// 替换所有的 "aa" 为 "AA"
-Collections.replaceAll(arrayList, "aa", "AA");
-```
-
 # Map
-
-## Map
 
 Map 双列集合: 存储 key-value
 
@@ -620,7 +274,7 @@ hashMap.put("no3", "cheng");
 System.out.println(hashMap); // {no1=sun, no2=xue, no3=cheng}
 ```
 
-### entrySet()
+# entrySet()
 
 一对 k-v 对应 HashMap.Node object, 存储在 Node<K, V>\[\] table 中
 
@@ -707,7 +361,7 @@ for (Object obj : entrySet) {
  */
 ```
 
-### keySet()
+# keySet()
 
 key 引用 不仅存储在 entrySet 中, 也存储在 keySet 中
 
@@ -730,7 +384,7 @@ for (Object key : keySet) {
 }
 ```
 
-### values()
+# values()
 
 value 引用 不仅存储在 entrySet 中, 也存储在 values 中
 
@@ -753,107 +407,82 @@ for (Object value : values) {
 }
 ```
 
-### put()
+# HashMap
+
+HashMap 采用 Array + LinkedList + RedBlackTree 的结构, 无法保证线程安全.
+
+HashMap 是懒惰加载, 在创建对象时并没有初始化数组, 在无参的构造函数中, 设置了默认的 Load Factor 为 0.75.
+
+HashMap Infinite Loop, [Explain](https://www.bilibili.com/video/BV1yT411H7YK?p=85&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+- JDK7 的 HashMap 采用头插法, 扩容后链表顺序会颠倒, 在并发场景下, 数组进行扩容数据迁移时, 有可能导致死循环.
+- JDK8 的 HashMap 采用尾插法, 扩容后链表顺序不\会颠倒, 避免了死循环.
+
+JDK8 的 Hash Algo 通过 hash ^ (hash >>> 16) 是在 hash 的基础上增加了高位对低位的影响, 这种混淆和干扰能够更均匀地分布 Hash, 降低碰撞的概率.
+
+HashMap 采用 RedBlackTree 不仅可以提高查询效率, 还可以防止 DDos. 
+
+- RedBlackTree 是一种自平衡的二叉搜索树, 与普通的平衡二叉树相比, 主要区别在于其引入了颜色标记和一些额外的规则, 以保持树的平衡性.
+- 颜色标记提供了额外信息, 规则简化了平衡维护, 通过颜色变化和旋转等操作可以相对简单地调整树的结构, 而无需进行复杂的平衡计算, 使得平衡调整可以在常数时间内完成, 而不会导致整个树的结构变化.
+
+当 LinkedList 的元素个数 > 8 && 数组的容量 > 64 时, 就会将 LinkedList 进化成 RedBlackTree. 当 LinkedList 的元素个数 < 6 是, 就会将 RedBlackTree 退化成 LinkedList.
+
+# HashTable
+
+HashTable 线程安全, 数据存储在数组中, 数组存储单向链表, key 和 value 都不可以存储 null.
+
+# ConcurrentHashMap
+
+JDK7 采用 Array + LinkedList, 通过 Segment + ReentrantLock 保证线程安全.
+
+- Segment 本质上就是一个独立的 ﻿HashTable, 也就是说 ﻿ConcurrentHashMap 是由多个 ﻿Segment 组成的.
+- ﻿Segment 可以独立锁定, 这允许多个线程可以同时访问 ﻿ConcurrentHashMap 的不同部分, 从而实现了比完全锁定整个 ﻿Map 更高级别的并发性.
+- Segment 包含一个 ReentrantLock, 当一个线程需要访问某个 Segment 中的元素时, 需要先获得这个 Segment 对应的 ReentrantLock, 实现了对数据的分段加锁, 这种策略是 ﻿ConcurrentHashMap 能提供比 ﻿HashTable 更好的并发性能的关键.
+
+JDK8 采用 Array + LinkedList + RedBlackTree, 通过 CAS + synchronized 保证线程安全, 放弃了 Segment 的臃肿设计, 通过 synchronized 锁定每个索引上的第一个结点, 如果当前索引有结点了, 就需要通过 CAS 去争抢锁添加结点, 如果当前索引没有结点, 就不受 synchronized 影响, 效率还是很高的.
+
+JDK8 引入了多线程并发扩容, 对原始数组进行分片, 每个线程负责一个分片的数据迁移, 从而提升了扩容的效率
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403022009974.png)
+
+ConcurrentHashMap 可以通过 size() 获取元素格式, 这要求在保证 Atomicity 的前提下, 去维护一个整形的递增, 这个效率是非常低的, ConcurrentHashMap 针对此做了特殊优化.
+
+ConcurrentHashMap 通过维护 CounterCell[] 来实现 size(), CounterCell 的 volatile long value 记录了 ConcurrentHashMap 的元素个数, 不同的线程操作不同的 ConcurrentCell, 不存在并发问题. 最终调用 size() 时, 就遍历 CounterCell[] 进行求和, 类似于 LongAddr.
 
 ```java
-Map map = new HashMap();
+public class ConcurrentHashMap {
+    public int size() {
+        long n = sumCount();
+        return ((n < 0L) ? 0 :
+                (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
+                (int)n);
+    }
 
-map.put("no1", "sun");
-map.put(null, "cheng");
-map.put("no2", null);
+    final long sumCount() {
+        CounterCell[] cs = counterCells;
+        long sum = baseCount;
+        if (cs != null) {
+            for (CounterCell c : cs)
+                if (c != null)
+                    sum += c.value;
+        }
+        return sum;
+    }
 
-System.out.println(map); // {null=cheng, no2=null, no1=sun}
-
-// 添加的相同 key 的元素, 覆盖上一个
-map.put("no1", "xue");
+    @jdk.internal.vm.annotation.Contended static final class CounterCell {
+        volatile long value;
+        CounterCell(long x) { value = x; }
+    }
+}
 ```
 
-### get()
-
-```java
-// 根据 key, 返回 value
-Object val = map.get("no3");
-```
-
-### replace()
-
-```java
-// 根据 key, 替换 value
-map.replace("no1", "sun");
-```
-
-### size()
-
-```java
-// 返回元素个数
-int size = map.size();
-```
-
-### isEmpty()
-
-```java
-// 判断集合是否为空
-boolean isEmpty = map.isEmpty();
-```
-
-### containsKey()
-
-```java
-// 判断 key 是否存在
-boolean containsKey = map.containsKey("no4"); // true
-```
-
-### remove()
-
-```java
-// 根据 key, 删除元素
-map.remove("no2");
-```
-
-### clear()
-
-```java
-// 清除所有的元素
-map.clear();
-```
-
-## HashMap
-
-HashMap 线程不安全, 数据存储在数组中, 数组存储单向链表, key 和 value 都可以存储 null, key 只能存储一个 null
-
-- 添加元素, 获取元素的 hashCode 值, 转成 hash 值, 转成索引值
-- 根据索引值, 找到指定位置, 判断该索引处是否存储了数据
-    - 如果没有, 直接存储
-    - 如果有, 通过 equals() 判断是否相同
-        - 如果相同, 放弃存储
-        - 如果不同, 在索引处, 建立链表, 通过链表存储数据
-
-数组的扩容机制
-
-- 初始容量为 0
-- 第一次添加元素时, 扩容为 16
-- 达到 临界值 (容量 * 0.75) 时, 后续扩容, 每次扩容 2 倍
-- 一条链表上的元素个数 >= 8 时, 每添加一个元素, 就扩容 2 倍
-
-一条链表上的元素个数 >= 8 && 数组的容量 >= 64 就会将链表转成红黑树
-
-## HashTable
-
-HashTable 线程安全, 数据存储在数组中, 数组存储单向链表, key 和 value 都不可以存储 null
-
-数组的扩容机制
-
-- 初始容量为 0
-- 第一次添加元素时, 扩容为 11
-- 达到 临界值 (容量 * 0.75) 时, 后续扩容, 每次扩容 2 倍 + 1
-
-## Properties
+# Properties
 
 Properties 继承 Hashtable, 实现 Map, key 和 value 都不可以存储 null
 
 Properties 可以读取 xxx.properties 配置文件, 加载数据到 Properties 对象中
 
-## TreeMap
+# TreeMap
 
 TreeMap 和 TreeSet 类似, 存储的数据可以通过 Comparator 排序
 

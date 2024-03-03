@@ -13,18 +13,23 @@ show variables like '%storage_engine%';
 设置默认 Storage Engine.
 
 ```sql
-set DEFAULT_STORAGE_ENGINE=MyISAM;
+set DEFAULT_STORAGE_ENGINE=innodb;
 ```
 
 设置默认 Storage Engine (file: my.cnf).
 
 ```
-default-storage_engine=MyISAM
+default-storage_engine=innodb
 ```
 
 创建表时, 指定 Storage Engine.
 
 ```sql
+create table stu (
+	`id` int,
+	`name` varchar(32)
+) engine innodb;
+
 create table stu (
 	`id` int,
 	`name` varchar(32)
@@ -38,13 +43,11 @@ create table stu (
 
 # InnoDB
 
-InnoDB (def) 支持 Transaction, 需要保证 ACID 就首选 InnoDB.
+InnoDB (def) 支持 Transaction, 需要保证 ACID 就首选 InnoDB. 
 
 InnoDB 支持 Row Lock, 适合 Multi Thread.
 
 InnoDB 的 Data 和 Index 都存储在 ibd File 中, 所有首次加载时, 耗时久一些, 占用资源也多一些.
-
-InnoDB 相比 MyISAM 处理 Write 的效率差一些, 还需要占用更多的 Disk 来存储 Data 和 Index.
 
 MySQL 8.0 前, ibd File 存储 Table Data 和 Table Index, frm File 存储 Table Frame.
 
@@ -72,6 +75,8 @@ ibd2sdi --dump-file=emp.ibd emp.txt
 MyISAM 不支持 Transaction, 不支持 Foreign Key, 访问速度快, 但是无法保证 ACID, 即崩溃后无法恢复数据.
 
 MyISAM 不支持 Row Lock, 支持 Table Lock, 不适合 Multi Thread.
+
+MyISAM 一大堆不支持的东西, 所以处理起来非常简单, 在并发量小的情况下, 处理速度要比 InnoDB 快, 但是由于不支持 Row Lock, 所以在高并发场景下, 处理速度不如 InnoDB.
 
 MySQL 8.0 前, MYD 存储 Table Data, MYI 存储 Table Index, frm 存储 Table Structure
 

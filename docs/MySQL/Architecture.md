@@ -8,9 +8,11 @@ Connection Layer 负责管理 Connection, Validation, Authorization. Client 和 
 
 Connection Layer 通过 Connection Pool 实现 Connection, 避免频繁的 Creation 和 Destroy
 
-Service Layer 包含 MySQL 的大多数核心功能 (eg: Query Caching, SQL Parsing, SQL Analysis, SQL Optimizing, Built-in Function), 所有的 Cross Storage Engine 的 Function 都是在这实现的 (eg: Stored Procedure, Trigger, View)
+Service Layer 包含 MySQL 的大多数核心功能 (eg: Query Caching, SQL Parsing, SQL Analysis, SQL Optimizing, Built-in Function), 所有的 Cross Storage Engine 的 Function 都是在这实现的 (eg: Stored Procedure, Trigger, View).
 
-Storage Engine Layer 负责 Data Storage 和 Data Extraction, 支持多种 Storage Engine (eg: InnoDB,MyISAM, Memory)
+Storage Engine Layer 负责 Data Storage 和 Data Extraction, 支持多种 Storage Engine (eg: InnoDB,MyISAM, Memory).
+
+MySQL 执行 SQL, 需要 Client 和 Connector 建立连接, 接着依次执行 Query Caching, SQL Parsing, SQL Preprocessing, SQL Optimization, SQL Execution.
 
 # Query Caching
 
@@ -50,24 +52,32 @@ select sql_cache * from emp;
 select sql_no_cache * from emp;
 ```
 
-# Parser
+# SQL Parsing
 
-Lexical analysis, syntax analysis
+SQL Parsing 是对 SQL 进行 Preprocessing 和 Parsing, 提取 Keyword, 先进行 Lexical Analysis, 再进行 Syntax Analysis, 生成一个 AST, 接着优化 AST, 生成 Physical Planning.
 
-Parser 可以对 SQL 进行 Preprocessing 和 Parsing, 提取 Keyword, 先进行 Lexical Analysis, 再进行 Syntax Analysis, 生成一个 AST, 接着优化 AST, 生成 Physical Planning
+Lexical Analysis 是将 SQL 分成一系列的词元和标记, 识别出每个字符串代表什么.
 
-Lexical Analysis 是将 SQL 分成一系列的词元和标记, 识别出每个字符串代表什么
+Syntax Analysis 是将对输入的 SQL 进行语法校验.
 
-Syntax Analysis 是将对输入的 SQL 进行语法校验
+# SQL Preprocessing
 
-# Optimizer
+进行一些基本的检查 (eg: 检查表和字段是否存在, 用户是否有权限访问目标数据), 此阶段可能会对 AST 进行树的改写以进行一些优化
 
-Optimizer 接收到 Physical Planning 进行 LQO 和 PQO, 找到最好的执行计划后, 交给 Executor 执行
+# SQL Optimization
 
-LQO (Logical Query Optimization) 更改查询方式, 以提高效率, 就是这里更改了 SQL 的执行顺序
+接收到 Physical Planning 进行 LQO 和 PQO, 找到最好的执行计划后.
 
-PQO (Physical Query Optimization) 通过 Index 和 Table Join 进行优化
+LQO (Logical Query Optimization) 更改查询方式, 以提高效率, 就是这里更改了 SQL 的执行顺序.
 
-# Executor
+PQO (Physical Query Optimization) 通过 Index 和 Table Join 进行优化.
 
-Executor 接收到 Physical Planning 后, 进行权限检查, 执行查询, 处理结果集, 如果遇到错误, 需要进行错误处理
+# SQL Execution
+
+接收到 Physical Planning 后, 进行权限检查, 执行查询, 处理结果集, 如果遇到错误, 需要进行错误处理.
+
+# AST
+
+AST (Abstract Syntax Tree) 是对 SQL 语句的结构化解析表示, AST 将 SQL 语句进行抽象化解析, 将其转换为一个树形结构, 这种结构能够反映出 SQL 语句中各元素 (eg: 关键字、表达式、函数、操作符) 之间的逻辑关系.
+
+MySQL 的源代码中有对 SQL 语句进行解析并生成 AST 的部分, 但对 AST 的直接操作和查看并不像某些语言 (eg: JavaScript) 的 AST 工具那样普遍和容易. 目前可以使用 [sql-ast](https://github.com/aleclarson/sql-ast), 可以将来自 `mysqldump` 的输出解析为 AST.
