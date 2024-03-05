@@ -14,4 +14,4 @@ Idempotent 要求重复多次调用接口不会改变业务状态, 保证单次�
 
 通过 Token + Redis 实现 Idempotent
 
-- Client 访问就在 Redis 中生成一个 Unique Token, 下单时就去删除该 Token, 删除成功才可以创建订单, 实现 Idempotent, 这里的 Unique Token 就是一个 Distributed Lock
+- Client 访问订单详情时, 就在 Redis 中生成一个 Unique Token, 下单时就去删除该 Token, 删除成功才可以创建订单, 实现 Idempotent, 这里的 Unique Token 就是一个 Distributed Lock

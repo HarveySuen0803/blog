@@ -4,15 +4,22 @@
 
 添加了 synchronized 的 method 会添加一个 ACC_SYNCHRONIZED flag
 
-monitor 是 JVM 的 lock, 执行 thread 得先持有一个 monitor, 每个 object 都有一个 monitor, 和 object 一样, 共同创建, 共同销毁, 每一个 object 都可以做 monitor
+# Monitor
 
-ObjectMonitor 的 Field
+Monitor 是 JVM 的 Lock, 是实现 synchronized 线程同步的基础, 每个 Object 都会关联一个 Monitor Obj, 所有的 Thread 都是去争抢 Monitor Obj.
 
-- `_owner` 记录了 Thread Id
+Monitor 的 Field
+
+- `_owner` 记录持有当有当前 Mointor Obj 的 Thread Id
 - `_count` 标识了 Monitor object 是否被锁, 每次添加 Lock, 就 +1, 每次释放 Lock 就 -1
 - `_recursions` 记录 ReEntrant 的次数, 每次进入一层, 就 +1, 每次出来一层, 就 -1
-- `_EntryList` 存储了 Blocked Thread
-- `_WaitSet` 存储了 Waited Thread
+- `_EntryList` 存储了 Blocked Thread, 当一个线程尝试去获取一个已经被占有的 Monitor Obj 时, 就会进入 `_EntryList`
+- `_WaitSet` 存储了 Waited Thread, 当线程调用了 wait(), 当前线程就会释放锁, 并进入 `_WaitSet`
+
+每个 Mointor 都有 Entry Lock 和 WaitSet Lock
+
+- 当一个线程想要获取 Mointor 时, 就会去尝试获取 Entry Lock
+- 当一个线程进入 WaitSet 时, 就会尝试去获取 WaitSet Lock
 
 # synchronized
 

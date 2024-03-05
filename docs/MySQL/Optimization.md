@@ -34,7 +34,7 @@
 
 强制, Field 小写, 采用 `_` 分割.
 
-强制, Field 尽量使用缩写 (eg: 使用 `corp_id`, 不要使用 `corporation_id`).
+强制, Field 尽量使用缩写 (eg: 使用 `corp_id`, 不要使用 `corporation_id`), 可以节省存储资源, 提升查询性能.
 
 建议, Field 尽量添加 Not Null 约束, 不仅可以省去 Null List 的占用, 还不用再去判断是否非空, 避免索引失效.
 
@@ -44,7 +44,7 @@
 
 建议, 增加冗余字段, 减少连接.
 
-建议, 优先选择符合存储的需求最小数据类型 (eg: age 使用 `tinyint`), 减少必要的浪费. 如果 Field 太大, 也会导致一个 Page 可以存储的 Record 减少, 提高了 IO, 降低了 Index 性能.
+建议, 优先选择符合存储的需求最小数据类型 (eg: age 使用 `tinyint`), 减少不必要的浪费. 如果 Field 太大, 也会导致一个 Page 可以存储的 Record 减少, 提高了 IO, 降低了 Index 性能.
 
 建议, 如果数据不为负数 (eg: age), 可以使用 Unsigned, 这样就从 -127 ~ 128 提升到了 0 ~ 255, 太牛逼了.
 
@@ -78,7 +78,7 @@
 
 强制, 使用 `select` 时, 指定具体的 Field, 不要使用 `select *`.
 
-建议, 使用 `select` 时, 使用 `union all`, 不要使用 `union`, `union` 会多一次过滤, 效率低.
+建议, 使用 `select` 时, 使用 `union all`, 不要使用 `union`, `union` 会多一次去重操作, 效率低.
 
 建议, 使用 `insert` 时, 指定具体的 Field, 不要使用 `insert into tbl values (...)`.
 
@@ -94,9 +94,9 @@
 
 建议, 使用 DML 时, 使用 `where` 缩小范围, 使用 Index 提高查询性能.
 
-建议, 使用 TXN 时, 1 个 TXN 内不超过 5 个 SQL. TXN 过长, 会导致 Lock 的占用变长, Cache 无法清理, Connection 过多的问题.
+建议, 使用 TRX 时, 1 个 TRX 内不超过 5 个 SQL. TRX 过长, 会导致 Lock 的占用变长, Cache 无法清理, Connection 过多的问题.
 
-建议, 使用 TXN 时, 使用 Unique Key 减小 Gap Lock 的范围.
+建议, 使用 TRX 时, 使用 Unique Key 减小 Gap Lock 的范围.
 
 # Index
 
@@ -132,7 +132,7 @@ Unified Index 太多, 就会 Redundant Index, 需要进行权衡.
 
 CostBaseOptimizer 会根据各种条件决定是否采用 Index.
 
-这里会使用 `idx_key1_key2`, 不会使用 `idx_key1`. `idx_key1_key2` 中会使用 `key2` 在过滤一部分后, 再回表, 可以大大提高效率.
+这里会使用 `idx_key1_key2`, 不会使用 `idx_key1`. `idx_key1_key2` 中会使用 `key2` 再过滤一部分后, 再回表, 可以大大提高效率.
 
 ```sql
 explain select key1 from s where key1 = 1 and key2 = 1;

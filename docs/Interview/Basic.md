@@ -69,6 +69,10 @@
 - Canal
 - Split DB
 - Split DB and Table
+- Optimization
+  - Field 缩写, Field 设置为 Not Null 或 Default Value, 节省 Null List , 避免 Index Invalidation, 辅助 Optimizer 选择 Index
+  - inner join, not outer join
+  - no order by, group by, distinct
 
 # Spring
 
@@ -147,8 +151,8 @@
 - JVM Structure
 - PC Register
 - Object Strcuture
-- 对象怎么分配内存, `new Object()` 占用多少内存
-- 对象如何定位的
+- Object Memory Allocation
+- Object Reference
 
 # Service
 
@@ -171,3 +175,6 @@ RabbitMQ 重复消费消息导致的表单重复提交
 
 - 根据每个消息的 messageid 向 Redis 执行 SETNX 保证幂等
 
+# Bug Solution
+
+- RabbitMQ 消息重试, RPC 重试, 导致重复订单, Idempotent

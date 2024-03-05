@@ -91,7 +91,13 @@ appendfilename "appendonly.aof"
 appenddirname "appendonlydir"
 ```
 
-配置 AOF 的写入策略, 一般都采用 `everysec` 的策略, 每隔 1s 将 AOF Buffer 中的数据写入到 AOF 文件中, 最多丢失 1s 内的数据, 性能也适中
+Redis 将写入操作追加到 AOF Buffer 中, 再自动将数据写入到 OS 的 Page Cache 中, 接着执行 fsync() 将 Page Cache 中的数据立刻刷入 (flush) 到 Disk
+
+配置 AOF 的写入策略
+
+- `everysec` 的策略, 每隔 1s 将 Page Cache 中的数据刷盘到 Disk 中, 最多丢失 1s 内的数据, 性能也适中, 而且 OS 也不太容易崩溃, 所以一般建议使用这个
+- `always` 是每次写入操作都会立即刷盘到 Disk 中, 性能差, 安全性强
+- `no` 是每次写入操作, 只会将数据写入到 Page Cache 中, 后续 Redis 就不管了, 由 OS 决定何时进行刷盘, 性能强, 安全性差.
 
 ```shell
 # appendfsync always
@@ -139,7 +145,7 @@ auto-aof-rewrite-min-size 64mb
 BGREWRITEAOF
 ```
 
-主线程执行完命令, 将命令写入 AOF Buffer 中, 子线程每隔 1s 就从 AOF Buffer 中读取命令, 进行刷盘, 即 fsync. 主线程写入完后, 会去判断上一次 fsync 耗时, 如果超过 2s, 主线程就会进入堵塞, 等待 fsync 结束, 因为刷盘出了问题, 必须要保证数据的安全
+主线程执行完命令, 将命令写入 AOF Buffer 中, 每隔 1s 就从 AOF Buffer 中读取命令, 进行刷盘, 即 fsync. 主线程写入完后, 会去判断上一次 fsync 耗时, 如果超过 2s, 主线程就会进入堵塞, 等待 fsync 结束, 因为刷盘出了问题, 必须要保证数据的安全
 
 在 Log Rewriting 期间, 进行 AOF, 就有可能因为 AOF 导致主线程堵塞, 可以禁止在 Log Rewriting 期间进行 AOF
 

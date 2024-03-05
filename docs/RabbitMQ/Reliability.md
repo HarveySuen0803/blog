@@ -53,6 +53,8 @@ RabbitMQ 提供 Publisher Confirm 进行消息确认, 保证消息能被安全�
 - Publisher 发送消息给 Exchange, Exchange 路由给 Queue, Queue 持久化, 返回 ACK
 - Publisher 发送消息给 Exchange, 发送失败, 返回 NACK
 
+Publisher 接受到 ACK 后, 根据不同的 ACK 进行处理, 保证 Publisher -> Exchange 这一段的 Reliability
+
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401291226537.png)
 
 开启 Publisher Confirm, 通过阻塞的方式处理 ACK
@@ -132,6 +134,8 @@ RabbitMQ 提供 Consumer Confirm 进行消息确认, 保证消息被安全处理
 - ACK: 成功处理, MQ 会从 Queue 中删除该消息
 - NACK: 失败处理, MQ 会重新发送消息给该 Consumer
 - REJECT: 拒绝处理, MQ 会从 Queue 中删除该消息
+
+如果某个 Consumer Instance 宕机了, MQ 没有接受到 ACK, 则 MQ 会重新发送消息给其他的 Consumer, 保证 Queue -> Consumer 这一段的 Reliability
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401291346731.png)
 
