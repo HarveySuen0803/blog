@@ -53,13 +53,15 @@ RTT (Round Trip Time) 表示往返延迟, 是指一个信号被发送出去到�
 
 # TFO
 
-TFO (TCP Fast Open) 是对 TCP 的一种简化握手流程的拓展, 用于提高两端点间连接的打开速度.
+TFO (TCP Fast Open) 是对 TCP 的一种简化握手流程的拓展, 用于提高两端点间连接的打开速度
 
 - Client 发送 SYN 给 Server, 通过一个标识符表示要开启 Fast Open
 - Server 接受到 SYN 后, 不仅返回 SYN 和 ACK, 还会返回一个 Cookie 给 Client
 - Client 接受到 SYN 和 ACK 后, 返回 ACK 给 Server 完成三次握手后, 存储 Cookie 到本地, 后续请求都携带这个 Cookie, Server 只需要校验 Cookie 是否正确, 既可以直接进入连接状态, 不需要三次握手了
 
-TFO 在后续的每次请求中都会一个 RTT, 效率提升很多, 还能有效解决 SYN Flood
+TFO 在后续的每次请求中都会少一个 RTT, 效率提升很多
+
+TFO 能有效解决 SYN Flood, Server 接受到 SYN 后, 会去检查是否携带 Cookie, 如果没有 Cookie 就不会再进行后续的三次握手了
 
 TFO 存在一定安全风险, TFO 默认不会对结果的 TCP 连接提供任何形式的加密保护, 也不对端点进行身份保证, 如果需要这类防护, 可以与 TLS 或 IPsec 这样的加密协议组合使用
 

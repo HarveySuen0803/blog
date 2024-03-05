@@ -4,7 +4,9 @@ RDB 可以用于 Full Persistence, 定时存储 Snapshotting 到硬盘, 在 Redi
 
 RDB 会在 Redis Server 服务结束前自动执行, 会在达到了保存条件时自动执行, 执行 `FLUSHALL`, `FLUSHDB`, `SHUTDOWN` 时也会触发 RDB, 还可以通过 `SAVE` 和 `BGSAVE` 手动触发
 
-Redis 进行 RDB Persistence 时, 会调用 fork() 创建一个子进程, 这个子进程不需要执行 exec(), 而是会直接复制一份父进程的 Directory Table 和 Page Table, Page Table 中记录了虚拟地址和物理地址的映射, 子进程就可以通过这个 Page Table 去读取数据进行持久化操作了, 主线程执行完 fork() 就可以继续去处理请求了, 两者相不干扰. 如果主线程想要修改数据, 就会采用 Copy-On-Write 的方式, 给内存中的原始数据加上 ReadOnly Lock, 然后复制一份出来进行修改, 修改完再去修改 Page Table 的指向
+Redis 进行 RDB Persistence 时, 会调用 fork() 创建一个子进程, 这个子进程不需要执行 exec(), 而是会直接复制一份父进程的 Page Directory 和 Page Table, 主线程执行完 fork() 就可以继续去处理请求了, 两者相不干扰. 如果主线程想要修改数据, 就会采用 Copy-On-Write 的方式, 给内存中的原始数据加上 ReadOnly Lock, 然后复制一份出来进行修改, 修改完再去修改 Page Table 的指向
+
+- Page Table 中记录了虚拟地址和物理地址的映射, 子进程就可以通过这个 Page Table 去读取数据进行持久化操作了
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401021948769.png)
 
@@ -118,6 +120,9 @@ aof-use-rdb-preamble yes
 追加写入修改命令, 会有很多无用的操作 (eg: `set k1 v1`, `set k1 v2`, `set k1 v3 ` 这几条命令就等价于 `set k1 v3`), 所以很有必要定期对 AOF 文件进行重写, 这就是 Log Rewriting
 
 开启 Auto Rewriting 后, 子线程会去读取 Old AOF File, 然后分析命令, 压缩命令, 写入到一个临时文件中. 主线程一直累积命令在缓存中, 正常写入命令到 Old AOF File 中, 保证 Old AOF File 的可用性. 当子线程完成 Rewriting 后, 会发送一个信号给主线程, 主线程再将缓存中的累积的命令追加写入到 New AOF File 中, 再通过 New AOF File 代替 Old AOF File
+
+- 子线程读取 Old AOF File 后, 会将文件内容加载到内存中进行处理, 所以主线程后续修改 Old AOF File 不会对子线程的读取造成影响
+- 如果替换过程中如果发生了故障, Redis 依然可以通过 Old AOF File 来恢复数据, 这就是为什么在重写过程中 Old AOF File 一直要保持可用状态
 
 开启 Auto Log Rewriting
 

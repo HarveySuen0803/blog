@@ -9,7 +9,7 @@ private static final ThreadLocal<Map<Object, Object>> resources =
     new NamedThreadLocal<>("Transactional resources");
 ```
 
-# Transaction with Manual
+# Transaction with Code
 
 ```java
 DataSource dataSource = applicationContext.getBean(DataSource.class);
@@ -26,7 +26,7 @@ try {
 }
 ```
 
-# Transaction with Spring
+# Transaction with Anno
 
 add @Transactional to Interface Method to enable Transaction for the Method
 

@@ -184,6 +184,10 @@ class UserService {
 
 Spring 在创建动态代理时, 如果目标对象实现了至少一个接口, 则使用 JDK 动态代理, 如果目标对象没有实现接口, 则使用 CGLib 动态代理
 
+虽然 CGLib 代理效率高, 但是产生字节码文件有一定的开销, 并且生成的代理类无法被 JVM HotSpot 进行优化, 相比之下, JDK 使用 Reflect 进行 Dynamic Proxy, 在最近的几个版本中已得到大幅优化 (eg: 访问的方法被标记为 @HotSpotIntrinsicCandidate 时, JVM 能够直接调用原生代码, 避免了反射的开销)
+
+Spring AOP 的设计原则是应尽可能做到轻量级和最小侵入性, 面向接口编程, JDK Dynamic Proxy 对接口代理更符合这一原则
+
 ```java
 @Aspect
 @Component

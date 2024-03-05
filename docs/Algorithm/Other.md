@@ -175,94 +175,160 @@ public static void extend(char[] chs, int i, int j) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=188&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * The algorithm utilizes the sliding window technique to find the minimum window substring that contains all characters
- * of the target string (tar) in any order. It uses two pointers, 'l' and 'r', to maintain a window and adjusts the window
- * size based on the frequency of characters in the target string.
- * 
- * @param src The source string in which to find the minimum window substring.
- * @param tar The target string that defines the characters to be covered in the minimum window substring.
- * @return The minimum window substring that contains all characters of the target string in any order.
- */
-public static String minWindow(String src, String tar) {
-    char[] tarChs = tar.toCharArray();
-    int[] tarCount = new int[128];
-    int passTotal = 0;
-    
-    // Count the frequency of each character in the target string (tar)
-    for (char ch : tarChs) {
-        tarCount[ch]++;
-        passTotal++;
+public static String minWindow(String str, String ptn) {
+    int[] strCount = new int[128];
+    int[] ptnCount = new int[128];
+    for (char ch : ptn.toCharArray()) {
+        ptnCount[ch]++;
     }
     
-    char[] srcChs = src.toCharArray();
-    int[] srcCount = new int[128];
     int l = 0;
     int r = 0;
-    int passed = 0;
-    Result res = null;
-    
-    // Sliding window approach to find the minimum window substring
-    while (r < srcChs.length) {
-        char rCh = srcChs[r];
-        srcCount[rCh]++;
-        
-        // Update 'passed' when a character from 'tar' is covered in the window
-        if (srcCount[rCh] <= tarCount[rCh]) {
-            passed++;
+    int len = 0;
+    int lRes = -1;
+    int rRes = -1;
+    while (r < str.length()) {
+        char rCh = str.charAt(r);
+        strCount[rCh]++;
+        if (ptnCount[rCh] != 0 && strCount[rCh] <= ptnCount[rCh]) {
+            len++;
         }
-        
-        // Contract the left boundary while maintaining coverage of all characters from 'tar'
-        while (passed == passTotal && l <= r) {
-            // Update the minimum window 'res' whenever a smaller valid window is found
-            if (res == null || (r - l) < (res.r - res.l)) {
-                res = new Result(l, r);
+        while (len == ptn.length() && l <= r) {
+            if (rRes == -1 || (r - l) < (rRes - lRes)) {
+                lRes = l;
+                rRes = r;
             }
-            
-            char lCh = srcChs[l];
-            srcCount[lCh]--;
-            
-            // Update 'passed' when a character from 'tar' is no longer covered
-            if (srcCount[lCh] < tarCount[lCh]) {
-                passed--;
+            char lCh = str.charAt(l);
+            strCount[lCh]--;
+            if (strCount[lCh] < ptnCount[lCh]) {
+                len--;
             }
-            
-            // Move the left boundary to the next position
             l++;
         }
-        
-        // Expand the right boundary to cover all characters from 'tar'
         r++;
     }
     
-    // Return the minimum window substring found in 'src'
-    return res == null ? "" : src.substring(res.l, res.r + 1);
-}
-
-/**
- * Result Class
- * 
- * Helper class to store the indices of the minimum window substring.
- */
-public static class Result {
-    int l;
-    int r;
-    
-    public Result(int l, int r) {
-        this.l = l;
-        this.r = r;
-    }
-}
-
-public static void print(int[] count) {
-    System.out.println(IntStream.range(0, count.length)
-                                .filter(i -> count[i] != 0)
-                                .boxed()
-                                .collect(toMap(i -> (char) i.intValue(), i -> count[i])));
+    return rRes != -1 ? str.substring(lRes, rRes + 1) : "";
 }
 
 public static void main(String[] args) {
     System.out.println(minWindow("ADOBECODEBANC", "ABC")); // BANC
+}
+```
+
+# Subarray Sum Equals K
+
+[Problem Description](https://leetcode.cn/problems/subarray-sum-equals-k/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static int subarraySum(int[] nums, int tarSum) {
+    int count = 0;
+    for (int i = 0; i < nums.length; i++) {
+        int curSum = 0;
+        for (int j = i; j < nums.length; j++) {
+            curSum += nums[j];
+            if (curSum == tarSum) {
+                count++;
+            }
+        }
+    }
+    return count;
+}
+```
+
+# Subarray Sum Equals K
+
+```java
+/**
+ * This function uses the prefix sum method. It iterates the given array, storing the sum from start to the
+ * current number in the HashMap. If the current sum minus tarSum has appeared in HashMap before
+ * it means that we have found a subarray that adds up to tarSum.
+ *
+ * Example:
+ * nums = [3, 4, 7, 2, -3, 1, 4, 2], tarSum = 7
+ * Prefix sums array: [3, 7, 14, 16, 13, 14, 18, 20]
+ * 7 appears once before 14, so we have two subarrays ([3, 4], [7]) that add up to 7.
+ *
+ * Extended Example:
+ * Assume nums = [3, 4, 7, 2, -3, 1, 4, 2], tarSum = 7.
+ *
+ * 1. Initialization: count = 0, curSum = 0, map = [(0,1)]
+ *
+ * 2. For number 3:
+ *     curSum = 3
+ *     No record of (3-7) in map.
+ *     map becomes [(0,1), (3,1)]
+ *
+ * 3. For number 4:
+ *     curSum = 7
+ *     There is record of (7-7) in map, so count += 1.
+ *     map becomes [(0,1), (3,1), (7,1)]
+ *
+ * 4. For number 7:
+ *     curSum = 14
+ *     There is record of (14-7) in map, so count += 1.
+ *     map becomes [(0,1), (3,1), (7,1), (14,1)]
+ *
+ * 5. For number 2:
+ *     curSum = 16
+ *     No record of (16-7) in map.
+ *     map becomes [(0,1), (3,1), (7,1), (14,1), (16,1)]
+ *
+ * 6. For number -3:
+ *     curSum = 13
+ *     No record of (13-7) in map.
+ *     map becomes [(0,1), (3,1), (7,1), (14,1), (16, ```java
+ *     1), (13,1)]
+ *
+ * 7. For number 1:
+ *     curSum = 14
+ *     There is a record of (14-7) in map, so count += 1.
+ *     map becomes [(0,1), (3,1), (7,1), (14,2), (16,1), (13,1)]
+ *
+ * 8. For number 4:
+ *     curSum = 18
+ *     No record of (18-7) in map.
+ *     map becomes [(0,1), (3,1), (7,1), (14,2), (16,1), (13,1), (18,1)]
+ *
+ * 9. For number 2:
+ *     curSum = 20
+ *     No record of (20-7) in map.
+ *     map becomes [(0,1), (3,1), (7,1), (14,2), (16,1), (13,1), (18,1), (20,1)]
+ *
+ * So, the final result is count = 2, which represents there are 2 subarrays ([3, 4] and [7]) with sum equal to tarSum.
+ * 
+ * Special Cases Consideration:
+ * There may be negative numbers in the input array, so we can't just consider that the sum should be increasing.
+ * If tarSum is 0, the output should not always be 0. For example, in the array [0, 0], there are 3 subarrays that sum to 0.
+ * Therefore, we initialize the HashMap with (0, 1) to correctly handle the situation where the subarray starts from the beginning of the array.
+ */
+public static int subarraySum(int[] nums, int tarSum) {
+    // Initialize the counter for the number of valid subarrays
+    int count = 0;
+    
+    // This is to record the cumulative sum of the numbers from the beginning to the current position
+    int curSum = 0;
+    
+    // Use HashMap to record the number of occurrences of each sum
+    HashMap<Integer, Integer> map = new HashMap<>();
+    
+    // Put (0,1) into the HashMap to handle the case where the subarray starts from the beginning of the array
+    map.put(0, 1);
+    
+    // Iterate through the input array
+    for (int num : nums) {
+        // For each number, add it to the cumulative sum
+        curSum += num;
+        // If the current sum minus tarSum has appeared before, add the corresponding count to our counter
+        if (map.containsKey(curSum - tarSum)) {
+            count += map.get(curSum - tarSum);
+        }
+        // Update the map with the current sum
+        map.put(curSum, map.getOrDefault(curSum, 0) + 1);
+    }
+    
+    // Return the total count of the subarrays where the sum equals to tarSum
+    return count;
 }
 ```
 
@@ -316,6 +382,16 @@ public static int getPrimeCount(int n) {
 [Explain](https://www.bilibili.com/video/BV1eg411w7gn?p=74&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
+/**
+ * Example: 
+ * Given x = 8, the binary search first focuses on range [1, 8].
+ * 
+ * 1. With l = 1, r = 8, m = (1 + 8) >>> 1 = 4. As m <= x/m, res becomes 4 and l becomes m+1 = 5.
+ * 
+ * 2. Now with l = 5, r = 8, m = (5 + 8) >>> 1 = 6. As m > x/m, r becomes m - 1 = 5.
+ * 
+ * 3. Then with l = 5, r = 5, m = (5 + 5) >>> 1 = 5. As m > x/m, r becomes m - 1 = 4. Now r is less than l, ending the loop.
+ */
 public static int mySqrt(int x) {
     int l = 1;
     int r = x;

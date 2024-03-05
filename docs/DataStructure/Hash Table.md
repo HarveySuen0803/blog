@@ -300,36 +300,130 @@ public static int[] twoSum(int[] nums, int sum) {
 
 [Problem Description](https://leetcode.cn/problems/longest-substring-without-repeating-characters/solutions/)
 
+```java
+public static int lengthOfLongestSubstring(String str) {
+    char[] chs = str.toCharArray();
+    HashSet<Character> set = new HashSet<>();
+    int len = chs.length;
+    int i1 = 0;
+    int i2 = 0;
+    int maxLen = 0;
+    while (i1 < len) {
+        while (i2 < len && !set.contains(chs[i2])) {
+            set.add(chs[i2++]);
+        }
+        maxLen = Math.max(maxLen, i2 - i1);
+        set.remove(chs[i1++]);
+    }
+    return maxLen;
+}
+```
+
+# Longest Substring Without Repeating Characters
+
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=38&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-/**
- * This function calculates the length of the longest substring without repeating characters.
- * The function uses a sliding window approach to solve this problem.
- * 
- * @param s The input string.
- * @return The length of the longest substring without repeating characters.
- */
 public static int lengthOfLongestSubstring(String str) {
     char[] chs = str.toCharArray();
-    HashMap<Character, Integer> map = new HashMap<>();
-    
-    int srt = 0;
-    int end = 0;
+    HashMap<Character, Integer> map = new HashMap();
     int maxLen = 0;
-    
-    // Iterate through the string and store the characters and their indices in the map.
+    int i1 = 0;
+    int i2 = 0;
     for (char ch : chs) {
-        // If the current character is found in the map, update the start index to the index of the character + 1.
         if (map.containsKey(ch)) {
-            srt = Math.max(srt, map.get(ch) + 1);
+            i1 = Math.max(i1, map.get(ch) + 1);
         }
-        map.put(ch, end);
-        end++;
-        // Update the max length if the current length is greater than the max length.
-        maxLen = Math.max(maxLen, end - srt);
+        map.put(ch, i2);
+        i2++;
+        maxLen = Math.max(maxLen, i2 - i1);
+    }
+    return maxLen;
+}
+```
+
+# Find All Anagrams in a String
+
+[Problem Description](https://leetcode.cn/problems/find-all-anagrams-in-a-string/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static List<Integer> findAnagrams(String str, String ptn) {
+    List<Integer> res = new ArrayList<>();
+    if (str.length() < ptn.length()) {
+        return res;
     }
     
+    int[] sCount = new int[26];
+    int[] pCount = new int[26];
+    for (int i = 0; i < ptn.length(); i++) {
+        sCount[str.charAt(i) - 'a']++;
+        pCount[ptn.charAt(i) - 'a']++;
+    }
+    if (Arrays.equals(sCount, pCount)) {
+        res.add(0);
+    }
+    
+    for (int l = 0, r = ptn.length(); r < str.length(); l++, r++) {
+        sCount[str.charAt(l) - 'a']--; // Left boundary (including)
+        sCount[str.charAt(r) - 'a']++; // Right boundary (excluding), and ptn.length() is the window size
+        if (Arrays.equals(sCount, pCount)) {
+            res.add(l + 1);
+        }
+    }
+
+    return res;
+}
+```
+
+# Longest Consecutive Sequence
+
+[Problem Description](https://leetcode.cn/problems/longest-consecutive-sequence/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public int longestConsecutive(int[] nums) {
+    HashSet<Integer> set = new HashSet<>(nums.length);
+    for (int num : nums) {
+        set.add(num);
+    }
+    
+    int maxLen = 0;
+    for (int num : set) {
+        if (!set.contains(num - 1)) {
+            int curNum = num;
+            int curLen = 1;
+            while (set.contains(curNum + 1)) {
+                curLen++;
+                curNum++;
+            }
+            maxLen = Math.max(maxLen, curLen);
+        }
+    }
+    
+    return maxLen;
+}
+```
+
+# Longest Consecutive Sequence
+
+```java
+public int longestConsecutive(int[] nums) {
+    if (nums == null || nums.length == 0) {
+        return 0;
+    }
+    
+    Arrays.sort(nums);
+    int curLen = 1;
+    int maxLen = 1;
+    for (int i = 0; i < nums.length - 1; i++) {
+        if (nums[i] == nums[i + 1]) {
+            continue;
+        } else if (nums[i] + 1 == nums[i + 1]) {
+            curLen++;
+            maxLen = Math.max(maxLen, curLen);
+        } else {
+            curLen = 1;
+        }
+    }
     return maxLen;
 }
 ```

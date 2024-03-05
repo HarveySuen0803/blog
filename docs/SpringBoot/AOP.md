@@ -1,6 +1,10 @@
-# AOP
+# Spring AOP
 
 AOP (Aspect-Oriented Programming) 是面向切面编程, 可以不修改源代码的情况下, 抽取并封装一个可重用的模块, 可以同时作用于多个方法, 减少模块耦合的同时, 扩展业务功能. 可用于记录操作日志, 处理缓存, 事务处理
+
+OOP 可以解决 Class 级别的代码冗余问题, AOP 可以解决 Method 级别的代码冗余问题.
+
+Bean Lifecycle 的 postProcessAfterInitialization 阶段, 会调用 BeanPostProcessor 的实现类 AbstractAutoProxyCreator 的 postProcessAfterInitialization(), 先判断 Bean 是否需要实现 Dynamic Proxy, 如果需要则会去根据当前 Bean 是否有 Interface 选择是采用 JDK 还是 CGLib 实现 Dynamic Proxy.
 
 Spring 底层的 TRX 就是通过 AOP 实现的, 通过 Surround 的方式扩展, 在方法开启前开启事务, 在方法结束后提交事务, 无侵入, 碉堡了 !!!
 
@@ -30,70 +34,13 @@ public class MyAspect {
 }
 ```
 
-# Static Proxy
+# AspectJ AOP
 
-UserServiceStaticProxy.java, 代理 UserService
+Aspecjt AOP 通过 Weaver (AspectJ Aop 自己的 Compiler), 将 @Before, @After, @Around 的代码编译成字节码织入到目标方法的字节码文件中, 即 AspectJ AOP 在编译器期间就完成了增强, 而 Spring AOP 是通过 Dynamic Proxy 实现了目标方法的增强.
 
-```java
-public class UserServiceStaticProxy implements UserService {
-    private UserService userService;
+AspectJ AOP 支持在方法调用, 方法内调, 构造器调用, 字段设置, 获取等级别的织入, 更加灵活强大.
 
-    public UserServiceStaticProxy(UserService userService) {
-        this.userService = userService;
-    }
-
-    @Override
-    public void show() {
-        System.out.println("before around");
-        userService.show();
-        System.out.println("after around");
-    }
-}
-```
-
-Test
-
-```java
-UserServiceStaticProxy userServiceStaticProxy = new UserServiceStaticProxy(new UserServiceImpl());
-userServiceStaticProxy.show();
-```
-
-# Dynamic Proxy
-
-ProxyFactory.java
-
-```java
-public class ProxyFactory {
-    private Object target;
-
-    public ProxyFactory(Object target) {
-        this.target = target;
-    }
-
-    public Object getProxy() {
-        ClassLoader classLoader = target.getClass().getClassLoader();
-        Class<?>[] interfaces = target.getClass().getInterfaces();
-        InvocationHandler invocationHandler = new InvocationHandler() {
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                System.out.println("before around");
-                Object result = method.invoke(target, args);
-                System.out.println("after around");
-                return result;
-            }
-        };
-        return Proxy.newProxyInstance(classLoader, interfaces, invocationHandler);
-    }
-}
-```
-
-Test
-
-```java
-ProxyFactory proxyFactory = new ProxyFactory(new UserServiceImpl());
-UserService userService = (UserService) proxyFactory.getProxy();
-userService.show();
-```
+AspejcJ AOP 不需要借助 Dynamic Proxy, 而是直接编译成字节码, 所以性能也要好很多.
 
 # Advice type
 
@@ -445,6 +392,105 @@ public class OperationLogAspect {
         OperationLog operationLog = new OperationLog(null, operationUser, operationTime, className, methodName, methodParams, returnValue, costTime);
         operationLogMapper.insert(operationLog);
 
+        return result;
+    }
+}
+```
+
+# Exercise Operation Log
+
+这里 OperationLogDo 的参数是 OrderId, 而 AddOrderDto 的参数是 id, 所以参数不相同, 不同的 Dto 就可能有千奇百怪的参数, 导致 Aspect 中无法统一处理
+
+基于 Startegy Pattern, 不同的 OperationLog 想要去统一参数, 只需要去实现 OperationLogConvert 完成参数转换即可
+
+```java
+@Service
+public class OrderService {
+    @OperationLogAnno(description = "Add order", convert = AddOrderOperationLogConvert.class)
+    public Result addOrder(AddOrderDto addOrderDto) {
+        System.out.println("Add order: " + addOrderDto);
+        return Result.success();
+    }
+    
+    @OperationLogAnno(description = "Upd order", convert = UpdOrderOperationLogConvert.class)
+    public Result updOrder(UpdOrderDto updOrderDto) {
+        System.out.println("Upd order: " + updOrderDto);
+        return Result.success();
+    }
+}
+```
+
+```java
+@Documented
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface OperationLogAnno {
+    String description() default "";
+    
+    Class<? extends OperationLogConvert> convert() default OperationLogConvert.class;
+}
+```
+
+```java
+public interface OperationLogConvert<T> {
+    OperationLogDo convert(T t);
+}
+```
+
+```java
+public class AddOrderOperationLogConvert implements OperationLogConvert<AddOrderDto> {
+    @Override
+    public OperationLogDo convert(AddOrderDto addOrderDto) {
+        OperationLogDo operationLogDo = new OperationLogDo();
+        operationLogDo.setOrderId(addOrderDto.getId());
+        return operationLogDo;
+    }
+}
+```
+
+```java
+public class UpdOrderOperationLogConvert implements OperationLogConvert<UpdOrderDto> {
+    @Override
+    public OperationLogDo convert(UpdOrderDto updOrderDto) {
+        OperationLogDo operationLogDo = new OperationLogDo();
+        operationLogDo.setOrderId(updOrderDto.getId());
+        return operationLogDo;
+    }
+}
+```
+
+配置 Aspect, 封装 OperationLog
+
+```java
+@Aspect
+@Component
+public class OrderAspect {
+    @Pointcut("@annotation(com.harvey.common.OperationLog)")
+    public void operationLogPointCut() {
+    }
+    
+    private ThreadPoolExecutor threadPoolExecutor = new ThreadPoolExecutor(1, 1, 1, TimeUnit.SECONDS, new LinkedBlockingDeque<>(100));
+    
+    @Around("operationLogPointCut()")
+    public Object operationLogAround(ProceedingJoinPoint joinPoint) throws Throwable {
+        Object result = joinPoint.proceed();
+        threadPoolExecutor.execute(() -> {
+            try {
+                MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
+                OperationLogAnno annotation = methodSignature.getMethod().getAnnotation(OperationLogAnno.class);
+                
+                Class<? extends OperationLogConvert> convert = annotation.convert();
+                OperationLogConvert operationLogConvert = convert.getDeclaredConstructor().newInstance();
+                OperationLogDo operationLogDo = operationLogConvert.convert(joinPoint.getArgs()[0]);
+                operationLogDo.setDescription(annotation.description());
+                operationLogDo.setResult(result);
+                
+                System.out.println("Insert operation log: " + operationLogDo);
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                     NoSuchMethodException e) {
+                throw new RuntimeException(e);
+            }
+        });
         return result;
     }
 }

@@ -23,11 +23,17 @@
 - 校验成功后, 登录成功后, 就删除这个 验证码 Key, 清空验证码统计 Key
 - 通过 INCR, DECR 统计验证码, 1h 过期, 超过 3 次, 就拒绝访问
 
-分布式登录状态同步：通过 Redis + JWT 解决分布式环境下登录状态同步的问题, 通过 Redis + Hash 存储用户的 Token, 限制 Token 数量, 并通过 Redis 维护了一个黑名单拦截报废的 Token.
+分布式登录状态同步：通过 Redis + JWT + Hash 解决分布式环境下登录状态同步的问题, 通过 Redis + Hash 存储用户的 Token, 限制 Token 数量, 并通过 Redis 维护了一个黑名单拦截报废的 Token.
 
 - 用户登入后, 会存储到一个 Hash 中, Key 为 `token:login:<userid>`, Field 为 Create Time, Val 为 Token, 每次存储 New Token 前会先判断 Hash 存储的 Token 数量是否达到了存储上限, 如果达到了, 就移除 Oldest Token, 并将该 Oldest Token 加入 BlackList
 - 用户登出后, 需要删除 Hash 中的 Token, 并且将 Token 加入 BlackList
 - 拦截器拒绝该 BlackList 中 Token 的访问
+
+分布式登录状态同步：通过 Redis + JWT + List 解决分布式环境下登录状态同步的问题
+
+- lpush 添加 token, 执行 ltrim 保留 0 ~ 2 的 token, 删除超出的 token
+- 每次请求都查询一次 Redis 都 Token list, 对比 token 是否相同
+- 也不需要通过 XXL-JOB 来实现周期性删除 Redis 中过期的 Token
 
 日活跃统计: 通过 MQ + Interceptor + Redis 的 HyperLogLog 统计日活跃用户数量
 

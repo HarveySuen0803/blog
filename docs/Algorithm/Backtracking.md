@@ -462,6 +462,45 @@ public int[] twoSum(int[] nums, int tar) {
 }
 ```
 
+# Three Sum
+
+[Problem Description](https://leetcode.cn/problems/3sum/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static List<List<Integer>> threeSum(int[] nums) {
+    Arrays.sort(nums);
+    LinkedList<Integer> stk = new LinkedList<>();
+    List<List<Integer>> res = new ArrayList<>();
+    for (int i = 0; i < nums.length - 1; i++) {
+        if (i > 0 && nums[i - 1] == nums[i]) {
+            continue;
+        }
+        stk.push(nums[i]);
+        twoSum(nums, -nums[i], i + 1, nums.length - 1, stk, res);
+        stk.pop();
+    }
+    return res;
+}
+
+public static void twoSum(int[] nums, int tar, int l, int r, LinkedList<Integer> stk, List<List<Integer>> res) {
+    while (l < r) {
+        if (nums[l] + nums[r] < tar) {
+            l++;
+        } else if (nums[l] + nums[r] > tar) {
+            r--;
+        } else {
+            stk.push(nums[l]);
+            stk.push(nums[r]);
+            res.add(new ArrayList<>(stk));
+            stk.pop();
+            stk.pop();
+            while (++l < r && nums[l - 1] == nums[l]);
+            while (l < --r && nums[r] == nums[r + 1]);
+        }
+    }
+}
+```
+
 # N Sum
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=178&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
@@ -502,8 +541,8 @@ public static void twoSum(int[] nums, int tar, int l, int r, LinkedList<Integer>
             stk.add(nums[l]);
             stk.add(nums[r]);
             res.add(new ArrayList<>(stk));
-            while (l++ < r && nums[l] == nums[l - 1]);
-            while (l < r-- && nums[r] == nums[r + 1]);
+            while (++l < r && nums[l - 1] == nums[l]);
+            while (l < --r && nums[r] == nums[r + 1]);
             stk.removeLast();
             stk.removeLast();
         }

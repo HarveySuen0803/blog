@@ -3,36 +3,43 @@
 ```java
 public class Main {
     public static void main(String[] args) {
-        new SalesMan(new StrategyA()).show();
-        new SalesMan(new StrategyB()).show();
+        NumberSorter sorter = new NumberSorter(new BubbleSortStrategy());
+        
+        sorter.sort(new int[]{5, 1, 3, 2, 4});
+        
+        sorter.setStrategy(new QuickSortStrategy());
+        sorter.sort(new int[]{5, 1, 3, 2, 4});
+        
+        sorter.setStrategy(new BubbleSortStrategy());
+        sorter.sort(new int[]{5, 1, 3, 2, 4});
     }
 }
 
-interface Strategy {
-    void show();
+interface SortingStrategy {
+    int[] sort(int[] numbers);
 }
 
-class StrategyA implements Strategy {
-    public void show() {
-        System.out.println("hello world");
+class QuickSortStrategy implements SortingStrategy {
+    public int[] sort(int[] numbers) {
+        return numbers;
     }
 }
 
-class StrategyB implements Strategy {
-    public void show() {
-        System.out.println("hello world");
+class BubbleSortStrategy implements SortingStrategy {
+    public int[] sort(int[] numbers) {
+        return numbers;
     }
 }
 
-class SalesMan {
-    private Strategy strategy;
+class NumberSorter {
+    private SortingStrategy strategy;
     
-    public SalesMan(Strategy strategy) {
+    public NumberSorter(SortingStrategy strategy) {
         this.strategy = strategy;
     }
     
-    public void show() {
-        this.strategy.show();
+    public int[] sort(int[] numbers) {
+        return strategy.sort(numbers);
     }
 }
 ```

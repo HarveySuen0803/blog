@@ -546,22 +546,6 @@ resp.sendRedirect(contextPath + "/demo2");
 
 # Cookie
 
-Cookie: HTTP 无状态, 无法在两个请求之间通信, 需要借助 Cookie 通信
-
-Cookie 特点
-
-- 数据存储在客户端, 最大存储 3KB, 不安全
-
-Cookie 应用场景
-
-- 购物车
-- 记住勾选
-
-Cookie 访问过程
-
-- 客户端发送请求, 服务端接受请求, 创建一个 Cookie 对象 存储数据, 响应 Cookie 给客户端 (添加响应头 Set-Cookie: name=sun), 客户端接受后, 会将 Cookie 存储在浏览器内
-- 客户端携带 Cookie 再次请求 (添加请求头 Cookie: name=sun), 服务端就可以访问 Cookie 中存储的数据, 实现两次请求之间的数据共享
-
 响应 Cookie
 
 ```java
@@ -605,21 +589,6 @@ for (Cookie cookie : cookies) {
 ```
 
 # Session
-
-Session 的特点
-
-- 一般用来保存用户登录后的数据
-- 数据存储在服务端, 无限制存储, 安全
-
-Session 的应用场景
-
-- 用户登录后的名称显示
-- 验证码
-
-Session 访问过程
-
-- 客户端发送请求, 服务端接受请求, 创建一个 Session 对象 存储数据, 将 Session 的 id 封装成一个 Cookie, 响应 Cookie 给客户端 (添加响应头 Set-Cookie: SESSIONID=10), 客户端接受后, 会将 Cookie 存储在浏览器内
-- 客户端携带 Cookie 再次请求 (添加请求头 Cookie: JESSIONID=10), 服务端就可以根据  Cookie 中存储的 id 找到服务端的 Session, 实现两次请求之间的数据共享
 
 响应 Session
 

@@ -3,6 +3,8 @@
 - HTTP
 - TCP
 - UDP
+- Cookie, Session
+- IO
 
 # JDK
 
@@ -73,7 +75,9 @@
 - Bean Life Cycle
 - Bean Circular Reference
 - Transaction Invalidation
-- AOP
+- Transaction Propagation
+- Spring AOP
+- AspectJ Aop
 - MVC Process
 - Auto Configuration
 - Design Pattern

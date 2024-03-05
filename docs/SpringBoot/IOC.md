@@ -4,7 +4,7 @@ IOC (Inversion of Control) 一种设计原则, 用于减小计算机程序中各
 
 IOC 最佳实践了 Singleton 和 Fast Fail, 不仅可以节省大量不必要的对象创建, 防止 GC, 还在项目启动时, 就实例化所有的 Bean, 可以将 Bean 的创建由运行期提前至启动期, 在启动时期就可以检测出问题, 而不是在运行时遇到问题停机. Singleton 是不可变状态, 可以保证线程安全.
 
-IOC 最佳实践了 DIP (Dependence Inversion Principle), 高层模块不直接依赖低层模块, 而是依赖低层模块的抽象, 低层模块去实现抽象 (eg: Controller 通过 Service 访问 ServcieImpl), 实现 Decoupling.
+IOC 最佳实践了 DIP (Dependence Inversion Principle), 高层模块不直接依赖低层模块, 而是依赖低层模块的抽象, 低层模块去实现抽象 (eg: Controller 通过 Service 访问 ServcieImpl), 实现 Decoupling, 同时接口的引入便于后续扩展, 便于引入 Design Pattern (JDK's Dynamic Proxy).
 
 # @SpringBootApplication
 
@@ -483,7 +483,7 @@ Spring 初始化 Bean 的过程
 Spring 销毁 Bean 的过程
 
 - 调用 Bean 中添加了 @PreDestroy 的 Destroy Method
-- 调用 destroyBenans() 遍历 singletonObjects, 逐一销毁所有的 Bean, 这个过程会依次执行 Bean 的 destroy()
+- 调用 destroyBeans() 遍历 singletonObjects, 逐一销毁所有的 Bean, 这个过程会依次执行 Bean 的 destroy()
 - 调用 Bean 中添加了 @Bean(destroyMethod = "destroyMethod") 的 Destroy Method
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401081756800.png)
@@ -631,7 +631,6 @@ public class MyRunner implements CommandLineRunner {
     }
 }
 ```
-
 
 通过 CommandLineRunner 在 App 启动后, 开启一个异步任务定期收集和发送统计报告.
 
@@ -893,19 +892,24 @@ Spring 的 DefaultSingletonBeanRegistry Cls 中声明了 singletonObjects (Concu
 - singletonObjects 是 Lv1 Cache, 存放经历了完整 Life Cycle 的 Bean Obj
   - singletonObjects 的 Key 为 Bean Name, Val 为 Bean Obj
   - 通过 applicationContext.getBean() 获取 Bean 就是访问 singletonObjects 这个 Map
-- earlySingletonObjects 是 Lv2 Cache, 存放未经历完整 Life Cycle 的 Bean Obj
+- earlySingletonObjects 是 Lv2 Cache, 存放未经历完整 Life Cycle 的 Bean Obj, 解决 Circurlar Reference 的关键
 - singletonFactories 是 Lv3 Cache, 存放各种 Bean 的 ObjectFactory, 可以用来创建 Normal Obj 或 Proxy Obj
   - singletonFactories 是 HashMap, 而不是 ConcurrentHashMap, 因为 singletonFactories 通常只在 Bean 的创建过程中使用, 一旦 Bean 创建完成, 即使有多线程对创建好的 Bean 进行访问, 访问的是 singletonObjects, 而不是 singletonFactories, 不存在线程安全问题.
 
 ```java
-public class DefaultSingletonBeanRegistry {
-    // Lv1 Cache
-    private final Map<String, Object> singletonObjects = new ConcurrentHashMap(256);
-    // Lv2 Cache
-    private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap(16);
-    // Lv3 Cache
-    private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap(16);
-}
+// Lv1 Cache
+private final Map<String, Object> singletonObjects = new ConcurrentHashMap(256);
+// Lv2 Cache
+private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap(16);
+// Lv3 Cache
+private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap(16);
+```
+
+Spring 的 DefaultSingletonBeanRegistry Cls 中声明了 singletonsCurrentlyInCreation (Collections.newSetFromMap(new ConcurrentHashMap<>(16))) 存储正在创建过程中的 Bean, 用来判断是否存在 Circular Reference.
+
+```java
+private final Set<String> singletonsCurrentlyInCreation = 
+    Collections.newSetFromMap(new ConcurrentHashMap<>(16));
 ```
 
 Spring 通过 Three-Level Cache 解决了大部分的 Circular Reference, 需要使用 A 时, 会执行下面的步骤
@@ -961,7 +965,9 @@ public class B {
 
 # Circular Reference (Constructor)
 
-Three-Level Cache 无法解决 Constructor 引起的 Circular Reference, 这里 A 和 B 在 Constructor 中相互引用, 会产生 Circular Reference
+Spring 无法解决 Constructor 引起的 Circular Reference.
+
+Bean Lifecycle 的 populateBean() 中通过 Three-Level Cache 解决了 Circular Reference, 而 createBeanInstance() 是早于 populateBean() 的. A 执行 createBeanInstance() 时, 在 Constructor 中需要去获取 B, 此时 Bean 只存储在 beanDefinitionMap 中, Spring 的 createBeanInstance() 并没有去解决 Circular Reference.
 
 ```java
 @Component

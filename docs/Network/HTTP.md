@@ -1,15 +1,8 @@
 # HTTP
 
-HTTP: 浏览器和服务端之间数据传输的规则
+HTTP 是一种网络通信协议, 基于 TCP, 面向连接, 安全, 建立连接后, 需要进行三次握手, 可以使浏览器工作更高效, 减少网络传输. 端口 80.
 
-HTTP 基于 TCP, 面向连接, 安全, 建立连接后, 需要进行三次握手
-
-HTTP 基于 byte stream
-
-HTTP 是无状态协议, 服务端响应完后, 不会记录任何数据
-
-- 优点: 速度快
-- 缺点: 多请求之间不能共享数据 (通过 Cookie, Session 解决)
+HTTP 是无状态协议, 服务端响应完后, 不会记录任何数据, 响应速度快, 但是多请求之间不能共享数据, 需要通过 Cookie, Session 解决.
 
 # HTTP Request
 
@@ -26,7 +19,7 @@ Cache-Control: max-age=0
 Content-Type: application/x-www-form-urlencoded
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 Edg/95.0.1020.53
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
-Referer: http://localhost:63342/
+Referer: HTTP://localhost:63342/
 Accept-Encoding: gzip, deflate, br
 Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6,zh-TW;q=0.5
 Cookie: Webstorm-46a075f9=2c28767f-84f5-43ab-ba30-03a72a719916
@@ -75,7 +68,7 @@ sec-ch-ua: "Microsoft Edge";v="95", "Chromium";v="95", ";Not A Brand";v="99"
 sec-ch-ua-mobile: ?0
 sec-ch-ua-platform: "Windows"
 Upgrade-Insecure-Requests: 1
-Origin: http://localhost:63342
+Origin: HTTP://localhost:63342
 Content-Type: application/x-www-form-urlencoded
 User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36 Edg/95.0.1020.53
 Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9
@@ -83,7 +76,7 @@ Sec-Fetch-Site: same-site
 Sec-Fetch-Mode: navigate
 Sec-Fetch-User: ?1
 Sec-Fetch-Dest: document
-Referer: http://localhost:63342/
+Referer: HTTP://localhost:63342/
 Accept-Encoding: gzip, deflate, br
 Accept-Language: zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6,zh-TW;q=0.5
 Cookie: Webstorm-46a075f9=2c28767f-84f5-43ab-ba30-03a72a719916
@@ -130,3 +123,24 @@ Server: BWS/1.1
 | 500    | Internal Server Error           | **服务器发生不可预期的错误**。服务器出异常了，赶紧看日志去吧 |
 | 503    | Service Unavailable             | **服务器尚未准备好处理请求**，服务器刚刚启动，还未初始化好   |
 | 511    | Network Authentication Required | **客户端需要进行身份验证才能获得网络访问权限**               |
+
+# HTTPS
+
+HTTPS 是 HTTP 的增强版, 在 HTTP 的基础上增加了一系列安全机制, 可以认为是 HTTP + SSL, 既可以保证数据传输安全, 也可以对访问者进行校验. 端口 443.
+
+HTTP or HTTPS
+
+- HTTP
+
+  - 无状态连接
+  - 免费
+  - 不安全
+  - 速度快
+
+- HTTPS
+
+  - 有状态连接
+  - 收费, 收费还不低
+  - HTTPS 安全, 但是 Credential 不安全
+  - 速度慢
+

@@ -290,9 +290,9 @@ RPOP k1 3
 ```
 LPUSH k1 "a" "b" "c" "d" "e"
 
-LRANGE k1 0 2 # k1: {"a", "b", "c"}
+LRANGE k1 0 2 # k1: {"e", "d", "c"}
 
-LRANGE k1 0 -1 # k1: {"a", "b", "c", "d", "e"}
+LRANGE k1 0 -1 # k1: {"e", "d", "c", "b", "a"}
 ```
 
 ## LINDEX
@@ -300,7 +300,7 @@ LRANGE k1 0 -1 # k1: {"a", "b", "c", "d", "e"}
 ```
 LPUSH k1 "sun" "xue" "cheng"
 
-LINDEX k1 0 # "sun"
+LINDEX k1 0 # "cheng"
 LINDEX k1 1 # "xue"
 ```
 
@@ -315,6 +315,7 @@ LLEN k1
 ```
 LPUSH k1 "a" "a" "a" "a" "a" "b" "c"
 
+# LREM key count element
 LREM k1 4 "a" # k1: {"a", "b", "c"}
 ```
 
@@ -323,7 +324,8 @@ LREM k1 4 "a" # k1: {"a", "b", "c"}
 ```
 LPUSH k1 "a" "b" "c" "d" "e"
 
-LTRIM k1 1 3 # k1: {"a", "e"}
+# LREM key count element
+LTRIM k1 1 3 # k1: {"d", "c", "b"}
 ```
 
 ## RPOPLPUSH
