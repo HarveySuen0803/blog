@@ -42,18 +42,6 @@ Virtual Machine Stack Options
 
 - `-Xss256k` 设置每个线程的 Stack 的大小
 
-# StackOverflowError
-
-如果 Virtual Machine Stack 采用固定空间, 每一个 thread 可以在创建时指定 stack 大小, 当超出了指定 memory 后, 就会抛出 StackOverflowError
-
-通过 recursive 测试 StackOverflowError
-
-```java
-public static void main(String[] args) throws Exception {
-    main(args);
-}
-```
-
 # Native Method Stack
 
 JVM 通过 Native Method 调用 C Language 的 function, 通过 C Language 来和 OS 交互
@@ -65,6 +53,18 @@ private native void start0();
 Native Method Stack 管理 Native Method 的调用, 1 个 Stack Frame 对应 1 个 Native Method, 在 Native Method Stack 中注册 Native Method, Execution Engine 执行时会加载 Native Method Library
 
 Native Method Stack 独立于 JVM, 拥有最高权限, 可以访问 JVM 的 Runtime Data Area, 可以任意分配 memory, 甚至可以访问 CPU Register
+
+# StackOverflowError
+
+如果 Virtual Machine Stack 采用固定空间, 每一个 thread 可以在创建时指定 stack 大小, 当超出了指定 memory 后, 就会抛出 StackOverflowError
+
+通过 recursive 测试 StackOverflowError
+
+```java
+public static void main(String[] args) throws Exception {
+    main(args);
+}
+```
 
 # Local Variable Table
 
@@ -227,7 +227,7 @@ public void test();
 
 # Dynamic Linking
 
-Dynamic Linking 发生在 Class Loding 的 Resolve 阶段, 他会将 Symbolic Reference 转成 Direct Reference
+Dynamic Linking 会发生在两个阶段. 如果能在 Class Loading 期间确定的 Reference, 则会在 Resolve 这一步将 Symbolic Reference 转成 Direct Reference. 由于 Dynamic Binding 的存在, 很多引用需要在 Runtime 时确定, 将 Symbolic Reference 转成 Direct Reference
 
 Symbolic Reference 是一个标识, 用于描述所引用的目标的各种符号信息, 包括类和接口的全限定名, 字段的名称和描述符, 方法的名称和描述符等, 存储在 class file 的 Class Constant Pool
 

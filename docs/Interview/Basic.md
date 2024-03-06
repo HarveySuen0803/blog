@@ -154,26 +154,6 @@
 - Object Memory Allocation
 - Object Reference
 
-# Service
-
-Idempotent
-
-- 实现 Idempotent 的方法就是在数据表上添加一个字段, 最好是一个业务字段, 在插入前, 先查询该字段, 判断操作是否已经执行过了, 但是在高并发场景下, 可能两个线程同时查到都没有执行过, 这时就需要采用锁的方案保证串行, 单机就采用 JDK 提供的锁, 分布式就采用分布式锁
-
-用户重复点击按钮导致的表单重复提交
-
-- 前端按钮置灰, 提示加载中, 避免重复点击
-- 在用户进入下单页面时, 就由后端派发一个 Token 给前端, 或者由前端生成一个 Token, 前端下单前携带这个 Token 请求后端, 后端根据这个 Token 向 Redis 执行 SETNX 实现幂等
-- 如果是提交表单时, 去前端生成 Token 或者由后端派发 Token 都无法保证幂等性 !!!
-
-Nginx 和 Gateway 导致的表单重复提交
-
-- 上面的方案都可以采用, 而且在提交表单时, 去由前端生成 Token 或者由后端派发 Token 也可以解决这里的表单重复提交问题
-- 直接通过 Redis 存储 `<user_id>:<goods_id>`, 下单成功后, 去删除这个
-
-RabbitMQ 重复消费消息导致的表单重复提交
-
-- 根据每个消息的 messageid 向 Redis 执行 SETNX 保证幂等
 
 # Bug Solution
 

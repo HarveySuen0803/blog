@@ -1,5 +1,4 @@
-基于 SpringBoot + SpringCloudAlibaba + SpringSecurity + OAuth2 + Spring Authorization Server + Redis 的分布式
-客户关系管理系统, 实现了分布式授权认证, 用户管理, 活动管理, 数据统计, 数据展示等功能.
+基于 SpringBoot + SpringCloudAlibaba + SpringSecurity + OAuth2 + Spring Authorization Server + Redis 的分布式客户关系管理系统, 实现了分布式授权认证, 用户管理, 活动管理, 数据统计, 数据展示等功能.
 
 [Github](https://github.com/HarveySuen0803/crm-server)
 

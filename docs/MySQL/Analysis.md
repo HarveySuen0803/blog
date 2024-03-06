@@ -587,21 +587,17 @@ order by (tmp_tables + statement_analysis.tmp_disk_tables) desc;
 select * from sys.innodb_lock_waits;
 ```
 
-# Inner Join
+# Join
+
+多表连接时, 需要遵循小表驱动大表的原则, 首先遍历小表, 将小表的数据加载到内存中, 根据小表的内容去匹配大表的内容, 可以减少连接次数, 减少磁盘 IO, 减少 Drivered Table 的全表扫描次数.
 
 对于 Inner Join, Optimizer 一般会让拥有 Index 的 Field 作为 Drived Table, 会让数据量小的 Table 作为 Drivering Table, 即小表驱动大表.
 
 Table A 有 100 条记录, 每行记录 1 B, Table B 有 1000 条数据, 每行记录 2 B. 这里 A Left Join B 后, 通过 where 对 B 进行过滤, 得到 10 条数据. Table A 的数据量就是 100 * 1 B, Table B 的数据量就是 10 * 2 B, 那么 Table B 为小表, 即 Table B 驱动 Table A.
 
-小表驱动大表, 可以减少连接次数, 提高一次 IO 读取的记录条数, 减少 Drivered Table 的全表扫描次数.
-
-小表就是 Outer Loop, 大表就是 Inner Loop.
+Optimizer 会将 Outer Join 转换成 Inner Join, 所以最终还是 Optimizer 决定 Driving Table 和 Drived Table.
 
 建议, 使用 `inner join` 代替 `outer join`.
-
-# Outer Join
-
-Optimizer 会将 Outer Join 转换成 Inner Join, 所以最终还是 Optimizer 决定 Driving Table 和 Drived Table.
 
 # SNLJ
 
