@@ -1,6 +1,6 @@
 # Sentinel
 
-Sentinel 会不断监控 Master 和 Slave 是否按预期工作. 如果 Master 故障了, Sentinel 会根据投票数将一个 Slave 转成 Master, 并通知 Client 最新的 Master IP 和 Slave IP 进行转移故障
+Sentinel 通过 PING PANG 不断监控 Master 和 Slave 是否按预期工作. 如果 Master 故障了, Sentinel 会根据投票数将一个 Slave 转成 Master, 并通知 Client 最新的 Master IP 和 Slave IP 进行转移故障
 
 Subjective Down, 单个 Sentinel 发送心跳给 Master, 一定时间内没有收到合法回复 (def. 30s), 就主观认定 Master 不可用
 

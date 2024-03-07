@@ -334,6 +334,8 @@ JVM 通过 invokedynamic 调用 Dynamic Method
 Thread thread = new Thread(() -> System.out.println("hello world"));// invokedynamic
 ```
 
+# Virtual Method Table
+
 Class Loading 的 Linking 的 Resolve 时, 会在 Method Area 中建立一个 Virtual Method Table 记录 Virtual Method 的 index, 访问 Virtual Method 就不需要频繁向上寻找了
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241742836.png)
@@ -370,7 +372,7 @@ System.out.println("totalMemory: " + maxMemory * 4 / 1024 + "G"); // 32G
 
 通过 `jps` 查看 JVM Process, 再根据 Process No 查看其他信息
 
-```
+```txt
 49425 Jps
 49014 Launcher
 49015 Main
@@ -449,7 +451,7 @@ TLAB 可以避免多线程竞争, 提高对象的分配速度, 提高并发性�
 
 # Method Area
 
-Metaspace 是 HotSpot 对 Method Area 的实现, 不存储在 JVM Memory 中, 存储在 Native Memory 中, OG 中 Lifecycle 过长的 data 会进入 Method Area
+Metaspace 是 HotSpot 对 Method Area 的实现, 不存储在 JVM Memory 中, 存储在 Native Memory 中
 
 - JDK7, Method Area 存储在 JVM Memory 的 Heap 中, 非常容易导致 OOM
   - java.lang.OutOfMemoryError: Permspace
@@ -458,9 +460,9 @@ Metaspace 是 HotSpot 对 Method Area 的实现, 不存储在 JVM Memory 中, �
 
 Method Area 的初始化大小 MetaspaceSize 为 21MB, 当占用达到 MetaspaceSize 后, 会触发 FGC, 如果清理后还是不够用, 会向上扩容, 直到 MaxMetaspaceSize, 如果清理了很多后, 会降低 MetaspaceSize
 
-逻辑上 Runtime Constant Pool, String Constant Pool, Static Member, Metaspace, Class Info 存储在 Method Area 中
+逻辑上 Runtime Constant Pool, String Constant Pool, Static Member, Class Info 存储在 Method Area 中
 
-实际上 String Constant Pool, Static Member, Metaspace 存储在 Heap 中, Class Info, Runtime Constant Pool 存储在 Method Area 中
+实际上 Hotspot 将 String Constant Pool, Static Member 存储在 Heap 中, Class Info, Runtime Constant Pool 存储在 Method Area 中
 
 - JDK7, Static Obj 存储在 Heap 中, Static Obj Ref 存储在 Method Area 中
 - JDK8, Static Obj 和 Static Obj Ref 都存储在 Heap 中
@@ -469,7 +471,7 @@ Method Area 的初始化大小 MetaspaceSize 为 21MB, 当占用达到 Metaspace
 
 Method Area 触发 GC 主要清理 Runtime Constant Pool 和 Class Info, 要求非常苛刻, 包括三个条件
 
-- Class 和 Sub Class 都不存在 Instace
+- Class 和 Sub Class 都不存在 Instance
 - 加载该 Class 的 Class Loader 已经被回收
 - 该 Class 的 Class Object 没有被引用
 
@@ -482,11 +484,17 @@ Method Area 通过 Klass 这种数据结构表示 Class Info (Klass 和 Class �
 
 # Class Constant Pool
 
-Class Constant Pool 存储 Literal 和 Symbolic Reference, 类似于一个 Table, 每个 Literal 和 Symbolic Reference 都标识了 Index, 可以通过 Index 访问
+Class Constant Pool 存储在 Class File 中, 包含 Literal 和 Symbolic Reference, 类似于一个 Table, 每个 Literal 和 Symbolic Reference 都标识了 Index, 可以通过 Index 访问
 
 Literal 包含 Basic Field, String Field 和 Final Field
 
 Symbolic Reference 本质上还是 Literal, 用作标识, Class File 占用小, 就是因为采用了 Symbolic Reference
+
+# Runtime Constant Pool
+
+Class File 经过 Class Loader, 会将 Class Constant Pool 中必要的信息加载到 Runtime Constant Pool 中, 包括 Literal, Dynamic Ref, Symbolic Ref (有部分 Symbolic Ref 在 Class Loading 阶段无法转成 Dynamic Ref)
+
+Runtime Constant Pool 具有 Dynamic, 可以在 Code 中修改 Runtime Constant Pool (eg: String 的 Intern())
 
 # String Constant Pool
 
@@ -496,25 +504,13 @@ SCP (String Constant Pool) 维护了一个 StringTable 通过 HashTable 实现, 
 - JDK8 中 StringTable 默认长度为 65536, 可以通过 `-XX:StringTableSize` 设置 HashTable 的长度
 - 存储 String Object 过多, 就会导致 Hash Complict, 导致 Linked List 过长, 性能下降
 
-SCP 为了保证存储唯一的 String Object, 会进行编译优化 (eg: `String s = "a" + "b" + "c"` 经过编译优化, ByteCode 中会是 `String s = "abc"`)
-
-String 的拼接, 底层依赖的是 StringBuilder 调用 append() 追加 String Object
-
-```java
-String s = new String("a") + new String("b");
-
-// Similar to this
-String s = new StringBuilder()
-    .append(new String("a"))
-    .append(new String("b"))
-    .toString();
-```
-
 通过 intern() 也可以保证存储唯一的 String Object. 调用 intern() 后会先去 SCP 中寻找该 String Object
 
-- 如果找到了, 就会返回该 String Object 的 Reference
-- 如果找不到, 就会创建一个 String Object, 然后返回 Reference
+- 如果找得到, 就会返回该 String Object 的 Reference
+- 如果找不到, 就会创建该 String Object, 然后返回 Reference
 - 通过 intern() 创建 String Object, 可以节省 Memory, 并且 GC 也会容易很多
+
+new String("ab") 可以在 Compile Stage 确定, 不仅仅会在 Heap 中创建 "ab", 还会在 SCP 中创建 "ab"
 
 ```java
 // s1 指向 SCP 的 "ab"
@@ -536,24 +532,51 @@ String s3 = "ab";
 System.out.println(s1 == s2); // false
 System.out.println(s1 == s3); // false
 System.out.println(s2 == s3); // true
+```
 
-// 编译优化时, 会将 new String("a") + new String("b") 直接优化成 "ab" 存储到 SCP 中, 不会再存到 Heap 了
-// s1 指向 SCP 的 "ab"
-String s1 = new String("a") + new String("b");
-// s2 指向 SCP 的 "ab"
+JVM 为了会进行编译优化, String s = "a" + "b" 经过编译优化, ByteCode 中会是 String s = "ab"
+
+```java
+String s1 = "a" + "b";
+String s2 = "ab";
+System.out.println(s1 == s2); // true
+```
+
+String 的拼接, 底层依赖的是 StringBuilder 调用 append() 追加 String Object
+
+```java
+String s = new String("a") + new String("b");
+
+// Similar to this
+String s = new StringBuilder().append("a").append("b").toString();
+```
+
+StringBuilder 拼接的字符串 "ab" 无法在 Compile Stage 确定, 所以就不会在 SCP 中创建
+
+通过 intern() 访问, 则会在 SCP 中存储一个引用指向 Heap 中的 "ab" 中, 所以 SCP 不仅存储 String Object, 还会存储 String Object Ref
+
+```java
+// s1 指向 Heap 的 "ab"
+String s1 = new StringBuilder().append("a").append("b").toString();
+// s1.intern() 处理 StringBuilder 拼接的字符串, 创建一个引用指向 "ab", 非常特别
+// s2 指向 Heap 的 "ab"
 String s2 = s1.intern();
-// s3 指向 SCP 的 "ab"
+// s3 指向 Heap 的 "ab"
+String s3 = "ab";
+System.out.println(s1 == s2); // true
+System.out.println(s1 == s3); // true
+System.out.println(s2 == s3); // true
+
+// new String("a") + new String("b") 本质上就是通过 StringBuilder 的 append() 拼接的, 所以下面的效果一样
+String s1 = new String("a") + new String("b");
+// s2 指向 Heap 的 "ab"
+String s2 = s1.intern();
+// s3 指向 Heap 的 "ab"
 String s3 = "ab";
 System.out.println(s1 == s2); // true
 System.out.println(s1 == s3); // true
 System.out.println(s2 == s3); // true
 ```
-
-# Runtime Constant Pool
-
-Class File 经过 Class Loader, 会将 Class Constant Pool 中必要的信息加载到 Runtime Constant Pool 中 (eg: 将 Symbolic Ref 转成 Direct Ref, 存储 Direct Ref)
-
-Runtime Constant Pool 具有 Dynamic, 可以在 Code 中修改 Runtime Constant Pool (eg: String 的 Intern())
 
 # Object Instantiation
 
@@ -589,7 +612,7 @@ Object Structure 包括 Header, Instance Data 和 Padding
 
 1. Header: 包括 Mark Word, Class Pointer 和 Array Length
 
-- Mark Word: 存储 HashCode, GC Age (4B, 所以 GC Age 最大 15), Lock, Lock State, Thread Id, Thread Stamp
+- Mark Word: 存储 HashCode, GC Age (4b, 所以 GC Age 最大 15), Lock, Lock State, Thread Id, Thread Stamp
 - Class Pointer: 指向 Method Area 中对应 Class 的 Klass Class Info
 - Array Length: 如果 Object 是 Array, 则会记录 Array Length
 
@@ -600,8 +623,6 @@ Object Structure 包括 Header, Instance Data 和 Padding
 - 如果是 Array Obj, 则 Instance Data 包括 Array Length 和 Array Element
 
 3. Padding: JVM 要求 Object 的 Start Address 为 8B 的整数倍, 通过 Padding 向上对齐 (eg: 14B 向上对齐为 16B)
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241742843.png)
 
 Heap 中是不存储 Class Info 的, 只存储 Instance Data, 通过 ClassPointer 指向当前对象对应的 Klass 查询 Class Info
 

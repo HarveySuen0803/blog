@@ -5,7 +5,8 @@
 Loading
 
 - 由专门的 Class Loader 通过 Full Class Name 找到 Class File, 获取 Byte Stream, 加载数据到 Memory 中
-- 在 Method Area 中封装一个 Klass 对象, 表示 Class Info
+- 在 Heap 中生成 Class Obj (通过 Reflect 获取的 Class Obj)
+- 在 Method Area 中生成 Klass 对象, 本质上是二进制数据, 表示 Class Info
 
 Linking, 分为 Verify, Prepare 和 Resolve 三个步骤
 
@@ -13,7 +14,7 @@ Linking, 分为 Verify, Prepare 和 Resolve 三个步骤
 - Prepare, 为 Static Member 和 Constant 分配 Memory, 进行 Default Initialization
     - Basic Type 的 Final Static Field 在 Prepare 进行 Specified Initialization
     - Ref Type 的 Final Static Field 在 Initialization 进行 Specified Initialization
-- Resolve, 将 Constant Pool 中 Class, Interface, Field, Method 的 Symbolic Ref 转换成 Direct Ref
+- Resolve, 将 Class Constant Pool 中 Class, Interface, Field, Method 的 Symbolic Ref 转换成 Direct Ref
 
 Initialization
 

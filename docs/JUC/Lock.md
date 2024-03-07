@@ -162,6 +162,19 @@ private void sellTicket() {
 }
 ```
 
+ReentrantLock 提供了 Fair Lock 和 Unfair Lock 两种模式, 这两种模式主要的区别在于获取锁的策略不同
+
+Fair Lock 的获取采取先来先得的原则, 也就是说, 先请求锁的线程将先获取到锁, 具体实现上, 系统维护了一个有序队列, 每当有新的线程请求锁时, 都会加入队列的末尾, 只有队列头部的线程能够获得锁, 当线程释放锁时, 它在队列中的节点将被移除, 队列的第二个节点将成为头部节点并获得锁
+
+Unfair Lock 的获取不再遵循先来先得的原则, 当一个线程请求锁时, 如果当前无线程持有锁, 那么这个线程可以直接获取到锁, 无论是否有其他线程正在等待, 这样可能导致一些线程等待时间过长
+
+Unfair Lock 的处理效率比 Fair Lock 要高, 线程的上下文切换和唤醒是需要耗费一定系统资源的, 不如直接让一个处于就绪的线程获取锁来的实在
+
+```java
+﻿ReentrantLock unfairLock = new ReentrantLock();
+﻿ReentrantLock fairLock = new ReentrantLock(true);
+```
+
 # ReentrantReadWriteLock
 
 ReenrantReadWriteLock 相比 ReentrantLock 不仅仅维护了 FairLock 和 UnfariLock, 还维护了一个 ReadLock 和 WriteLock, 这两个 Lock 都采用了 Shared Mode
@@ -331,7 +344,7 @@ public static void write() {
 
 CountDownLatch 是 Java 中用于多线程协作的同步工具之一, 类似于一个倒计时锁, 它允许一个或多个线程等待其他线程完成执行后再继续执行, 主要思想是在某个条件满足之前, 一个或多个线程一直阻塞等待, 常用于并行任务等待
 
-这里主线程创建了 10 个子线程, 并设置 CountDownLatch 初始值为 10, 每个线程执行结束后, 调用 countDown(), 让计数减一, 主线程通过 await() 来等待计数器减到零
+这里主线程创建了 10 个子线程, 并设置 CountDownLatch 初始值为 10, 每个线程执行结束后, 调用 countDown(), 让计数减一, 主线程调用 await() 进入堵塞的状态, 等待计数器减到零
 
 ```java
 int threadSize = 10;
@@ -885,7 +898,7 @@ Current Thread 持有 Biased Lock 后, 如果后续没有 Other Thread 访问, �
 
 Thread 获取 Lock 后通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 101, 即标识为 Biased Lock, 同时存储一个 Pointer 指向 JavaThread. JavaThread 中记录了 Thread 的 Id. 下一次有 Thread 访问时, 会先判断 Thread 的 Id 和记录的 Id 相同
 
-如果 Biased Lock 记录了 T1 的 Id, 此时 T1 访问, 就可以不触发 Sync, 也不需要进行 CAS. 如果 T2 访问, 就会发生 Conflict. T2 会通过 CAS 尝试抢 Biased Lock. 如果 T2 抢到 Biased Lock, 则会替换 Thread Id 为 T2 的 Id. 如果 T2 没有抢到 Biased Lock, 则会撤销 T1 的 Biased Lock, 等待 T1 到 Safty Area 后, 发动 Stop The World !!! 升级为 Light Lock !!! 此时 Thread A, 原先持有的 Biased Lock 会替换为 Light Lock, 继续执行完后, 释放 Light Lock, 两个 Thread 公平竞争 Light Lock
+如果 Biased Lock 记录了 T1 的 Id, 此时 T1 访问, 就可以不触发 Sync, 也不需要进行 CAS. 如果 T2 访问, 就会发生 Conflict. T2 会通过 CAS 尝试抢 Biased Lock. 如果 T2 抢到 Biased Lock, 则会替换 Thread Id 为 T2 的 Id. 如果 T2 没有抢到 Biased Lock, 则会撤销 T1 的 Biased Lock, 等待 T1 到 Safe Region 后, 发动 Stop The World !!! 升级为 Light Lock !!! 此时 Thread A, 原先持有的 Biased Lock 会替换为 Light Lock, 继续执行完后, 释放 Light Lock, 两个 Thread 公平竞争 Light Lock
 
 Biased Lock 的 Pointer 和 Epoch 会覆盖 Non Lock 的 HashCode, 所以 Biased Lock 无法与 HashCode 共存
 

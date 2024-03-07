@@ -387,7 +387,7 @@ public int longestConsecutive(int[] nums) {
     }
     
     int maxLen = 0;
-    for (int num : set) {
+    for (int num : set) { // Is set, not nums, for fast
         if (!set.contains(num - 1)) {
             int curNum = num;
             int curLen = 1;
@@ -459,7 +459,7 @@ public List<List<String>> groupAnagrams(String[] strs) {
         String key = new String(chars);
         // Use the computeIfAbsent method to get the value for the key if it exists,
         // or create a new ArrayList and put it into the map if the key does not exist.
-        List<String> list = map.computeIfAbsent(key, (k, v) -> new ArrayList<>());
+        List<String> list = map.computeIfAbsent(key, (k) -> new ArrayList<>());
         // Add the original string (not the sorted one) to the list of its anagrams
         list.add(str);
     }

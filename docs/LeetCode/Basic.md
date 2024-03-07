@@ -5,21 +5,21 @@
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=180)
 
 ```java
-public int maxArea(int[] height) {
-    int i = 0;
-    int j = height.length - 1;
-    int max = 0;
-    while (i < j) {
-        if (height[i] < height[j]) {
-            max = Math.max(max, height[i] * (j - i));
-            i++;
+public int maxArea(int[] hts) {
+    int l = 0;
+    int r = hts.length - 1;
+    int maxArea = 0;
+    while (l < r) {
+        if (hts[l] < hts[r]) {
+            maxArea = Math.max(maxArea, hts[l] * (r - l));
+            l++;
         } else {
-            max = Math.max(max, height[j] * (j - i));
-            j--;
-        }
+            maxArea = Math.max(maxArea, hts[r] * (r - l));
+            r--;
+        } 
     }
-    return max;
-}
+    return maxArea;
+}    
 ```
 
 # Climbing Stairs
@@ -111,7 +111,7 @@ public static int climbStairs(int n) {
 }
 ```
 
-# Move Zeroes with Non-Sort
+# Move Zeroes (Non-Sort)
 
 [Problem Description](https://leetcode.cn/problems/move-zeroes/description/)
 
@@ -157,29 +157,15 @@ public static void moveZeroes(int[] nums) {
 public static void moveZeroes(int[] nums) {
     for (int low = 1; low < nums.length; low++) {
         int idx = low;
-        int val = nums[low];
-        
-        while (idx > 0 && compare(nums[idx - 1], val) > 0) {
-            nums[idx] = nums[idx - 1];
+        int val = nums[idx];
+        while (idx > 0 && nums[idx - 1] == 0) {
+            nums[idx] = 0;
             idx--;
         }
-        
         if (idx != low) {
             nums[idx] = val;
         }
     }
-}
-
-public static int compare(int num1, int num2) {
-    if (num1 == 0) {
-        return 1;
-    }
-    
-    if (num2 == 0) {
-        return -1;
-    }
-    
-    return num1 - num2;
 }
 ```
 

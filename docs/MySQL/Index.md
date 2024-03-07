@@ -101,6 +101,8 @@ MySQL 为了减少 IO, 采用动态加载硬盘的方式, 不会一次就加载�
 
 B+ Tree 的所有数据都存储在 Leaf Node 中, B Tree 可以存储数据在 Non Leaf Node 中.
 
+B Tree 不稳定, 数据不确定在哪一层, 每次查询效率不太一样, MySQL 更注重综合的查询效率.
+
 MySQL 的一个 Page 只有 16 KB, 那么 B+ Tree 的 Directory Page 就可以存储更多的 Directory Record, 就可以指向更多的 Data Page, 让 Tree 变得更矮更宽.
 
 进行范围查询时. B+ Tree 可以直接通过 Single Linked List 进行 Binary Search, 非常高效. B Tree 只能通过 Inorder Traversal, 非常低效.

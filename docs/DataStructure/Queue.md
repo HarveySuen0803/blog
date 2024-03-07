@@ -1125,7 +1125,7 @@ public class MyStack {
 [Explain p129, p130](https://www.bilibili.com/video/BV1Lv4y1e7HL?p=129)
 
 ```java
-public class BlockingQueue {
+wpublic class BlockingQueue {
     private int[] arr;
     private int head;
     private int tail;

@@ -38,13 +38,13 @@ alter table stu add age int; -- auto commit
 
 # Transaction ACID
 
-Atomicity 是指一个 TRX 是一个不可分割的工作单元, 要么全成功提交, 要么全失败回滚, 成王败寇, 没有妥协之说.
+Atomicity 是指一个 TRX 是一个不可分割的工作单元, 要么全成功提交, 要么全失败回滚, 成王败寇, 没有妥协之说, 通过 Undo Log 保证.
 
 Consistency 是指数据需要从一个合法性状态变化到另一个合法性状态, 这个合法是业务层面的合法 (eg: A 扣钱, 扣成了负数, 则不符合业务层面的要求, 即不合法). 
 
-Isolation 是指一个 TRX 内部使用到的数据对其他 TRX 隔离, 不会受到其他 TRX 的影响.
+Isolation 是指一个 TRX 内部使用到的数据对其他 TRX 隔离, 不会受到其他 TRX 的影响, 通过 MVCC 保证.
 
-Durability 是指一个 TRX 一旦被提交, 它对数据库中数据的改变就是永久性的. Durability 是通过 TRX Log 保障的, 先将数据库的变化信息记录到 Redo Log 中, 再对数据进行修改, 这样做, 即使数据库崩掉了, 也可以根据 Redo Log 进行恢复.
+Durability 是指一个 TRX 一旦被提交, 它对数据库中数据的改变就是永久性的, 通过 Redo Log 保障的, 先将数据库的变化信息记录到 Redo Log 中, 再对数据进行修改, 这样做, 即使数据库崩掉了, 也可以根据 Redo Log 进行恢复.
 
 # Transaction Status
 
@@ -99,7 +99,7 @@ MySQL 提供的 Isolation Level 包含 `read-uncommitted`, `read-committed`, `re
 
 - `read-uncommitted` 可以解决 Dirty Write.
 - `read-committed` 可以解决 Dirty Write, Dirty Read.
-- `repeatable-read` 可以解决 Dirty Write, Dirty Read, Non-Repeatable Read. MySQL 的 `repeatable-read` 可以解决一定的 Phantom Read, 并且提供了一系列的 Lock 来解决 Phantom Read.
+- `repeatable-read` 可以解决 Dirty Write, Dirty Read, Non-Repeatable Read. MySQL 的 `repeatable-read` 可以解决一定的 Phantom Read, 并通过 Row Lock + Gap Lock + Next-Key Lock 解决 Phantom Read.
 - `serializable` 可以解决 Dirty Write, Dirty Read, Non-Repeatable Read, Phantom Read.
 
 查看当前的 Isolation Level.

@@ -49,12 +49,22 @@
 - 通过 RabbitMQ 的 Delayed Queue 实现超时订单, 分为 10s, 20s, 30s, 40s, 50s, 1m, 5m, 10m 去检查订单状态, 如果支付, 直接退出, 如果超过 10m 也未支付, 则直接恢复库存, 允许其他用户下单
 - 通过 XXL-JOB 每隔 10s 进行一次分页查询, 处理一部分超时订单, 总共在 10m 内完成一次全表扫描, 不仅可以兜底, 也可以防止 MQ 消息丢失和 MQ 宕机的问题
 
-权限校验
+超时订单: 定时任务 + 轮循数据库
 
-- SpringSecurity
-- AOP
+- 延迟高
 
-用户状态
+超时订单: 时间轮算法
 
-- UserHolder
-- RequestContextHolder
+- MQ 的延迟消息也有用到时间轮算法
+
+秒杀商品
+
+[Explain](https://www.bilibili.com/video/BV1Uz4y137UA/?spm_id_from=333.337.search-card.all.click&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+- 单机锁 -> 分布式锁 (Redis SETNX / Zookeeper)
+- 业务执行耗时太久, 就可以适当增加锁的过期时间, 或者开启一个子线程定时检查主线程是否依旧在线处理任务, 如果在就重设过期时间, 续命嘛, watch dog
+  - Watch Dog 就是通过时间轮算法实现的, 一般使用 Netty 的 HashedWheelTimer
+  - 一般续期都需要先判断是否过期, 然后再去修改过期时间, 是多个操作, 需要保证原子性, 就通过 Lua, 通过递归的方式继续进行续期操作
+- Key 设定为当前线程对应的 UUID, 每次删除 key, 只会释放属于自己的锁
+
+
