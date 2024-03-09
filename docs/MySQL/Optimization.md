@@ -30,6 +30,8 @@
 
 - eg: 从 `stu` 和 `cls` 中抽取出一个中间表 `stu_cls(stu_id, cls_id, monitor, sname, cname)`, 将需要多表查询的数据放在 `stu_cls` 中, 后续只需要根据 `stu_id` 和 `cls_id` 进行查询即可
 
+建议, 分离冷热数据, 可以有效减少 IO, 提高热数据在内存中的命中率, 高效利用缓存
+
 # Field
 
 强制, Field 小写, 采用 `_` 分割.
@@ -49,30 +51,6 @@
 建议, 如果数据不为负数 (eg: age), 可以使用 Unsigned, 这样就从 -127 ~ 128 提升到了 0 ~ 255, 太牛逼了.
 
 建议, 能使用 `int`, 就绝对不使用 `varchar`, 避免使用 `text` 和 `blob`, 太大了. 使用 `tinyint` 代替 `enum`. 使用 `timestamp` 代替 `datetime`, `timestamp` 只占用 4 Byte, 而且可以自动赋值, 自动更新, 非常智能. 使用 `decimal` 代替 `float` 和 `double`, 精准的浮点数, 尤其是财务相关的数据, 追求准确度.
-
-# Split Database and Table
-
-垂直分库, 将一个库的表拆分到多个库中
-
-- eg: db_service 拆分成 db_user, db_order, db_sku, 不同的业务访问不同的库
-
-垂直分表, 将一个表的字段拆分到多个表中, 根据字段不同的访问频率进行冷热隔离
-
-- eg: user(id, name, desc) 拆分成 user(id, name) 和 user_detail(id, desc)
-
-水平分库, 将一个库的数据拆分到多个库中, 通过 Id 取模的方式路由到不同的库中
-
-- eg: db_user 拆分成 db_user_0, db_user_1, db_user_2 三个库, 通过 id % 3 的方式选择不同的库进行访问
-
-水平分表, 将一个表的数据拆分到多个表中, 通过 Id 取模的方式路由到不同的表中
-
-- eg: tb_user 拆分成 tb_user_0, tb_user_1, tb_user_2 三个表, 通过 id % 3 的方式选择不同的表进行访问
-
-分库分表存在分布式事务一致性的问题, 跨结点关联查询, 分页查询, 排序查询的问题, 主键避重的问题, 可以搭配中间件解决 (eg: MyCat)
-
-建议, 单表的数据量达到 1000W 或 20G 时, 就需要拆分表
-
-建议, 分离冷热数据, 可以有效减少 IO, 提高热数据在内存中的命中率, 高效利用缓存
 
 # SQL
 

@@ -480,7 +480,7 @@ Spring 初始化 Bean 的过程
 - 调用 registerDisposableBean() 注册实现了 Disposable 的 Bean, 这样销毁时, 就会自动执行 destroy()
 - 调用 addSingleton() 将 Bean 放入 singletonObjects 中, 后续使用 Bean 都是从 singletonObjects 中获取
 
-Spring 销毁 Bean 的过程
+jSpring 销毁 Bean 的过程
 
 - 调用 Bean 中添加了 @PreDestroy 的 Destroy Method
 - 调用 destroyBeans() 遍历 singletonObjects, 逐一销毁所有的 Bean, 这个过程会依次执行 Bean 的 destroy()

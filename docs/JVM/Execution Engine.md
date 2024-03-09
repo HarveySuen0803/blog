@@ -1,6 +1,6 @@
 # Execution Engine
 
-Clas File 包含 Class Instruction, 只有 JVM 能识别 Class Instruction, 需要通过 Eexecution Engine 将 Class Instruction 编译成对应 CPU 的 Machine Instruction.
+Class File 包含 Class Instruction, 只有 JVM 能识别 Class Instruction, 需要通过 Eexecution Engine 将 Class Instruction 编译成对应 CPU 的 Machine Instruction.
 
 Execution Engine 既可以从 PC Register 中获取下一条 Instruction 的 Address, 也可以通过 Local Variable Table 的 Reference 找到 Heap 中的 Object.
 
@@ -25,7 +25,3 @@ C1 触发 OSR 的阈值默认为 1500 次, C2 触发 OSR 的阈值默认为 1000
 HotSpot Detection 统计的是一段时间内调用的次数, 如果超过一定的时间限度还不达不到阈值, 就会触发 Counter Decay, 减半统计的次数, 这个时间限度就是 Counter Half Life Time. 可以通过 `-XX:-UseCounterDecay` 关闭 Counter Decay. 可以通过 `-XX:CounterHalfLifeTime` 设置 Counter Half Life Time.
 
 JDK9 引入了 AOT (Ahead Of Time Compiler), 借助 Graal Compiler, 牺牲了动态性, 在程序执行前, 将 Class Instruction 全部转成 Machine Instruction. 
-
-
-
-

@@ -7,69 +7,112 @@
 # Simple Factory Pattern
 
 ```java
-class CoffeeFactory {
-    public Coffee createCoffee(String type) {
-        if (type.equals("american")) {
-            return new AmericanCoffee();
-        } else if (type.equals("italy")) {
-            return new ItalyCoffee();
+public class Main {
+    public static void main(String[] args) {
+        Factory Factory = new Factory();
+        Product productA = Factory.createProduct("A");
+        Product productB = Factory.createProduct("B");
+    }
+}
+
+class Factory {
+    public Product createProduct(String type) {
+        if ("A".equals(type)) {
+            return new ProductA();
+        } else if ("B".equals(type)) {
+            return new ProductB();
         }
         return null;
     }
 }
+
+interface Product {}
+
+class ProductA implements Product {}
+
+class ProductB implements Product {}
 ```
 
 # Factory Method Pattern
 
+Factory Method Pattern 定义了一个创建对象的接口, 由子类决定要实例化的类是哪一个, 工厂方法模式将对象的实例化推迟到子类, 可以通过不同子类创建不同的实例, 不再需要通过指定类型来创建不同的实例
+
 ```java
-interface CoffeeFactory {
-    Coffee createCoffee();
-}
-
-class ItalyCoffeeFactory implements CoffeeFactory {
-    public Coffee createCoffee() {
-        return new ItalyCoffee();
+public class Main {
+    public static void main(String[] args) {
+        Product productA = new FactoryA().createProduct();
+        Product productB = new FactoryB().createProduct();
     }
 }
 
-class AmericanCoffeeFactory implements CoffeeFactory {
-    public Coffee createCoffee() {
-        return new AmericanCoffee();
+interface Factory {
+    Product createProduct();
+}
+
+class FactoryA implements Factory {
+    @Override
+    public Product createProduct() {
+        return new ProductA();
     }
 }
+
+class FactoryB implements Factory {
+    @Override
+    public Product createProduct() {
+        return new ProductB();
+    }
+}
+
+interface Product {}
+
+class ProductA implements Product {}
+
+class ProductB implements Product {}
 ```
 
 # Abstract Factory Pattern
 
+Abstract Factory Pattern 在 Factory Method Pattern 上做了进一步扩展, 每个 Factory 可以生成不同的 Product
+
 ```java
-interface DessertFactory {
-    Coffee createCoffee();
-    Mousse createMousse();
-}
-
-class AmericanDessertFactory implements DessertFactory {
-    @Override
-    public Coffee createCoffee() {
-        return new AmericanCoffee();
-    }
-    
-    @Override
-    public Mousse createMousse() {
-        return new AmericanMousse();
+public class Main {
+    public static void main(String[] args) {
+        Product1 product1 = new FactoryA().createProduct1();
+        Product2 product2 = new FactoryB().createProduct2();
     }
 }
 
-class ItalyDessertFactory implements DessertFactory {
-    @Override
-    public Coffee createCoffee() {
-        return new ItalyCoffee();
+interface Factory {
+    Product1 createProduct1();
+    Product2 createProduct2();
+}
+
+class FactoryA implements Factory {
+    public Product1 createProduct1() {
+        return new ProductA1();
     }
-    
-    @Override
-    public Mousse createMousse() {
-        return new ItalyMousse();
+    public Product2 createProduct2() {
+        return new ProductA2();
     }
 }
+
+class FactoryB implements Factory {
+    public Product1 createProduct1() {
+        return new ProductB1();
+    }
+    public Product2 createProduct2() {
+        return new ProductB2();
+    }
+}
+
+interface Product1 { }
+interface Product2 { }
+
+class ProductA1 implements Product1 { }
+class ProductA2 implements Product2 { }
+
+class ProductB1 implements Product1 { }
+class ProductB2 implements Product2 { }
 ```
 
 # Load Properties

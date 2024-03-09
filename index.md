@@ -1,5 +1,6 @@
 ---
 layout: home
+home: true
 
 hero:
   name: Harvey's Blog
@@ -60,4 +61,3 @@ features:
   }
 }
 </style>
-

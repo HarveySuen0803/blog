@@ -257,7 +257,7 @@ CMS GC Process
 
 CMS GC 通过 MarkSweep Algo 回收 OG, 必定会产生 Memory Fragment. 由于 User Thread 在并发运行, 采用 MarkSweepCompact Algo, 还需要调整 User Thread 的 Reference, 非常不合适
 
-CMS GC 无法处理 Float Garbae. 在 Concurrent Mark 过程中, CMS GC 无法发现并发运行的 User Thread 产生的新垃圾, 这戏 Float Garbage, 需要等下次 GC 再去清理这些垃圾
+CMS GC 无法处理 Float Garbage. 在 Concurrent Mark 过程中, CMS GC 无法发现并发运行的 User Thread 产生的新垃圾, 这戏 Float Garbage, 需要等下次 GC 再去清理这些垃圾
 
 CMS GC Options
 

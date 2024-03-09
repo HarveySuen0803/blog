@@ -317,7 +317,7 @@ InnoDB 创建一个 Table, 就需要建立一个 Clustered Index, 立马生成 1
 
 Fragment Extent 就类似于一个 Public Extent, 不归属于任何 Segment, 而是归属于 Tablespace. Fragment Extent 中的 Fragment Page 可以用于任何 Segment.
 
-当一个 Segment 已经用到了 32 个 Fragment Page 时, 就会为这 32 个 Fragment Page 单独开辟一个 Extent, 后续的 Page 都存储在该 Extent 中. 尽量减少浪费.
+当一个 Extent 已经用到了 32 个 Fragment Page 时, 就会为这 32 个 Fragment Page 单独开辟一个 Extent, 后续的 Page 都存储在该 Extent 中. 尽量减少浪费.
 
 # Segment
 
