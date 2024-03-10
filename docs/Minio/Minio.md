@@ -3,43 +3,66 @@
 pull image
 
 ```shell
-sudo docker image pull minio/minio:RELEASE.2023-10-14T05-17-22Z
+docker image pull minio/minio:RELEASE.2023-10-14T05-17-22Z
 ```
 
-create volume
+startup Minio with multi data volume
 
 ```shell
-sudo docker volume create minio-data-1
-sudo docker volume create minio-data-2
-sudo docker volume create minio-data-3
-sudo docker volume create minio-data-4
-sudo docker volume create minio-config
+docker volume create minio-conf
+docker volume create minio-data-1
+docker volume create minio-data-2
+docker volume create minio-data-3
+docker volume create minio-data-4
 
 sudo mkdir -p /opt/minio
 
-sudo ln -s /var/lib/docker/volumes/minio-config/_data /opt/minio/config
+sudo ln -s /var/lib/docker/volumes/minio-conf/_data /opt/minio/conf
 sudo ln -s /var/lib/docker/volumes/minio-data-1/_data /opt/minio/data-1
 sudo ln -s /var/lib/docker/volumes/minio-data-2/_data /opt/minio/data-2
 sudo ln -s /var/lib/docker/volumes/minio-data-3/_data /opt/minio/data-3
 sudo ln -s /var/lib/docker/volumes/minio-data-4/_data /opt/minio/data-4
 ```
 
-startup Minio
-
 ```shell
-sudo docker container run \
+docker container run \
     --name minio \
     --privileged \
-    -e "MINIO_ROOT_USER=minioadmin" \
-    -e "MINIO_ROOT_PASSWORD=minioadmin" \
     -p 9000:9000 \
     -p 9001:9001 \
-    -v minio-config:/root/.minio \
+    -v minio-conf:/root/.minio \
     -v minio-data-1:/data-1 \
     -v minio-data-2:/data-2 \
     -v minio-data-3:/data-3 \
     -v minio-data-4:/data-4 \
+    -e "MINIO_ROOT_USER=minioadmin" \
+    -e "MINIO_ROOT_PASSWORD=minioadmin" \
     -d minio/minio:RELEASE.2023-10-14T05-17-22Z server --console-address ":9001" /data-{1...4}
+```
+
+startup Minio with single data volume
+
+```shell
+docker volume create minio-conf
+docker volume create minio-data
+
+sudo mkdir -p /opt/minio
+
+sudo ln -s /var/lib/docker/volumes/minio-conf/_data /opt/minio/conf
+sudo ln -s /var/lib/docker/volumes/minio-data/_data /opt/minio/data
+```
+
+```shell
+docker container run \
+    --name minio \
+    --privileged \
+    -p 9000:9000 \
+    -p 9001:9001 \
+    -v minio-conf:/root/.minio \
+    -v minio-data:/data \
+    -e "MINIO_ROOT_USER=minioadmin" \
+    -e "MINIO_ROOT_PASSWORD=minioadmin" \
+    -d minio/minio:RELEASE.2023-10-14T05-17-22Z server --console-address ":9001" /data
 ```
 
 access http://127.0.0.1:9001
@@ -51,7 +74,7 @@ access http://127.0.0.1:9001
 startup Minio (ip: 192.168.10.101, 192.168.10.102, 192.168.10.103)
 
 ```shell
-sudo docker container run \
+docker container run \
     --name minio \
     --privileged \
     -e "MINIO_ROOT_USER=minioadmin" \

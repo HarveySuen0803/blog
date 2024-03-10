@@ -27,15 +27,15 @@ Happens-Before 规范了两个操作的先后关系, 第一个操作的结果对
 
 # Memory Fence
 
-Memory Fence, 实现了 Happens-Before, 是 CPU 和 Compiler 对 memory 随机访问中的一个同步点, 该同步点前的所有操作执行完毕后, 才可以执行后续操作, 保证 Visibility, 不允许将 Memory Fence 之后的操作重新排序到 Memory Fence 之前, 保证 Orderliness
+Memory Fence 实现了 Happens-Before, 是 CPU 和 Compiler 对 memory 随机访问中的一个同步点, 该同步点前的所有操作执行完毕后, 才可以执行后续操作, 保证 Visibility, 不允许将 Memory Fence 之后的操作重新排序到 Memory Fence 之前, 保证 Orderliness
 
-LoadLoad Fence, 确保在 Load 操作之前的所有 Load 操作都已经完, 确保一个线程读取共享变量的值之前, 它之前的所有读操作都已经完成
+LoadLoad Fence 确保在 Load 操作之前的所有 Load 操作都已经完, 确保一个线程读取共享变量的值之前, 它之前的所有读操作都已经完成
 
-StoreStore Fence, 确保在 Store 操作之前的所有 Store 操作都已经完成, 确保一个线程修改共享变量的值之前, 它之前的所有写操作都已经完成
+StoreStore Fence 确保在 Store 操作之前的所有 Store 操作都已经完成, 确保一个线程修改共享变量的值之前, 它之前的所有写操作都已经完成
 
-LoadStore Fence, 确保在 Load 操作之前的所有 Store 操作都已经完成, 确保一个线程读取共享变量的值之前, 其他线程对该变量的写操作已经完成
+LoadStore Fence 确保在 Load 操作之前的所有 Store 操作都已经完成, 确保一个线程读取共享变量的值之前, 其他线程对该变量的写操作已经完成
 
-StoreLoad Fence, 确保在 Store 操作之前的所有 Load 操作都已经完成, 确保一个线程修改共享变量的值之前，其他线程对该变量的读操作已经完成
+StoreLoad Fence 确保在 Store 操作之前的所有 Load 操作都已经完成, 确保一个线程修改共享变量的值之前，其他线程对该变量的读操作已经完成
 
 Java 对 Memory Fence 的实现有 volatile, synchronized, final, concurrent ...
 
@@ -99,6 +99,38 @@ public int readSharedValue() {
 }
 ```
 
+volatile read 后面会插入一个 LoadLoad Fence, 防止和后面的 normal read 进行 reorder, 还会再插入一个 LoadStore Fence, 防止和后面的 normal write 进行 reorder, 最终保证了 volatile read 后的 instruction 不会重排到 volatile read 前面
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402031244938.png)
+
+volatile write 前面插入一个 StoreStore Fence, 防止和前面的 normal read 进行 reorder, 后面插入一个 StoreLoad Fence, 防止和后面的 volatile read, volatile write 进行 reorder, 最终保证了 volatile write 前的 instruction 不会重排到 volatile write 后面
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402031244590.png)
+
+这里, 如果通过 volatile 修饰 x, 无法避免 x 和 y 重排序, 如果通过 volatile 修饰 y, 可以避免 x 和 y 的重排序
+
+为了避免重排序, 要么全部加上 volatile, 要么就把 volatile read 放在最后, 把 volatile write 放在最前面, 巧妙利用 Memory Fence 避免重排序
+
+```txt
+volatile init x # Add volatile to x (not recommanded)
+init y
+--- Fence for x write --- # This can not prohibit reordering x below and y below
+write x = 10
+write y = 10
+read y
+read x
+--- Fence for x read --- # This can not prohibit reordering x above and y above
+
+init x
+volatile init y # Add volatile to y (recommanded)
+write x = 10
+--- Fence for y write --- # This can prohibit reordering x above and y below
+write y = 10
+read y
+--- Fence for y read --- # This can prohibit reordering x below and y above
+read x
+```
+
 volatile 无法保证 Atomicity, 不适合参与需要依赖当前 variable 的运算
 
 这里 count++ 包含 Data Loading, Data Calculation, Data Assignment 三个步骤, 无法保证 Atomicity
@@ -119,38 +151,6 @@ public static void main(String[] args) throws Exception {
     
     System.out.println(count);
 }
-```
-
-volatile read 后面会插入一个 LoadLoad Fence, 防止和后面的 normal read 进行 reorder, 还会再插入一个 LoadStore Fence, 防止和后面的 normal write 进行 reorder, 最终保证了 volatile read 后的 instruction 不会重排到 volatile read 前面
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402031244938.png)
-
-volatile write 前面插入一个 StoreStore Fence, 防止和前面的 normal read 进行 reorder, 后面插入一个 StoreLoad Fence, 防止和后面的 volatile read, volatile write 进行 reorder, 最终保证了 volatile write 前的 instruction 不会重排到 volatile write 后面
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402031244590.png)
-
-这里, 如果通过 volatile 修饰 x, 无法避免 x 和 y 重排序, 如果通过 volatile 修饰 y, 可以避免 x 和 y 的重排序
-
-为了避免重排序, 要么全部加上 volatile, 要么就把 volatile read 放在最后, 把 volatile write 放在最前面, 巧妙利用 Memory Fence 避免重排序
-
-```txt
-init x
-volatile init y
---- Fence for x write --- # This can not prohibit reordering x below and y below
-write x = 10
-write y = 10
-read y
-read x
---- Fence for x read --- # This can not prohibit reordering x above and y above
-
-init x
-volatile init y # Add volatile to y (recommanded)
-write x = 10
---- Fence for y write --- # This can prohibit reordering x above and y below
-write y = 10
-read y
---- Fence for y read --- # This can prohibit reordering x below and y above
-read x
 ```
 
 通过 volatile 保证 Visibility, 最终 Read Consistency

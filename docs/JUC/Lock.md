@@ -4,6 +4,14 @@
 
 添加了 synchronized 的 method 会添加一个 ACC_SYNCHRONIZED flag
 
+Pessimistic Locking 先锁定资源, 再操作资源, 适合写操作多的场景
+
+Optimistic Locking 先判断资源是否被更新过, 再操作资源, 如果没有被更新, 就直接操作资源, 如果被更新过, 就采取相应策略 (eg: 放弃修改, 重试强锁), 适合读操作的场景, 一般通过 OCC 或 CAS 判断资源是否被操作过
+
+OCC (Optimistic Concurrency Control) 是一种乐观锁的并发控制策略, 它假设事务冲突的概率较低, 因此允许多个事务同时进行, 并在提交时检查版本是否有冲突 (eg: AtomicInteger)
+
+OCC 和 CAS 都是基于乐观锁, 都是比较版本号解决并发冲突, OCC 更侧重软件实现, CAS 更侧重硬件实现
+
 # Monitor
 
 Monitor 是 JVM 的 Lock, 是实现 synchronized 线程同步的基础, 每个 Object 都会关联一个 Monitor Obj, 所有的 Thread 都是去争抢 Monitor Obj.
@@ -12,7 +20,7 @@ Monitor 的 Field
 
 - `_owner` 记录持有当有当前 Mointor Obj 的 Thread Id
 - `_count` 标识了 Monitor object 是否被锁, 每次添加 Lock, 就 +1, 每次释放 Lock 就 -1
-- `_recursions` 记录 ReEntrant 的次数, 每次进入一层, 就 +1, 每次出来一层, 就 -1
+- `_recursions` 记录 Reentrant 的次数, 每次进入一层, 就 +1, 每次出来一层, 就 -1
 - `_EntryList` 存储了 Blocked Thread, 当一个线程尝试去获取一个已经被占有的 Monitor Obj 时, 就会进入 `_EntryList`
 - `_WaitSet` 存储了 Waited Thread, 当线程调用了 wait(), 当前线程就会释放锁, 并进入 `_WaitSet`
 
@@ -105,17 +113,197 @@ class A implements Runnable {
 }
 ```
 
-# Pessimistic Locking
+# Lock MarkWord
 
-Pessimistic Locking 先锁定资源, 再操作资源, 适合写操作多的场景
+在 HotSpot JVM 中, MarkWord 是用于存储对象元数据的关键部分 (eg: HashCode, GC Age, Lock State, GC Info)
 
-# Optimistic Locking
+Non Lock's MarkWord
 
-Optimistic Locking 先判断资源是否被更新过, 再操作资源, 如果没有被更新, 就直接操作资源, 如果被更新过, 就采取相应策略 (eg: 放弃修改, 重试强锁), 适合读操作的场景, 一般通过 OCC 或 CAS 判断资源是否被操作过
+```
+| unused:25b | identity_hashcode:31b | unused:1b | age:4b | biase_lock:1b | lock:2b |
+```
 
-OCC (Optimistic Concurrency Control) 是一种乐观锁的并发控制策略, 它假设事务冲突的概率较低, 因此允许多个事务同时进行, 并在提交时检查版本是否有冲突 (eg: AtomicInteger)
+通过 jol-core 查看 Non Lock 的 Object 的 MarkWord 是如何存储 HashCode 的
 
-OCC 和 CAS 都是基于乐观锁, 都是比较版本号解决并发冲突, OCC 更侧重软件实现, CAS 更侧重硬件实现
+```xml
+<dependency>
+    <groupId>org.openjdk.jol</groupId>
+    <artifactId>jol-core</artifactId>
+    <version>0.8</version>
+</dependency>
+```
+
+```java
+Object o = new Object();
+System.out.println(o.hashCode()); // HashCode will not be stored in MarkWord until the HashCode is accessed
+System.out.println(Integer.toHexString(o.hashCode()));
+System.out.println(Integer.toBinaryString(o.hashCode()));
+System.out.println(ClassLayout.parseInstance(o).toPrintable());
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746692.png)
+
+Biased Lock's MarkWord
+
+```
+| thread:54b | epoch:2b | unused:1b | age:4b | biased_lock:1b | lock:2b |
+```
+
+Light Lock's MarkWord
+
+```
+| ptr_to_lock_record:62b | lock:2b |
+```
+
+Weight Lock's MarkWord
+
+```
+| ptr_to_heavyweight_monitor:62b | lock:2b |
+```
+
+# Lock State
+
+Object 的 Header 的 MarkWord 的最后几位标识了 Lock State
+
+```
+Non Lock      001
+Biased Lock   101
+Light Lock     00
+Heavy Lock     10
+```
+
+# Lock Escalation
+
+Lock Escalation 是指 synchronized 实现的 Lock, 随着竞争的情况根据 Non Lock -> Biased Lock -> Light Lock -> Heavy Lock 的顺序逐渐升级, 并且是不可逆的过程
+
+Non Lock -> Biased Lock, 当一个线程第一次访问同步块时, 会在对象头和栈帧中记录偏向的锁的 Thread ID, 之后该线程再次进入和退出同步块时, 不需要进行 CAS 操作来加锁和解锁
+
+Biased Lock -> Light Lock, 当第二个线程尝试访问同步块时, 偏向锁就需要撤销, 撤销过程需要等待全局安全点 (在这个点上没有正在执行的字节码), 撤销后, 偏向锁就升级为轻量级锁
+
+Light Lock -> Heavy Lock, 如果轻量级锁的竞争激烈, 即有多个线程同时申请轻量级锁, 那么轻量级锁就会膨胀为重量级锁
+
+# Biased Lock
+
+Current Thread 持有 Biased Lock 后, 如果后续没有 Other Thread 访问, 则 Current Thread 不会触发 Sync, 不需要再获取 Lock 了, 即一个 Thread 吃到撑, 适合经常单个 Thread 操作的场景, 不需要添加 Lock, 性能非常强
+
+Thread 获取 Lock 后通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 101, 即标识为 Biased Lock, 同时在 Monitor 的 Owner Field 中存储 Cur Thread 的 Id. 下一次有 Thread 访问时, 会先判断 Thread 的 Id 和记录的 Id 相同
+
+如果 Biased Lock 记录了 T1 的 Id, 此时 T1 访问, 就可以不触发 Sync, 也不需要进行 CAS. 如果 T2 访问, 就会发生 Conflict. T2 会通过 CAS 尝试抢 Biased Lock. 如果 T2 抢到 Biased Lock, 则会替换 Owner 为 T2 的 Id. 如果 T2 没有抢到 Biased Lock, 则会撤销 T1 的 Biased Lock, 等待 T1 到 Safe Region 后, 发动 Stop The World !!! 升级为 Light Lock !!! 此时 Thread A, 原先持有的 Biased Lock 会替换为 Light Lock, 继续执行完后, 释放 Light Lock, 两个 Thread 公平竞争 Light Lock
+
+Biased Lock 的 Pointer 和 Epoch 会覆盖 Non Lock 的 HashCode, 所以 Biased Lock 无法与 HashCode 共存
+
+- 如果获取 HashCode 后再开启 Sync, 就会直接忽略 Biased Lock, 直接升级为 Light Lock
+- 如果使用 Biased Lock 的过程中, 试图获取 HashCode, 就会撤销 Biased Lock, 直接膨胀为 Heavy Lock
+
+由于 Biased Lock 维护成本太高, JDK15 后逐渐废弃了, 默认禁用了 Biased Lock, 可以通过 `-XX:+UseBiasedLocking` 手动开启
+
+Biased Lock 默认在程序启动后 4s 开启, 可以通过 `-XX:+BiasedLockingStartupDelay=0` 手动调整
+
+Test Biased Lock
+
+```java
+Object o = new Object();
+new Thread(() -> {
+    synchronized (o) {
+        System.out.println("hello world");
+    }
+}).start();
+System.out.println(ClassLayout.parseInstance(o).toPrintable());
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746693.png)
+
+# Light Lock
+
+Light Lock 本质就是 CAS. 多个 Thread 交替抢 Lock, 执行 Sync. 不需要从 User Mode 切换到 Kernel Mode, 也不需要发生 Blocking. Conflict 的处理速度非常快, 适合经常多个 Thread 操作的场景, 不会造成 Thread Blocking, 执行速度也很高
+
+JVM 为每一个 Thread 的 Stack Frame, 都开辟了 LockRecord 的空间, 称为 Displaced MarkWord, 存储 LockRecord Object
+
+T1 通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 101, 修改 Lock 的 Markword 的 ptr_to_lock_record 指向 T1 的 LocalRecord Object, 复制 Lock 的 MarkWord 到 LockRecord Object 中, 并且 T1 的 LockRecord Object 也会存储了一个 Pointer 指向 Lock
+
+T2 通过 CAS 尝试修改 ptr_to_lock_record 指向 T2 的 LockRecord Object. 如果修改成功, 则表示 T2 抢到了 Lock. 如果 T2 尝试了多次 Spining 后, 还是没修改成功, 则会升级 Light Lock 为 Heavy Lock
+
+T1 释放 Lock 时, 会将 Displaced MarkWord 复制到 MarkWord 中. 如果复制成功, 则本次 Sync 结束. 如果复制失败, 则说明 Light Lock 升级为 Heavy Lock 了, 此时 T1 会释放 Lock, 唤醒其他 Blocing Thread, 一起竞争 Heavy Lock
+
+如果是 Reentrant Lock 在进行重入时, 每次重入一个锁, 就需要通过 CAS 创建一个 LockRecord Object, 后续创建的 LockRecord Object 不需要再去修改 ptr_to_lock_record 了
+
+JDK6 前, 默认 Spining 10 次, 就会进行 Lock Escalation, 可以通过 `-XX:PreBlockSpin=10` 手动设置
+
+JDK6 后, 采用 Adaptive Spin Lock, 如果 Spinning 成功, 则会提高 PreBlockSpin, 如果 Sprinning 失败, 则会降低 PreBlockSpin
+
+Biased Lock 是一个 Thread 抢 Lock. Light Lock 是多个 Thread 抢 Lock. Biased Lock 是每次执行完, 不会释放 Lock. Light Lock 是每次执行完, 都会释放 Lock
+
+# Heavy Lock
+
+synchronized 就是 Heavy Lock, 通过 Monitor 实现 Sync, 但是 Monitor 依赖 OS 的 Mutex Lock, 需要从 User Mode 切换为 Kernel Mode, 频繁切换, CPU 消耗非常多, 适合 Conflict 激烈的场景, 可以保证绝对的 Thread Safty, 但性能太差, 尽量避免用于同步时间较长的地方, 当 CAS 带来的消耗太多时, 也可以考虑切换为 Heavy Lock
+
+Heavy Lock 的 MarkWord 存储了 Pointer 指向 Heap 的 Monitor object. Monitor 存储了 Non Lock 的 HashCode, GC Age 等信息, 释放 Heavy Lock 时, 也会将这些信息写回到 MarkWord 中
+
+JVM Instruction
+
+- `monitorenter` 表示进入 Monitor object, 开启 Sync
+- `monitorleave` 表示离开 Monitor object, 关闭 Sync
+
+Test Heavy Lock
+
+```java
+Object o = new Object();
+new Thread(() -> {
+    synchronized (o) {
+        System.out.println("hello world");
+    }
+}).start();
+new Thread(() -> {
+    synchronized (o) {
+        System.out.println("hello world");
+    }
+}).start();
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746694.png)
+
+# Lock Elimination
+
+JIT 进行 Compoile 时, 会对 lock 进行 Escape Analysis, 这里的 obj 未发生 Escape, 所以这个 lock 毫无意义 JIT 会自动帮我们去除 lock, 提升性能, 但是这种编译优化手段依旧会影响一定性能, 应当避免这样的失误
+
+```java
+public void test() {
+    Object obj = new Object();
+    synchronized(obj) {
+        System.out.println("hello world");
+    }
+}
+```
+
+# Lock Coarsening
+
+一个 Method 内, 多处将同一个 Object 作为 Lock 没有意义, JIT 会帮我们合并内容, 扩大范围
+
+```java
+// Before JIT optimization
+Object o = new Object();
+new Thread(() -> {
+    synchronized (o) {
+        System.out.println("hello world");
+    }
+    synchronized (o) {
+        System.out.println("hello world");
+    }
+    synchronized (o) {
+        System.out.println("hello world");
+    }
+}).start();
+
+// After JIT optimization
+Object o = new Object();
+new Thread(() -> {
+    synchronized (o) {
+        System.out.println("hello world");
+        System.out.println("hello world");
+        System.out.println("hello world");
+    }
+}).start();
+```
 
 # ReentrantLock
 
@@ -821,196 +1009,4 @@ public void consume() throws InterruptedException {
         tailLock.unlock();
     }
 }
-```
-
-# Lock MarkWord
-
-在 HotSpot JVM 中, MarkWord 是用于存储对象元数据的关键部分 (eg: HashCode, GC Age, Lock State, GC Info)
-
-Non Lock's MarkWord
-
-```
-| unused:25b | identity_hashcode:31b | unused:1b | age:4b | biase_lock:1b | lock:2b |
-```
-
-通过 jol-core 查看 Non Lock 的 Object 的 MarkWord 是如何存储 HashCode 的
-
-```xml
-<dependency>
-    <groupId>org.openjdk.jol</groupId>
-    <artifactId>jol-core</artifactId>
-    <version>0.8</version>
-</dependency>
-```
-
-```java
-Object o = new Object();
-System.out.println(o.hashCode()); // HashCode will not be stored in MarkWord until the HashCode is accessed
-System.out.println(Integer.toHexString(o.hashCode()));
-System.out.println(Integer.toBinaryString(o.hashCode()));
-System.out.println(ClassLayout.parseInstance(o).toPrintable());
-```
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746692.png)
-
-Biased Lock's MarkWord
-
-```
-| thread:54b | epoch:2b | unused:1b | age:4b | biased_lock:1b | lock:2b |
-```
-
-Light Lock's MarkWord
-
-```
-| ptr_to_lock_record:62b | lock:2b |
-```
-
-Weight Lock's MarkWord
-
-```
-| ptr_to_heavyweight_monitor:62b | lock:2b |
-```
-
-# Lock State
-
-Object 的 Header 的 MarkWord 的最后几位标识了 Lock State
-
-```
-Non Lock      001
-Biased Lock   101
-Light Lock     00
-Heavy Lock     10
-```
-
-# Lock Escalation
-
-Lock Escalation 是指 synchronized 实现的 Lock, 随着竞争的情况根据 Non Lock -> Biased Lock -> Light Lock -> Heavy Lock 的顺序逐渐升级, 并且是不可逆的过程
-
-Non Lock -> Biased Lock, 当一个线程第一次访问同步块时, 会在对象头和栈帧中记录偏向的锁的 Thread ID, 之后该线程再次进入和退出同步块时, 不需要进行 CAS 操作来加锁和解锁
-
-Biased Lock -> Light Lock, 当第二个线程尝试访问同步块时, 偏向锁就需要撤销, 撤销过程需要等待全局安全点 (在这个点上没有正在执行的字节码), 撤销后, 偏向锁就升级为轻量级锁
-
-Light Lock -> Heavy Lock, 如果轻量级锁的竞争激烈, 即有多个线程同时申请轻量级锁, 那么轻量级锁就会膨胀为重量级锁
-
-# Biased Lock
-
-Current Thread 持有 Biased Lock 后, 如果后续没有 Other Thread 访问, 则 Current Thread 不会触发 Sync, 不需要再获取 Lock 了, 即一个 Thread 吃到撑, 适合经常单个 Thread 操作的场景, 不需要添加 Lock, 性能非常强
-
-Thread 获取 Lock 后通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 101, 即标识为 Biased Lock, 同时存储一个 Pointer 指向 JavaThread. JavaThread 中记录了 Thread 的 Id. 下一次有 Thread 访问时, 会先判断 Thread 的 Id 和记录的 Id 相同
-
-如果 Biased Lock 记录了 T1 的 Id, 此时 T1 访问, 就可以不触发 Sync, 也不需要进行 CAS. 如果 T2 访问, 就会发生 Conflict. T2 会通过 CAS 尝试抢 Biased Lock. 如果 T2 抢到 Biased Lock, 则会替换 Thread Id 为 T2 的 Id. 如果 T2 没有抢到 Biased Lock, 则会撤销 T1 的 Biased Lock, 等待 T1 到 Safe Region 后, 发动 Stop The World !!! 升级为 Light Lock !!! 此时 Thread A, 原先持有的 Biased Lock 会替换为 Light Lock, 继续执行完后, 释放 Light Lock, 两个 Thread 公平竞争 Light Lock
-
-Biased Lock 的 Pointer 和 Epoch 会覆盖 Non Lock 的 HashCode, 所以 Biased Lock 无法与 HashCode 共存
-
-- 如果获取 HashCode 后再开启 Sync, 就会直接忽略 Biased Lock, 直接升级为 Light Lock
-- 如果使用 Biased Lock 的过程中, 试图获取 HashCode, 就会撤销 Biased Lock, 直接膨胀为 Heavy Lock
-
-由于 Biased Lock 到维护成本太高, JDK15 后逐渐废弃了, 默认禁用了 Biased Lock, 可以通过 `-XX:+UseBiasedLocking` 手动开启
-
-Biased Lock 默认在程序启动后 4s 开启, 可以通过 `-XX:+BiasedLockingStartupDelay=0` 手动调整
-
-Test Biased Lock
-
-```java
-Object o = new Object();
-new Thread(() -> {
-    synchronized (o) {
-        System.out.println("hello world");
-    }
-}).start();
-System.out.println(ClassLayout.parseInstance(o).toPrintable());
-```
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746693.png)
-
-# Light Lock
-
-Light Lock 本质就是 CAS. 多个 Thread 交替抢 Lock, 执行 Sync. 不需要从 User Mode 切换到 Kernel Mode, 也不需要发生 Blocking. Conflict 的处理速度非常快, 适合经常多个 Thread 操作的场景, 不会造成 Thread Blocking, 执行速度也很高
-
-JVM 为每一个 Thread 的 Stack Frame, 都开辟了 LockRecord 的空间, 称为 Displaced MarkWord, 存储 LockRecord Object
-
-T1 通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 101, 修改 Lock 的 Markword 的 ptr_to_lock_record 指向 T1 的 LocalRecord Object, 复制 Lock 的 MarkWord 到 LockRecord Object 中, 并且 T1 的 LockRecord Object 也会存储了一个 Pointer 指向 Lock
-
-T2 通过 CAS 尝试修改 ptr_to_lock_record 指向 T2 的 LockRecord Object. 如果修改成功, 则表示 T2 抢到了 Lock. 如果 T2 尝试了多次 Spining 后, 还是没修改成功, 则会升级 Light Lock 为 Heavy Lock
-
-T1 释放 Lock 时, 会将 Displaced MarkWord 复制到 MarkWord 中. 如果复制成功, 则本次 Sync 结束. 如果复制失败, 则说明 Light Lock 升级为 Heavy Lock 了, 此时 T1 会释放 Lock, 唤醒其他 Blocing Thread, 一起竞争 Heavy Lock
-
-如果是 Reentrant Lock 在进行重入时, 每次重入一个锁, 就需要通过 CAS 创建一个 LockRecord Object, 后续创建的 LockRecord Object 不需要再去修改 ptr_to_lock_record 了
-
-JDK6 前, 默认 Spining 10 次, 就会进行 Lock Escalation, 可以通过 `-XX:PreBlockSpin=10` 手动设置
-
-JDK6 后, 采用 Adaptive Spin Lock, 如果 Spinning 成功, 则会提高 PreBlockSpin, 如果 Sprinning 失败, 则会降低 PreBlockSpin
-
-Biased Lock 是一个 Thread 抢 Lock. Light Lock 是多个 Thread 抢 Lock. Biased Lock 是每次执行完, 不会释放 Lock. Light Lock 是每次执行完, 都会释放 Lock
-
-# Heavy Lock
-
-synchronized 就是 Heavy Lock, 通过 Monitor 实现 Sync, 但是 Monitor 依赖 OS 的 Mutex Lock, 需要从 User Mode 切换为 Kernel Mode, 频繁切换, CPU 消耗非常多, 适合 Conflict 激烈的场景, 可以保证绝对的 Thread Safty, 但性能太差, 尽量避免用于同步时间较长的地方, 当 CAS 带来的消耗太多时, 也可以考虑切换为 Heavy Lock
-
-Heavy Lock 的 MarkWord 存储了 Pointer 指向 Heap 的 Monitor object. Monitor 存储了 Non Lock 的 HashCode, GC Age 等信息, 释放 Heavy Lock 时, 也会将这些信息写回到 MarkWord 中
-
-JVM Instruction
-
-- `monitorenter` 表示进入 Monitor object, 开启 Sync
-- `monitorleave` 表示离开 Monitor object, 关闭 Sync
-
-Test Heavy Lock
-
-```java
-Object o = new Object();
-new Thread(() -> {
-    synchronized (o) {
-        System.out.println("hello world");
-    }
-}).start();
-new Thread(() -> {
-    synchronized (o) {
-        System.out.println("hello world");
-    }
-}).start();
-```
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746694.png)
-
-# Lock Elimination
-
-JIT 进行 Compoile 时, 会对 lock 进行 Escape Analysis, 这里的 obj 未发生 Escape, 所以这个 lock 毫无意义 JIT 会自动帮我们去除 lock, 提升性能, 但是这种编译优化手段依旧会影响一定性能, 应当避免这样的失误
-
-```java
-public void test() {
-    Object obj = new Object();
-    synchronized(obj) {
-        System.out.println("hello world");
-    }
-}
-```
-
-# Lock Coarsening
-
-一个 Method 内, 多处将同一个 Object 作为 Lock 没有意义, JIT 会帮我们合并内容, 扩大范围
-
-```java
-// Before JIT optimization
-Object o = new Object();
-new Thread(() -> {
-    synchronized (o) {
-        System.out.println("hello world");
-    }
-    synchronized (o) {
-        System.out.println("hello world");
-    }
-    synchronized (o) {
-        System.out.println("hello world");
-    }
-}).start();
-
-// After JIT optimization
-Object o = new Object();
-new Thread(() -> {
-    synchronized (o) {
-        System.out.println("hello world");
-        System.out.println("hello world");
-        System.out.println("hello world");
-    }
-}).start();
 ```

@@ -25,7 +25,6 @@ startup MySQL
 ```shell
 sudo docker container run \
     --name mysql \
-    --restart always \
     --privileged \
     -p 3306:3306 \
     -v mysql-conf:/etc/mysql/conf.d \

@@ -20,42 +20,33 @@ Server Load Balancing: Server 通过 Hardware (eg: F5) 或 Software (eg: Nginx) 
 
 Client Load Balancing: Client 通过 Software (eg: Ribbon, LoadBalancer) 拦截请求, 转发请求, 实现 Load Balancing
 
-# install Nacos server by Docker
 
 pull Nacos image
 
 ```shell
-sudo docker image pull nacos/nacos-server:v2.1.1-slim
-```
-
-set volume
-
-```shell
-sudo docker volume create nacos-config
-sudo docker volume create nacos-data
-sudo docker volume create nacos-log
-
-sudo mkdir -p /opt/nacos
-
-sudo ln -s /var/lib/docker/volumes/nacos-config/_data /opt/nacos/config
-sudo ln -s /var/lib/docker/volumes/nacos-data/_data /opt/nacos/data
-sudo ln -s /var/lib/docker/volumes/nacos-log/_data /opt/nacos/log
+docker image pull nacos/nacos-server:v2.1.1-slim
 ```
 
 startup project
 
 ```shell
-sudo docker container run \
+docker container run \
     --name nacos \
-    --restart always \
     --privileged \
     -p 8848:8848 \
     -p 9848:9848 \
     -p 9849:9849 \
-    -v nacos-config:/home/nacos/conf \
+    -v nacos-conf:/home/nacos/conf \
     -v nacos-data:/home/nacos/data \
-    -v nacos-log:/home/nacos/logs \
+    -v nacos-logs:/home/nacos/logs \
     -e MODE=standalone \
+    -e NACOS_USER_NAME=nacos \
+    -e NACOS_USER_PASSWORD=nacos \
+    -e MYSQL_SERVICE_HOST=127.0.0.1 \
+    -e MYSQL_SERVICE_PORT=3306 \
+    -e MYSQL_SERVICE_DB_NAME=nacos \
+    -e MYSQL_SERVICE_USER=root \
+    -e MYSQL_SERVICE_PASSWORD=111 \
     -d nacos/nacos-server:v2.1.1-slim
 ```
 

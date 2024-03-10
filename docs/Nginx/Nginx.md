@@ -45,7 +45,6 @@ startup Nginx
 ```shell
 sudo docker container run \
     --name nginx \
-    --restart always \
     --privileged \
     -p 80:80 \
     -v nginx-conf:/etc/nginx \

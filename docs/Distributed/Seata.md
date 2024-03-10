@@ -1,12 +1,3 @@
-# CAP
-
-CAP: Consistency, Availability, Partition 同时只能满足两个, 结点之间形成分区后, 要么拒绝请求, 保证 Consistency, 放弃 Availability, 要么依旧提供服务, 保证 Availability, 放弃 Consistency
-
-BASE: 对 CAP 的一种解决方案, 结点之间形成分区后, 允许 Partial Availability, 要求 Core Availability, 允许 Temporary Incosistency, 要求 Eventual Consistency
-
-- AP Mode: Sub Transaction 分别执行 Operation 和 Commit, 允许 Temporary Incosistency, 后续采用 Remedy, 保证 Eventual Consistency (eg: Redis)
-- CP mode: Sub Transaction 分别执行 Operation, 相互等待, 放弃 Partial Availability, 保证 Core Availability, 共同执行 Commit (eg: ElasticSearch)
-
 # Seata
 
 Seata 是分布式事务的一种解决方案, 提供了 XA, AT, TCC 三种模式
@@ -21,40 +12,48 @@ Seata 全局管理事务中三个重要的角色
 
 # Seata Server
 
-download Seata
+pull image
 
 ```shell
-curl -LJO https://github.com/seata/seata/releases/download/v1.7.0/seata-server-1.7.0.zip
+docker image pull seataio/seata-server:1.5.2
 ```
 
-set Seata to connect to Nacos (file: conf/application.yaml)
+startup container
 
-```yaml
+```shell
+docker container run \
+    --name seata \
+    -p 8091:8091 \
+    -p 7091:7091 \
+    -e STORE_MODE=db \
+    -v seata-resources:/seata-server/resources \
+    -d seataio/seata-server:1.5.2
+```
+
+set Seata to connect to Nacos (file: resources/application.yml)
+
+```yml
 seata:
   config:
     type: nacos
     nacos:
       server-addr: 127.0.0.1:8848
-      namespace:
-      group: SEATA_GROUP
+      group: DEFAULT_GROUP
       username: nacos
       password: nacos
-      context-path:
       data-id: seata-server.properties
   registry:
     type: nacos
     nacos:
       application: seata-server
       server-addr: 127.0.0.1:8848
-      group: SEATA_GROUP
-      namespace:
+      group: DEFAULT_GROUP
       cluster: default
       username: nacos
       password: nacos
-      context-path:
 ```
 
-set Seata to connect to MySQL (file: conf/seata-server.properties)
+set Seata to connect to MySQL (file: nacos/DEFAULT_GROUP/seata-server.properties)
 
 ```properties
 store.mode=db
@@ -75,23 +74,34 @@ store.db.distributedLockTable=distributed_lock
 store.db.lockTable=lock_table
 store.db.queryLimit=100
 store.db.maxWait=5000
+
+server.undo.logSaveDays=7
+server.undo.logDeletePeriod=86400000
+server.maxCommitRetryTimeout=-1
+server.maxRollbackRetryTimeout=-1
+server.recovery.committingRetryPeriod=1000
+server.recovery.asynCommittingRetryPeriod=1000
+server.recovery.rollbackingRetryPeriod=1000
+server.recovery.timeoutRetryPeriod=1000
 ```
 
 create table
+
+```shell
+curl -LJO https://raw.githubusercontent.com/apache/incubator-seata/develop/script/server/db/mysql.sql
+```
 
 ```sql
 create database seata;
 
 use seata;
 
-source script/server/db/mysql.sql;
+source /Users/HarveySuen/Downloads/mysql.sql;
 ```
 
-startup Seata
+access http://127.0.0.1:7091 (username: seata, password: seata)
 
-```shell
-sh bin/seata-server.sh
-```
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403092232910.png)
 
 # Seata Client
 
@@ -108,14 +118,14 @@ set Nacos profile to connect to Seata server
 
 ```txt
 Data ID: seata-server.properties
-Group: SEATA_GROUP
+Group: DEFAULT_GROUP
 ```
 
 ```properties
 seata.registry.type=nacos
 seata.registry.nacos.server-addr=127.0.0.1:8848
 seata.registry.nacos.namespace=public
-seata.registry.nacos.group=SEATA_GROUP
+seata.registry.nacos.group=DEFAULT_GROUP
 seata.registry.nacos.application=seata-server
 seata.registry.nacos.username=nacos
 seata.registry.nacos.password=nacos
@@ -125,7 +135,7 @@ seata.service.vgroup-mapping.seata-demo=default
 
 # XA Mode
 
-XA Mode 属于 CP Mode, 一致性较强, 性能较差
+XA Mode 属于 CP Mode, 一致性较强, 性能较差, 其实 MySQL 已经通过 2PC 实现了 XA, Seata 对 MySQL 的实现又做了进一步的封装
 
 TM 通知 TC 开启 Global Transaction, TM 调用 RM 向 TC 注册 Branch Transaction, 执行 SQL, 报告 Transaction State
 
@@ -157,7 +167,7 @@ AT Mode 属于 AP Mode, 一致性较差, 性能较强, 企业一般都是采用 
 
 TM 通知 TC 开启 Global Transaction, TM 调用 RM 向 TC 注册 Branch Transaction, 存储 Snapshotting (Undo Log), 执行 SQL, 执行 Commit, 报告 Branch Transaction State
 
-TM 通知 TC 执行 Commit 或 Rollback, TC 检查 Branch Transaction State, 通知 RM 删除 Snapshotting 恢复 Data
+TM 通知 TC 执行 Commit 或 Rollback, TC 检查 Branch Transaction State, 通知 RM 异步删除 Snapshotting 或根据 Snapshotting 恢复 Data, 恢复完再通过异步的方式删除 Snapshotting
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241753971.png)
 
@@ -413,7 +423,7 @@ seata:
     nacos:
       server-addr: 127.0.0.1:8848
       namespace:
-      group: SEATA_GROUP
+      group: DEFAULT_GROUP
       username: nacos
       password: nacos
       context-path:
@@ -428,7 +438,7 @@ seata:
       password: nacos
       context-path:
       # group
-      group: SEATA_GROUP
+      group: DEFAULT_GROUP
       # cluster name
       cluster: JS
 ```
@@ -447,7 +457,7 @@ configure Nacos profile
 
 ```txt
 Data ID: seata-client.properties
-Group: SEATA_GROUP
+Group: DEFAULT_GROUP
 ```
 
 ```properties
@@ -506,7 +516,7 @@ configure micro-service to connect to Seata cluster
 seata.registry.type=nacos
 seata.registry.nacos.server-addr=127.0.0.1:8848
 seata.registry.nacos.namespace=public
-seata.registry.nacos.group=SEATA_GROUP
+seata.registry.nacos.group=DEFAULT_GROUP
 seata.registry.nacos.application=seata-server
 seata.registry.nacos.username=nacos
 seata.registry.nacos.password=nacos
@@ -514,7 +524,7 @@ seata.config.type=nacos
 seata.config.nacos.server-addr=127.0.0.1:8848
 seata.config.nacos.username=nacos
 seata.config.nacos.password=nacos
-seata.config.nacos.group=SEATA_GROUP
+seata.config.nacos.group=DEFAULT_GROUP
 # set group name
 seata.tx-service-group=seata-demo
 # set data id to access Nacos profile

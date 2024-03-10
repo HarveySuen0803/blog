@@ -168,7 +168,7 @@ configure parent module (file: spring-boot-demo/pom.xml)
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.0.2</version>
+        <version>3.1.0</version>
         <relativePath/>
     </parent>
     

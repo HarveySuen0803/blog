@@ -19,15 +19,15 @@ RabbitMQ architecture
 pull RabbitMQ image
 
 ```shell
-sudo docker image pull rabbitmq:3.12
+docker image pull rabbitmq:3.12
 ```
 
 set volume
 
 ```shell
-sudo docker volume create rabbitmq-conf
-sudo docker volume create rabbitmq-data
-sudo docker volume create rabbitmq-plugin
+docker volume create rabbitmq-conf
+docker volume create rabbitmq-data
+docker volume create rabbitmq-plugin
 
 sudo mkdir -p /opt/rabbitmq/data
 
@@ -39,10 +39,9 @@ sudo ln -s /var/lib/docker/volumes/rabbitmq-plugin/_data /opt/rabbitmq/plugin
 startup RabbitMQ server
 
 ```shell
-sudo docker container run \
+docker container run \
     --hostname rabbitmq-node-01 \
     --name rabbitmq \
-    --restart always \
     --privileged \
     -e RABBITMQ_DEFAULT_USER=harvey \
     -e RABBITMQ_DEFAULT_PASS=111 \
@@ -353,4 +352,10 @@ public Binding binding(Queue queue, DirectExchange directExchange) {
     return binding;
 }
 ```
+
+# Batch Consumption
+
+
+
+
 

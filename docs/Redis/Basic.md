@@ -47,7 +47,6 @@ startup Redis
 ```shell
 sudo docker container run \
     --name redis \
-    --restart always \
     --privileged \
     -p 6379:6379 \
     -p 16379:16379 \

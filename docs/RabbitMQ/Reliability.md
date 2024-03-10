@@ -341,3 +341,14 @@ public void listener(Message message) {
     System.out.println("deal non-idempotent business");
 }
 ```
+
+# Message Accumulation
+
+Message Accumulation 是 Publisher 发布消息的速度太快, Consumer 消费消息的速度太慢, 导致大量消息堆积在队列中
+
+Message Accumulation 解决方案
+
+- 增加 Consumer 提高消费速度
+- 通过 ThreadPool 提高消费速度
+- 通过 Lazy Queue 提高消息的存储能力
+
