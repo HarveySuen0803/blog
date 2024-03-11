@@ -39,12 +39,12 @@ let clickHandle = async () => {
 import axios from 'axios'
 import {StorageConstant} from '@/common/constant.ts'
 
-api.defaults.withCredentials = true;
-
 const api = axios.create({
   baseURL: '/api',
   timeout: 5000
 })
+
+api.defaults.withCredentials = true;
 
 api.interceptors.request.use(
   config => {

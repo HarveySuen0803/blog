@@ -496,6 +496,98 @@ public static ListNode reverseList(ListNode o1) {
 }
 ```
 
+# Swap Nodes in Pairs
+
+[Problem Description](https://leetcode.cn/problems/swap-nodes-in-pairs/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static ListNode swapPairs(ListNode head) {
+    if (head == null) {
+        return null;
+    }
+
+    ListNode p1 = head;
+    ListNode p2 = head.next;
+    while (p2 != null) {
+        int t = p1.val;
+        p1.val = p2.val;
+        p2.val = t;
+        
+        if (p2.next == null) {
+            break;
+        }
+        p1 = p1.next.next;
+        p2 = p2.next.next;
+    }
+    return head;
+}
+```
+
+# Reverse Nodes in k-Group
+
+[Problem Description](https://leetcode.cn/problems/reverse-nodes-in-k-group/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+/*
+    end
+    srt                                    cur
+    1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8   nil -> N
+    -----------------------------------------------------------------------
+    srt       end                          cur
+    1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8   nil -> N
+    -----------------------------------------------------------------------
+    srt       end                                           cur
+    1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8   nil -> 3 -> 2 -> 1
+    -----------------------------------------------------------------------
+                   srt
+                   end                                      cur
+    1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8   nil -> 3 -> 2 -> 1
+    -----------------------------------------------------------------------
+                   srt
+                   end                                      cur
+    1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8   nil -> 3 -> 2 -> 1
+    -----------------------------------------------------------------------
+                   srt       end                            cur
+    1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8   nil -> 3 -> 2 -> 1
+    -----------------------------------------------------------------------
+                   srt       end                                           cur
+    1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8   nil -> 3 -> 2 -> 1 -> 6 -> 5 -> 4
+    -----------------------------------------------------------------------
+                                  srt  end                                 cur
+    1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8   nil -> 3 -> 2 -> 1 -> 6 -> 5 -> 4 -> 7 -> 8
+ */
+public static ListNode reverseKGroup(ListNode head, int k) {
+    int i = 0;
+    ListNode nil = new ListNode(-1, head);
+    ListNode srt = head;
+    ListNode end = head;
+    ListNode cur = nil;
+    while (end != null) {
+        if (++i % k == 0) {
+            cur.next = reverseGroup(srt, end);
+            while (cur.next != null) {
+                cur = cur.next;
+            }
+            srt = end.next;
+        }
+        end = end.next;
+    }
+    if (i % k != 0) {
+        cur.next = srt;
+    }
+    return nil.next;
+}
+
+public static ListNode reverseGroup(ListNode srt, ListNode end) {
+    ListNode nil = new ListNode(-1, null);
+    while (srt != end.next) {
+        nil.next = new ListNode(srt.val, nil.next);
+        srt = srt.next;
+    }
+    return nil.next;
+}
+```
+
 # Remove Element by Value
 
 ```java
@@ -1366,5 +1458,96 @@ public static ListNode getIntersectionNode(ListNode headA, ListNode headB) {
         pB = pB != null ? pB.next : headA;
     }
     return pA;
+}
+```
+
+# Add Two Numbers
+
+[Problem Description](https://leetcode.cn/problems/add-two-numbers/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+    ListNode s = new ListNode(-1, null);
+    ListNode p3 = s;
+    ListNode p1 = l1;
+    ListNode p2 = l2;
+    int r = 0;
+    while (p1 != null && p2 != null) {
+        p3.next = new ListNode((p1.val + p2.val + r) % 10);
+        r = (p1.val + p2.val + r) / 10;
+        p3 = p3.next;
+        p1 = p1.next;
+        p2 = p2.next;
+    }
+    while (p1 != null) {
+        p3.next = new ListNode((p1.val + r) % 10);
+        r = (p1.val + r) / 10;
+        p3 = p3.next;
+        p1 = p1.next;
+    }
+    while (p2 != null) {
+        p3.next = new ListNode((p2.val + r) % 10);
+        r = (p2.val + r) / 10;
+        p3 = p3.next;
+        p2 = p2.next;
+    }
+    if (r == 1) {
+        p3.next = new ListNode(1);
+    }
+    return s.next;
+}
+```
+
+# Sort List
+
+[Problem Description](https://leetcode.cn/problems/sort-list/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static ListNode sortList(ListNode head) {
+    return sortList(head, null);
+}
+
+public static ListNode sortList(ListNode head, ListNode tail) {
+    if (head == null) {
+        return null;
+    }
+    if (head.next == tail) {
+        head.next = null;
+        return head;
+    }
+    ListNode slow = head;
+    ListNode fast = head;
+    while (fast != tail) {
+        slow = slow.next;
+        fast = fast.next;
+        if (fast != tail) {
+            fast = fast.next;
+        }
+    }
+    ListNode midd = slow;
+    ListNode head1 = sortList(head, midd);
+    ListNode head2 = sortList(midd, tail);
+    return merge(head1, head2);
+}
+
+public static ListNode merge(ListNode p1, ListNode p2) {
+    ListNode nil = new ListNode(-1, null);
+    ListNode p3 = nil;
+    while (p1 != null && p2 != null) {
+        if (p1.val < p2.val) {
+            p3.next = p1;
+            p1 = p1.next;
+        } else {
+            p3.next = p2;
+            p2 = p2.next;
+        } 
+        p3 = p3.next;
+    }
+    if (p1 != null) {
+        p3.next = p1;
+    } else {
+        p3.next = p2;
+    } 
+    return nil.next;
 }
 ```

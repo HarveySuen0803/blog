@@ -611,6 +611,27 @@ public int longestCommonSubsequence(String txt1, String txt2) {
 }
 ```
 
+# Maximum Subarray
+
+[Problem Description](https://leetcode.cn/problems/maximum-subarray/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static int maxSubArray(int[] nums) {
+    int[] dp = new int[nums.length];
+    dp[0] = nums[0];
+    int maxSum = dp[0];
+    for (int i = 1; i < nums.length; i++) {
+        if (dp[i - 1] > 0) {
+            dp[i] = dp[i - 1] + nums[i];
+        } else {
+            dp[i] = nums[i];
+        }
+        maxSum = Math.max(maxSum, dp[i]);
+    }
+    return maxSum;
+}
+```
+
 # Delete Operation for Two Strings
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=139)

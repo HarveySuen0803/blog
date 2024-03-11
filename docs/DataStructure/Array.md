@@ -263,3 +263,178 @@ public static int pivotIndex(int[] nums) {
     return -1;
 }
 ```
+
+# Maximum Subarray
+
+[Problem Description](https://leetcode.cn/problems/maximum-subarray/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static int maxSubArray(int[] nums) {
+    int maxSum = Integer.MIN_VALUE;
+    for (int i = 0; i < nums.length; i++) {
+        int curSum = 0;
+        for (int j = i; j < nums.length; j++) {
+            curSum += nums[j];
+            maxSum = Math.max(maxSum, curSum);
+        }
+    }
+    return maxSum;
+}
+```
+
+# Merge Intervals
+
+[Problem Description](https://leetcode.cn/problems/merge-intervals/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public int[][] merge(int[][] intervals) {
+    if (intervals.length == 0) {
+        return new int[0][2];
+    }
+    Arrays.sort(intervals, Comparator.comparingInt((int[] i) -> i[0]));
+    List<int[]> res = new ArrayList<>();
+    res.add(new int[]{intervals[0][0], intervals[0][1]});
+    for (int i = 1; i < intervals.length; i++) {
+        int lVal = intervals[i][0];
+        int rVal = intervals[i][1];
+        if (lVal > res.get(res.size() - 1)[1]) {
+            res.add(new int[]{lVal, rVal});
+        } else {
+            res.get(res.size() - 1)[1] = Math.max(res.get(res.size() - 1)[1], rVal);
+        }
+    }
+    return res.toArray(new int[res.size()][]);
+}
+```
+
+# Merge Intervals
+
+```java
+public int[][] merge(int[][] intervals) {
+    if (intervals.length == 0) {
+        return new int[0][2];
+    }
+    Arrays.sort(intervals, Comparator.comparingInt(v -> v[0]));
+    int[][] res = new int[intervals.length][2];
+    res[0] = new int[]{intervals[0][0], intervals[0][1]};
+    int idx = 0;
+    for (int i = 1; i < intervals.length; i++) {
+        if (intervals[i][0] > res[idx][1]) {
+            res[++idx] = intervals[i];
+        } else {
+            res[idx][1] = Math.max(res[idx][1], intervals[i][1]);
+        }
+    }
+    return Arrays.copyOf(res, idx + 1);
+}
+```
+
+# Rotate Array
+
+[Problem Description](https://leetcode.cn/problems/rotate-array/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static void rotate(int[] nums, int k) {
+    LinkedList<Integer> que = new LinkedList<>();
+    for (int num : nums) {
+        que.offerLast(num);
+    }
+    for (int i = 0; i < k; i++) {
+        que.offerFirst(que.pollLast());
+    }
+    for (int i = 0; i < nums.length; i++) {
+        nums[i] = que.pollFirst();
+    }
+}
+```
+
+# Rotate Array
+
+```java
+public static void rotate(int[] nums1, int k) {
+    int[] nums2 = new int[nums1.length];
+    for (int i = 0; i < nums1.length; i++) {
+        nums2[(i + k) % nums2.length] = nums1[i];
+    }
+    System.arraycopy(nums2, 0, nums1, 0, nums2.length);
+}
+```
+
+# Product of Array Except Self
+
+[Problem Description](https://leetcode.cn/problems/product-of-array-except-self/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static int[] productExceptSelf(int[] nums) {
+    int[] lCount = new int[nums.length];
+    int[] rCount = new int[nums.length];
+    lCount[0] = 1;
+    for (int i = 1; i < nums.length; i++) {
+        lCount[i] = lCount[i - 1] * nums[i - 1];
+    }
+    rCount[nums.length - 1] = 1;
+    for (int i = nums.length - 2; i >= 0; i--) {
+        rCount[i] = rCount[i + 1] * nums[i + 1];
+    }
+    for (int i = 0; i < nums.length; i++) {
+        nums[i] = lCount[i] * rCount[i];
+    }
+    return nums;
+}
+```
+
+# Product of Array Except Self
+
+[Explain](https://leetcode.cn/problems/product-of-array-except-self/submissions/509942756/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static int[] productExceptSelf(int[] nums) {
+    if (nums.length == 0) {
+        return new int[0];
+    }
+    int[] ans = new int[nums.length];
+    ans[0] = 1;
+    for (int i = 1; i < nums.length; i++) {
+        ans[i] = ans[i - 1] * nums[i - 1];
+    }
+    int tmp = 1;
+    for (int i = nums.length - 2; i >= 0; i--) {
+        tmp *= nums[i + 1];
+        ans[i] *= tmp;
+    }
+    return ans;
+}
+```
+
+# Set Matrix Zeroes
+
+[Problem Description](https://leetcode.cn/problems/set-matrix-zeroes/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public void setZeroes(int[][] matrix) {
+    boolean[] ca = new boolean[matrix.length];
+    boolean[] cb = new boolean[matrix[0].length];
+    for (int i = 0; i < matrix.length; i++) {
+        for (int j = 0; j < matrix[i].length; j++) {
+            if (matrix[i][j] == 0) {
+                ca[i] = true;
+                cb[j] = true;
+            }
+        }
+    }
+    for (int i = 0; i < ca.length; i++) {
+        if (ca[i]) {
+            for (int k = 0; k < matrix[0].length; k++) {
+                matrix[i][k] = 0;
+            }
+        }
+    }
+    for (int j = 0; j < cb.length; j++) {
+        if (cb[j]) {
+            for (int k = 0; k < matrix.length; k++) {
+                matrix[k][j] = 0;
+            }
+        }
+    }
+}
+```

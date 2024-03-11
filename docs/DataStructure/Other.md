@@ -6,14 +6,14 @@
 
 ```java
 public class LRUCache {
-    private final HashMap<Integer, Node> map;
-    private final DoubleLinkedList list;
+    private HashMap<Integer, Node> map;
+    private LinkedList<Node> list;
     private int cap;
     
     public LRUCache(int cap) {
+        this.map = new LinkedHashMap<>(cap);
+        this.list = new LinkedList<>();
         this.cap = cap;
-        this.map = new HashMap<>();
-        this.list = new DoubleLinkedList();
     }
     
     public int get(int key) {
@@ -30,20 +30,20 @@ public class LRUCache {
         if (map.containsKey(key)) {
             Node node = map.get(key);
             node.val = val;
+            map.put(key, node);
             list.remove(node);
             list.addFirst(node);
         } else {
-            if (map.size() = cap) {
-                Node removed = list.removeLast();
-                map.remove(removed.key);
+            if (map.size() == cap) {
+                Node last = list.removeLast();
+                map.remove(last.key);
             }
-
             Node node = new Node(key, val);
             map.put(key, node);
             list.addFirst(node);
         }
     }
-
+    
     public static class Node {
         Node prev;
         Node next;
@@ -56,38 +56,6 @@ public class LRUCache {
         public Node(int key, int val) {
             this.key = key;
             this.val = val;
-        }
-    }
-    
-    public static class DoubleLinkedList {
-        Node head;
-        Node tail;
-        
-        public DoubleLinkedList() {
-            head = tail = new Node();
-            head.next = tail;
-            tail.next = head;
-        }
-        
-        public void addFirst(Node newFirst) {
-            Node oldFirst = head.next;
-            newFirst.prev = head;
-            newFirst.next = oldFirst;
-            head.next = newFirst;
-            oldFirst.prev = newFirst;
-        }
-        
-        public void remove(Node removed) {
-            Node prev = removed.prev;
-            Node next = removed.next;
-            prev.next = next;
-            next.prev = prev;
-        }
-        
-        public Node removeLast() {
-            Node removed = tail.prev;
-            remove(removed);
-            return removed;
         }
     }
 }

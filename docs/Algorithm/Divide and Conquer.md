@@ -94,3 +94,115 @@ public int longestSubstring(String s, int k) {
     return s.length();
 }
 ```
+
+# Sort List
+
+[Problem Description](https://leetcode.cn/problems/sort-list/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static ListNode sortList(ListNode head) {
+    return sortList(head, null);
+}
+
+public static ListNode sortList(ListNode head, ListNode tail) {
+    if (head == null) {
+        return null;
+    }
+    if (head.next == tail) {
+        head.next = null;
+        return head;
+    }
+    ListNode slow = head;
+    ListNode fast = head;
+    while (fast != tail) {
+        slow = slow.next;
+        fast = fast.next;
+        if (fast != tail) {
+            fast = fast.next;
+        }
+    }
+    ListNode midd = slow;
+    ListNode head1 = sortList(head, midd);
+    ListNode head2 = sortList(midd, tail);
+    return merge(head1, head2);
+}
+
+public static ListNode merge(ListNode p1, ListNode p2) {
+    ListNode nil = new ListNode(-1, null);
+    ListNode p3 = nil;
+    while (p1 != null && p2 != null) {
+        if (p1.val < p2.val) {
+            p3.next = p1;
+            p1 = p1.next;
+        } else {
+            p3.next = p2;
+            p2 = p2.next;
+        } 
+        p3 = p3.next;
+    }
+    if (p1 != null) {
+        p3.next = p1;
+    } else {
+        p3.next = p2;
+    } 
+    return nil.next;
+}
+```
+
+# Merge k Sorted lists
+
+[Problem Description](https://leetcode.cn/problems/merge-k-sorted-lists/description/)
+
+[Explain](https://www.bilibili.com/video/BV1Lv4y1e7HL?p=84)
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241804945.png)
+
+```java
+public static ListNode mergeKLists(ListNode[] lists) {
+    if (lists.length == 0) {
+        return null;
+    }
+    
+    if (lists.length == 1) {
+        return lists[0];
+    }
+
+    return splitLists(lists, 0, lists.length - 1);
+}
+
+public static ListNode splitLists(ListNode[] lists, int left, int right) {
+    if (left == right) {
+        return lists[left];
+    }
+    
+    int mid = (left + right) >>> 1;
+    ListNode leftNode = splitLists(lists, left, mid);
+    ListNode rightNode = splitLists(lists, mid + 1, right);
+    
+    return mergeTwoLists(leftNode, rightNode);
+}
+
+public static ListNode mergeTwoLists(ListNode p1, ListNode p2) {
+    ListNode s = new ListNode(-1, null);
+    ListNode p = s;
+    
+    while (p1 != null && p2 != null) {
+        if (p1.val < p2.val) {
+            p.next = p1;
+            p1 = p1.next;
+        } else {
+            p.next = p2;
+            p2 = p2.next;
+        }
+        p = p.next;
+    }
+    
+    if (p1 != null) {
+        p.next = p1;
+    } else {
+        p.next = p2;
+    }
+    
+    return s.next;
+}
+```
