@@ -19,6 +19,12 @@ Thread A 试图获取 Lock 时, 会先检查 State
 - 如果 State == 0 表示未占用, Thread A 就会尝试通过 CAS 将 State 改为 1, 表示 Thread A 获取了 Lock
 - 如果 State != 0 表示被占用, 那么 AQS 就会将 Thread A 封装成一个 Node 存储进 CLH Queue, 通过 LockSupport 让 Thread A 进入等待状态, 当 Lock 释放后, 先进入 Queue 的 Node 就会被唤醒, 试图去争抢 Lock
 
+CLH Queue 使用 Double LinkedList 的原因
+
+- Double LinkedList 相比 Single LinkedList 可以访问前驱节点, 加入到 CLH Queue 的节点都需要去判断前面的节点是否存在异常, 如果存在异常会无法唤醒后续等待的节点, 如果使用 Single LinkedList 就需要从头开始遍历, 非常低效
+- CLH Queue 中堵塞的节点, 下次唤醒时, 应该只有头节点去参与锁竞争, 避免同时唤醒所有的节点去竞争导致的惊群线程, 从而消耗大量资源, CLH Queue 中的节点只需要判断自己的前一个节点是否为头节点即可解决这个问题
+- 有些 AQS 的实现类实现了 lockInterruptibly() 表示是可以中断的 Lock (eg: ReentrantLock), 被中断的线程在后续就不应该参与到锁的竞争中了, 通过 Double LinkedList 可以很方便的删除这个节点, 如果使用 Single LinkedList 会导致删除操作和遍历操作的竞争
+
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746778.png)
 
 AQS 关于 Node 和 State 的 Source Code

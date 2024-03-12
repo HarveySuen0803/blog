@@ -219,7 +219,7 @@ nginx 接受 nginx-demo.com/4923402 的 request, 根据 UUID (4923402) 查询 DB
 
 # reverse proxy
 
-proxy 和 revser proxy 的区别, proxy 是 client 和 proxy server 处于 intranet, server proxy 是 proxy server 和 server 处于 intranet
+proxy 和 revser proxy 的区别, proxy 是 client 和 proxy server 处于 intranet, reverse proxy 是 proxy server 和 server 处于 intranet
 
 Tunnel model, client 发送 request 经过 proxy server, app server 响应 response 也要经过 proxy server, app server 容易受制于 proxy server, 当 proxy server 性能不佳时, 会拖累到 app server
 

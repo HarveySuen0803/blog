@@ -23,19 +23,19 @@ public class UserController {
 
 SpringMVC 处理 JSP 的流程
 
-- Client 请求 DispatcherServlet
-- DispatcherServlet 请求 HandlerMapping 查询 Handler
+- Client 请求 Servlet, Servlet 转发请求给 SpringMVC 的 DispatcherServlet
+- DispatcherServlet 请求 HandlerMapping 解析请求, 查询 Handler, HandlerMapping 返回 HandlerExecutionChain
     - HandlerMapping 就是一个 Map, Key 为 uri (eg: /user/1), Val 为 Class#Method (eg: com.harvey.controller.UserController#getById())
-- HandlerMapping 返回 HandlerExecutionChain
-    - HandlerExecutionChain 包含了 Method 和 Filter
-- DispatcherServlet 请求 HandlerAdapter
-- HandlerAdapter 请求 Handler
-    - HandlerAdapter 需要处理请求参数和返回值
+    - HandlerExecutionChain 包含了 Controller Method 和 Controller 的 Filter
+- DispatcherServlet 携带 HandlerExecutionChain 请求 HandlerAdapter
+- HandlerAdapter 根据 HandlerExecutionChain 找到对应的 Handler
+    - HandlerAdapter 会处理请求参数 (eg: Query Param, Body Param, Path Param), 将处理好的参数交给 Handler
 - Handler 执行 Method 后, 返回结果给 HandlerAdapter
+    - HandlerAdapter 接受到响应结果后, 封装成 ModelAndView
 - HandlerAdapter 返回 ModelAndView 给 DispatcherServlet
 - DispatcherServlet 携带 ModelAndView 请求 ViewResolver
 - ViewResolver 处理 ModelAndView, 返回 View Obj 给 DispatcherServlet
-    - 解析 View 中的 JSP, 替换为数据
+    - ViewResolver 会将 ModelAndVie 这个逻辑视图转成 JSP 视图或者 Thymeleaf视图
 - DispatcherServlet 响应 View 给 Client
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401181550236.png)

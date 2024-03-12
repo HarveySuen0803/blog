@@ -325,6 +325,22 @@ new Thread(() -> {
 }).start();
 ```
 
+```java
+public synchronized void increment() {
+    count++;
+}
+
+public synchronized void decrement() {
+    count--;
+}
+
+public synchronized void add(int value) {
+    for (int i = 0; i < value; i++) {
+        increment();
+    }
+}
+```
+
 ReentrantLock 维护了 FairLock 和 UnfairLock, 都采用是 Exclusive Mode.
 
 Fair Lock 是多个 Thread 按照顺序获取 Lock, 分配均匀, 不存在锁饥饿, 但是性能稍差.
@@ -848,10 +864,17 @@ public static void test() {
 
 死锁的四个必要条件
 
-- 互斥条件 (Mutual Exclusion): 一个资源每次只能被一个线程使用
-- 占有且等待条件 (Hold and Wait): 一个线程因持有了某个资源而等待另一个线程持有的资源
-- 非抢占条件 (No Preemption): 线程无法抢占其他线程持有的资源, 只能在持有资源的线程释放资源后才能获取
-- 循环等待条件 (Circular Wait): 若干线程之间形成一种循环等待资源的关系
+- 互斥 (Mutual Exclusion): 共享资源 X 只能同时被一个线程所持有
+- 占有等待 (Hold and Wait): A 持有 X, A 在等待 Y 的过程中不释放 X
+- 不可抢占 (No Preemption): A 持有 X, B 持有 Y, A 无法强行抢占 B 的 Y
+- 循环等待 (Circular Wait): A 等待 B 释放 Y, B 等待 A 释放 X
+
+只要打破四个必要条件的任意一个即可解决死锁问题
+
+- 互斥: 互斥是实现同步的根本原理, 无法被打破
+- 占有等待: A 一次性获取所需的 X 和 Y, 避免等待, 或者引入锁超时机制避免永远等待
+- 不可抢占: 使用可中断的锁, A 想要的 Y 被 B 抢走了, A 就主动在程序中释放 B 的 Y, 然后自己再获取 Y
+- 循环等待: 指定共享资源的获取顺序, 想要获取 Y 一定要先获取 X
 
 检测程序中是否存在死锁是一个相对复杂的任务, 因为死锁通常发生在运行时, 并且需要在系统中的某个时刻进行检测
 

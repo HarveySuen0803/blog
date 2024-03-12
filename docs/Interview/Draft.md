@@ -20,10 +20,6 @@ HashMap 采用 RedBlackTree 不仅可以提高查询效率, 还可以防止 DDos
 
 当 LinkedList 的元素个数 > 8 && Array 的容量 > 64 时, 就会将 LinkedList 进化成 RedBlackTree. 当 LinkedList 的元素个数 < 6 是, 就会将 RedBlackTree 退化成 LinkedList.
 
-## HashTable
-
-HashTable 线程安全, 数据存储在数组中, 数组存储单向链表, key 和 value 都不可以存储 null.
-
 ## ConcurrentHashMap
 
 JDK7 采用 Array + LinkedList, 通过 Segment + ReentrantLock 保证线程安全.
@@ -40,7 +36,7 @@ JDK8 引入了多线程并发扩容, 对原始数组进行分片, 每个线程�
 
 ConcurrentHashMap 可以通过 size() 获取元素格式, 这要求在保证 Atomicity 的前提下, 去维护一个整形的递增, 这个效率是非常低的, ConcurrentHashMap 针对此做了特殊优化.
 
-ConcurrentHashMap 通过维护 CounterCell[] 来实现 size(), CounterCell 的 volatile long value 记录了 ConcurrentHashMap 的元素个数, 不同的线程操作不同的 ConcurrentCell, 不存在并发问题. 最终调用 size() 时, 就遍历 CounterCell[] 进行求和, 类似于 LongAddr.
+ConcurrentHashMap 通过维护 CounterCell[] 来实现 size(), CounterCell 的 volatile long value 记录了 ConcurrentHashMap 的元素个数, 不同的线程操作不同的 ConcurrentCell, 不存在并发问题. 最终调用 size() 时, 就遍历 CounterCell[] 进行求和, 类似于 LongAdder.
 
 ## IO
 
@@ -324,6 +320,61 @@ NIO 时, OS 会直接划分一块 Buffer 供 Java Program 访问, OS 会同步 B
 
 # JUC
 
+## Lock
+
+尽量使用 object lock, 而不是 class lock
+
+添加了 synchronized 的 method 会添加一个 ACC_SYNCHRONIZED flag
+
+Pessimistic Locking 先锁定资源, 再操作资源, 适合写操作多的场景
+
+Optimistic Locking 先判断资源是否被更新过, 再操作资源, 如果没有被更新, 就直接操作资源, 如果被更新过, 就采取相应策略 (eg: 放弃修改, 重试强锁), 适合读操作的场景, 一般通过 OCC 或 CAS 判断资源是否被操作过
+
+OCC (Optimistic Concurrency Control) 是一种乐观锁的并发控制策略, 它假设事务冲突的概率较低, 因此允许多个事务同时进行, 并在提交时检查版本是否有冲突 (eg: AtomicInteger)
+
+OCC 和 CAS 都是基于乐观锁, 都是比较版本号解决并发冲突, OCC 更侧重软件实现, CAS 更侧重硬件实现
+
+## Dead Lock
+
+一个线程需要持有多把锁时, 并且锁之间存在嵌套关系, 就非常容易导致 Dead Lock, 尽量在设计程序时, 避免一个线程去争抢多把 Lock, 实在没办法, 也要让多把锁的逻辑放在一个层级, 不要去嵌套
+
+死锁的四个必要条件
+
+- 互斥 (Mutual Exclusion): 共享资源 X 和 Y 只能同时被一个线程所持有
+- 占有等待 (Hold and Wait): A 持有 X, A 在等待 Y 的过程中不释放 X
+- 不可抢占 (No Preemption): A 持有 X, B 持有 Y, A 无法强行抢占 B 的 Y
+- 循环等待 (Circular Wait): A 等待 B 释放 Y, B 等待 A 释放 X
+
+只要打破四个必要条件的任意一个即可解决死锁问题
+
+- 互斥: 互斥是实现同步的根本原理, 无法被打破
+- 占有等待: A 一次性获取所需的 X 和 Y, 避免等待, 或者引入锁超时机制避免永远等待
+- 不可抢占: 使用可中断的锁, A 想要的 Y 被 B 抢走了, A 就主动在程序中释放 B 的 Y, 然后自己再获取 Y
+- 循环等待: 指定共享资源的获取顺序, 想要获取 Y 一定要先获取 X
+
+检测程序中是否存在死锁是一个相对复杂的任务, 因为死锁通常发生在运行时, 并且需要在系统中的某个时刻进行检测
+
+- jstack 是 JVM 提供的一个 Command Tool, 可以打印出给定 Java 进程中所有线程的堆栈跟踪, 在一个运行中的 Java 程序中, 可以使用 jstack 来获取线程堆栈信息, 以分析是否存在死锁
+- VisualVM 是 JVM 提供的一个管理和分析 Java 应用程序的图形化工具, 可以通过 VisualGC, Thread Dump Analyzer 来分析线程和内存信息, 进而检测死锁
+- Deadlock Detector 是一些第三方的死锁检测工具
+
+## Monitor
+
+Monitor 是 JVM 的 Lock, 是实现 synchronized 线程同步的基础, 每个 Object 都会关联一个 Monitor Obj, 所有的 Thread 都是去争抢 Monitor Obj.
+
+Monitor 的 Field
+
+- `_owner` 记录持有当有当前 Mointor Obj 的 Thread Id
+- `_count` 标识了 Monitor object 是否被锁, 每次添加 Lock, 就 +1, 每次释放 Lock 就 -1
+- `_recursions` 记录 Reentrant 的次数, 每次进入一层, 就 +1, 每次出来一层, 就 -1
+- `_EntryList` 存储了 Blocked Thread, 当一个线程尝试去获取一个已经被占有的 Monitor Obj 时, 就会进入 `_EntryList`
+- `_WaitSet` 存储了 Waited Thread, 当线程调用了 wait(), 当前线程就会释放锁, 并进入 `_WaitSet`
+
+每个 Mointor 都有 Entry Lock 和 WaitSet Lock
+
+- 当一个线程想要获取 Mointor 时, 就会去尝试获取 Entry Lock
+- 当一个线程进入 WaitSet 时, 就会尝试去获取 WaitSet Lock
+
 ## ThreadLocalMap
 
 每一个线程都有一个关联的 ThreadLocal.ThreadLocalMap 用于存储线程局部变量, 每创建一个 ThreadLocal Obj, 就会创建一个 Entry, Key 指向 ThreadLocal Obj, Val 为 ThreadLocal Obj 维护的局部变量的副本, 通过 ThreadLocal Obj 的 get() 和 set() 就会去操作当前线程的 ThreadLocalMap 中存储的副本, 不影响其他线程, 保证了线程安全
@@ -421,7 +472,7 @@ Light Lock 本质就是 CAS. 多个 Thread 交替抢 Lock, 执行 Sync. 不需�
 
 JVM 为每一个 Thread 的 Stack Frame, 都开辟了 LockRecord 的空间, 称为 Displaced MarkWord, 存储 LockRecord Object
 
-T1 通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 101, 修改 Lock 的 Markword 的 ptr_to_lock_record 指向 T1 的 LocalRecord Object, 复制 Lock 的 MarkWord 到 LockRecord Object 中, 并且 T1 的 LockRecord Object 也会存储了一个 Pointer 指向 Lock
+T1 通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 00, 修改 Lock 的 Markword 的 ptr_to_lock_record 指向 T1 的 LocalRecord Object, 复制 Lock 的 MarkWord 到 LockRecord Object 中, 并且 T1 的 LockRecord Object 也会存储了一个 Pointer 指向 Lock
 
 T2 通过 CAS 尝试修改 ptr_to_lock_record 指向 T2 的 LockRecord Object. 如果修改成功, 则表示 T2 抢到了 Lock. 如果 T2 尝试了多次 Spining 后, 还是没修改成功, 则会升级 Light Lock 为 Heavy Lock
 
@@ -540,6 +591,12 @@ Thread A 试图获取 Lock 时, 会先检查 State
 - 如果 State == 0 表示未占用, Thread A 就会尝试通过 CAS 将 State 改为 1, 表示 Thread A 获取了 Lock
 - 如果 State != 0 表示被占用, 那么 AQS 就会将 Thread A 封装成一个 Node 存储进 CLH Queue, 通过 LockSupport 让 Thread A 进入等待状态, 当 Lock 释放后, 先进入 Queue 的 Node 就会被唤醒, 试图去争抢 Lock
 
+CLH Queue 使用 Double LinkedList 的原因
+
+- Double LinkedList 相比 Single LinkedList 可以访问前驱节点, 加入到 CLH Queue 的节点都需要去判断前面的节点是否存在异常, 如果存在异常会无法唤醒后续等待的节点, 如果使用 Single LinkedList 就需要从头开始遍历, 非常低效
+- CLH Queue 中堵塞的节点, 下次唤醒时, 应该只有头节点去参与锁竞争, 避免同时唤醒所有的节点去竞争导致的惊群线程, 从而消耗大量资源, CLH Queue 中的节点只需要判断自己的前一个节点是否为头节点即可解决这个问题
+- 有些 AQS 的实现类实现了 lockInterruptibly() 表示是可以中断的 Lock (eg: ReentrantLock), 被中断的线程在后续就不应该参与到锁的竞争中了, 通过 Double LinkedList 可以很方便的删除这个节点, 如果使用 Single LinkedList 会导致删除操作和遍历操作的竞争
+
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746778.png)
 
 ## ReentrantLock
@@ -605,6 +662,221 @@ Unfair Lock 的处理效率比 Fair Lock 要高, 线程的上下文切换和唤�
 ReenrantReadWriteLock 相比 ReentrantLock 不仅仅维护了 FairLock 和 UnfariLock, 还维护了一个 ReadLock 和 WriteLock, 这两个 Lock 都采用了 Shared Mode
 
 ReentrantLock 采用 Exclusive Mode, 不适合多线程中, 读多写少的场景, 通过 ReenrantReadWriteLock 可以让多线程之间, 读读不互斥, 读写互斥, 写读互斥, 写写互斥, 可以保证读时的高性能, 和写时的安全
+
+## JMM
+
+JMM (Java Memory Model) 是一个 standard, 规定所有的 variable 都存储在 memory 中, 并且规定了 variable 的访问方式, 保证了 multithreaded program 在不同 CPU, 不同 OS 下, 访问 memory 时达到一致的访问效果, 实现 Atomicity, Visibility, Orderliness
+
+thread 从 global memory 中拷贝 shared variable 到 local memory 中操作, 修改完再推送到 global memory 中, 实现修改, 不同 thread 之间, 无法访问对方的 local memory, 必须依靠 global memory 实现交互
+
+Visibility, 一个 thread 修改了一个 variable, 通知其他 thread 有了变化, 如果其他 thread 正在操作这个 vairable, 就会去 global memory 中获取新的 variable, 解决 Dirty Read
+
+Atomicity, 一个 thread 的操作不会被其他 thread 打断
+
+Orderliness, 不同 CPU 和 OS 下, instruction 可以调整执行顺序来提高性能, 但是有些情况下, 不允许,调整顺序, 需要遵守 Happends-Before
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746185.png)
+
+JMM 为了提高性能, 减少对主内存的频繁访问, 允许修改 Local Memory 中的变量后可以等一会, 不需要立即写回到 Global Memory, 这就可能导致无法保证 Visibility
+
+- T1 在 Local Memory 中修改完变量, 不立即写会到 Global Memory, 此时 T2 读取到的是 Local Memory 中的旧值
+
+Local Memory 中的变量满足下面的条件, 才会写回 Global Memory
+
+- 线程正常结束
+- 线程获得锁或释放锁
+
+## Happens-Before
+
+Happens-Before 规范了两个操作的先后关系, 第一个操作的结果对第二个操作可见, 保证 Visibility, 交换两个操作的顺序, 如果不影响结果, 则允许, 如果影响结果, 则不运行, 保证 Orderliness
+
+## Memory Fence
+
+Memory Fence 实现了 Happens-Before, 是 CPU 和 Compiler 对 memory 随机访问中的一个同步点, 该同步点前的所有操作执行完毕后, 才可以执行后续操作, 保证 Visibility, 不允许将 Memory Fence 之后的操作重新排序到 Memory Fence 之前, 保证 Orderliness
+
+LoadLoad Fence 确保在 Load 操作之前的所有 Load 操作都已经完, 确保一个线程读取共享变量的值之前, 它之前的所有读操作都已经完成
+
+StoreStore Fence 确保在 Store 操作之前的所有 Store 操作都已经完成, 确保一个线程修改共享变量的值之前, 它之前的所有写操作都已经完成
+
+LoadStore Fence 确保在 Load 操作之前的所有 Store 操作都已经完成, 确保一个线程读取共享变量的值之前, 其他线程对该变量的写操作已经完成
+
+StoreLoad Fence 确保在 Store 操作之前的所有 Load 操作都已经完成, 确保一个线程修改共享变量的值之前，其他线程对该变量的读操作已经完成
+
+Java 对 Memory Fence 的实现有 volatile, synchronized, final, concurrent ...
+
+## volatile
+
+volatile 是对 JMM 的一种实现, volatile 修饰的变量可以保证 Visibility 和 Orderliness, 但是无法保证 Atomicity
+
+通过 volatile 修饰 variable, 每次修改都会立即写回到 Global Memory 中, 再通过 JMM 清空其他线程中变量的值, 让他们重新来获取最新的值, 保证了 Visibility
+
+通过 volatile 修饰 variable, 执行 write variable 前会先执行 lock, lock 会清空其他 thread 的 local memory 中的 variable, 其他 thread, 就需要重新执行 read variable, 实现 multithreaded interaction, 所以 volatile 适合表示 flag, 适合读的场景
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746186.png)
+
+```java
+public static volatile boolean isLoop = true;
+
+public static void main(String[] args) throws InterruptedException, ExecutionException, TimeoutException {
+    new Thread(() -> {
+        while (isLoop) {}
+    }).start();
+    
+    try { TimeUnit.MICROSECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
+    
+    isLoop = false;
+}
+```
+
+这里不通过 volatile 修饰变量, 修改 Local Memory 中的数据后不会立即进行同步, 这里的 isLoop 就会一直是 Local Memory 中的 false
+
+这里不仅仅是因为无法读取到更改后的数据, 更重要的是 JIT 会自动将 while(isLoop) 优化成 while(true) 避免了一次数据读取, 这也导致了 Infinte Loop, 通过 volatile 修饰变量后, 就会禁用这个 JIT Optimization
+
+```java
+public static boolean isLoop = true;
+
+public static void main(String[] args) throws InterruptedException, ExecutionException, TimeoutException {
+    new Thread(() -> {
+        while (isLoop) {}
+    }).start();
+    
+    try { TimeUnit.MICROSECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
+    
+    isLoop = false;
+}
+```
+
+volatile 通过 Memory Fence 保证了 variable 的 Visibility, Orderliness
+
+```java
+private volatile int sharedValue;
+
+public void writeSharedValue(int value) {
+    // StoreStore Fence
+    sharedValue = value;
+    // StoreLoad Fence
+}
+
+public int readSharedValue() {
+    return sharedValue;
+    // LoadLoad Fence
+    // LoadStore Fence
+}
+```
+
+volatile read 后面会插入一个 LoadLoad Fence, 防止和后面的 normal read 进行 reorder, 还会再插入一个 LoadStore Fence, 防止和后面的 normal write 进行 reorder, 最终保证了 volatile read 后的 instruction 不会重排到 volatile read 前面
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402031244938.png)
+
+volatile write 前面插入一个 StoreStore Fence, 防止和前面的 normal read 进行 reorder, 后面插入一个 StoreLoad Fence, 防止和后面的 volatile read, volatile write 进行 reorder, 最终保证了 volatile write 前的 instruction 不会重排到 volatile write 后面
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402031244590.png)
+
+这里, 如果通过 volatile 修饰 x, 无法避免 x 和 y 重排序, 如果通过 volatile 修饰 y, 可以避免 x 和 y 的重排序
+
+为了避免重排序, 要么全部加上 volatile, 要么就把 volatile read 放在最后, 把 volatile write 放在最前面, 巧妙利用 Memory Fence 避免重排序
+
+```txt
+volatile init x # Add volatile to x (not recommanded)
+init y
+--- Fence for x write --- # This can not prohibit reordering x below and y below
+write x = 10
+write y = 10
+read y
+read x
+--- Fence for x read --- # This can not prohibit reordering x above and y above
+
+init x
+volatile init y # Add volatile to y (recommanded)
+write x = 10
+--- Fence for y write --- # This can prohibit reordering x above and y below
+write y = 10
+read y
+--- Fence for y read --- # This can prohibit reordering x below and y above
+read x
+```
+
+volatile 无法保证 Atomicity, 不适合参与需要依赖当前 variable 的运算
+
+这里 count++ 包含 Data Loading, Data Calculation, Data Assignment 三个步骤, 无法保证 Atomicity
+
+一个 thread 修改完 count 后, 将 latest data 写入 global memory 后, 清空其他 thread 的 count, 有些 thread 可能已经执行完 count++, 还没来得及写入 global memory, 就被清空了, 重新读取了 latest data, 导致刚刚的 count++ 丢失
+
+```java
+public static volatile int count = 0;
+
+public static void main(String[] args) throws Exception {
+    for (int i = 0; i < 10000; i++) {
+        new Thread(() -> {
+            count++;
+        }).start();
+    }
+    
+    try { TimeUnit.SECONDS.sleep(2); } catch (InterruptedException e) { e.printStackTrace(); }
+    
+    System.out.println(count);
+}
+```
+
+通过 volatile 保证 Visibility, 最终 Read Consistency
+
+通过 synchronized 保证 Atomicity, 最终 Write Consistency
+
+```java
+private volatile int value;
+
+// volatile ensure Visibility
+public int getValue() {
+    return value;
+}
+
+// synchronized ensure Atomicity
+public synchronized void setValue(int value) {
+    this.value = value;
+}
+```
+
+## DCL NullPointException
+
+DCL 是一种在单例模式中使用的延迟加载策略, 它尝试通过检查对象是否已经实例化来避免每次获取单例时都需要加锁的开销, 如果不通过 volatile 修饰 instance 会导致 NullPointException
+
+Object Creation 包含 Memory Allocation, Object Initialization, Reference Points to Memory 三个步骤, 在多线程环境下, 由于指令重排序的存在导致了 NullPointException
+
+- T1 进行 Object Creation 时, JVM 将 Reference Points to Memory 重排序到了 Object Initialization 之前
+- T2 又来访问, 发现 Reference 不为 null, 就会直接拿走, 但是此时 T1 还没有执行 Object Initialization, T2 直接访问就会导致 NullPointException
+
+通过 volatile 修饰 singleton, 禁止重排序, 避免 NullPointException
+
+```java
+class DoubleCheckSingleton {
+    private static volatile DoubleCheckSingleton instance;
+    
+    private DoubleCheckSingleton() {}
+    
+    public static DoubleCheckSingleton getInstance() {
+        if (instance == null) {
+            synchronized (DoubleCheckSingleton.class) {
+                if (instance == null) {
+                    instance = new DoubleCheckSingleton();
+                }
+            }
+        }
+        return instance;
+    }
+}
+```
+
+## LongAdder
+
+LongAdder 专用于高并发场景下, 原子累加一个长整型变量, 与 AtomicLong 相比, AtomicLong 操作 CAS, 每次只有一个 thread 修改成功, 其他的 thread 一直在 Spining, 导致 CPU 消耗过多
+
+在 Low Concurrency 下, LongAdder 只操作 base, 效果和 AtomicLong 没有区别
+
+在 High Concurrency 下, LongAdder 通过 add() 判断是否需要调用 longAcumulate(), 将单个的变量分解成多个独立的单元 Cell, 每个单元都独自维护一个独立的计数值, 首次会新建 2 个 Cell, 效果和 base 相同, 帮助 base 分散压力, 通过 Hash Algo 保证分布均匀, 当 Cell 不够用时, 会每扩容 2 个 Cell, 全部计算完后调用 sum() 叠加 base 和 Cell 得到结果
+
+LongAdder 不保证 Strong Consistency, 有可能在得到 sum 后, 又有 thread 修改了 Cell 导致 Inconsistency
+
+LongAdder, LongAccumulator, DoubleAdder, DoubleAccumulator 低层原理一致, 使用了一种类似于分段锁的机制
 
 # MySQL
 
@@ -828,9 +1100,9 @@ min-replicas-to-write 1
 min-replicas-max-lag 5
 ```
 
-## Redis Cluster
+## Redis Shard
 
-Redis Cluster, 多个 Master, 每个 Master 可以挂载多个 Slave, 每个 Master 负责管理部分 Slot 的数据, Master 之间会不断的通过 PING 去检测彼此健康状态, Client 连接任意一个结点, 请求就会被转发到正确的位置
+Shard Cluster, 多个 Master, 每个 Master 可以挂载多个 Slave, 每个 Master 负责管理部分 Slot 的数据, Master 之间会不断的通过 PING 去检测彼此健康状态, Client 连接任意一个结点, 请求就会被转发到正确的位置
 
 Redis 共有 16384 个 Slot, 通过 Slot 存储数据, 添加结点, 删除结点, 只需要移动 Slot, 而且移动 Slot 是不需要停止服务的. 存储数据时, 会通过 CRC16 Algo 将 Key 转换成一个 Hash, 再对 16384 取模确定具体存储到哪个 Slot 中. 数据跟 Slot 绑定, 而不跟 Node 绑定, 这样即使 Node 宕机了, 也可以转移 Slot 来恢复数据
 
@@ -1033,6 +1305,38 @@ no-appendfsync-on-rewrite yes
 
 建议, 预留足够的空间处理 Fork 和 Log Rewring
 
+## Redisson
+
+Redisson 底层通过 Redis 的 SETNX 进行加锁的, A 想要获取锁, 就会尝试通过 SETNX 去修改一个 Key, 如果修改成功, 就认为是成功获取了锁. B 这个时候想要获取锁, 也去尝试修改, 修改不成功就认为是没有获取到锁, B 就会进入自旋, 自旋到一定时间, 就会放弃
+
+Redisson 底层为了防止 A 执行的业务耗时太久, 导致锁的 TTL 到期失效的问题, 就让 Watch Dog 去监听这个锁, 每隔 releaseTime / 3 的时间就去重置 Lock 的过期时间为 releaseTime
+
+Redisson 底层通过 Redis 的 Hash 实现 Reentrant Lock, 存储 Key 为锁名, Field 为线程名, Value 为重入的次数. 重入获取锁时, 就去判断当前线程和锁的拥有者是否为相同, 如果相同, 就让 Value + 1, 释放锁后, 就让 Value - 1, 当 Value 为 0 时, 就认为该线程释放了锁
+
+Redisson 底层所有的操作中, 需要保证原子性的地方, 就会采用 Lua 脚本 (eg: 判断当前线程是否为锁的持有者和释放锁, 这两个操作需要保证原子性, 就会采用 Lua 脚本)
+
+Redisson 底层通过 RedLock 解决 Master-Slave 和 Cluster 环境下, Lock 的一致性问题, 创建分布式锁时, 直接在 n / 2 + 1 个 Redis 实例上创建锁, 即使当前 Redis 实例挂掉了, 也能保证数量的领先, 只会认定数量多的那把锁. 一般不建议采用这种方案, 性能太差, 而且 Redis 遵循的是 AP, 更注重性能, 后续可以通过 MQ 来保证最终一致性, 不在乎这点一致性. 如果非要保证 High Consistency, 就需要结合 Zookeeper 实现 Distributed Lock
+
+## DataStructure
+
+- String 的 INCR 实现分布式环境下的自增 ID
+- Hash 实现购物车 `hset cart:<user_id> <goods_id> <goods_number>`
+- List 的 LPUSH, LRANGE 获取最新的微博消息
+- Set 实现抽奖功能 
+  - SADD 参加抽奖活动
+  - SMEMBERS 查看抽奖人员信息
+  - SRANDMEMBER 随机抽奖
+  - SPOP 抽一二三等奖, 将抽到奖的用户移除 SET, 防止重复抽奖
+- Set 实现朋友圈功能
+  - `SADD like:<msg_id> <user_id>` 实现点赞
+  - `SREM like:<msg_id> <user_id>` 实现取消点赞
+  - `SMEMBERS like<msg_id>` 查看点赞列表
+  - `SCARD like<msg_id>` 获取点赞用户数量
+- Set 实现微博关系功能
+  - `SINTER following:harvey following:bruce` 实现共同关注
+  - `SDIFF following:harvey following:brude` 实现可能认识的人
+- ZSet 实现微信点赞功能, 以时间戳作为 Priority, 实现热搜排行, 实现新闻排行- 
+
 # MyBatis
 
 ## MyBatis Lazy Loading
@@ -1074,6 +1378,24 @@ User user = userMapper2.selectById(1);
 
 # Spring
 
+## Spring Lifecycle
+
+Starting: 通过 BootstrapContext 启动 Application, 发布 ﻿ApplicationStartingEvent
+
+Environment Prepared: 准备 ﻿Environment Obj, 会发布 ﻿ApplicationEnvironmentPreparedEvent
+
+Context Prepared: 准备 SpringApplication Obj, 加载 Source, 创建 ApplicationContext Obj, 发布 ApplicationContextInitializedEvent
+
+Context Loaded: 刷新 ApplicationContext, 初始化 Bean 的依赖关系, 发布 ApplicationPreparedEvent
+
+Started: 在启动 CommandLineRunner 和 ApplicationRunner 之前, 此时 ApplicationContext 已经被刷新并且所有的 ﻿Spring Bean 都已经被创建, 发布 ApplicationStartedEvent
+
+Ready: 在启动 CommandLineRunner 和 ApplicationRunner 之后, 已经完全启动并准备好接受 HTTP 请求, 发布 ApplicationReadyEvent
+
+Shutdown: 关闭 Application, 完成一些清理工作或者关闭应用所用的资源, 发布 ﻿ContextClosedEvent
+
+Failed: 启动过程中出现错误或异常, 就会发布 ApplicationFailedEvent 表示启动失败
+
 ## Bean Lifecycle
 
 Spring 创建 Bean 的过程
@@ -1106,19 +1428,19 @@ jSpring 销毁 Bean 的过程
 
 SpringMVC 处理 JSP 的流程
 
-- Client 请求 DispatcherServlet
-- DispatcherServlet 请求 HandlerMapping 查询 Handler
+- Client 请求 Servlet, Servlet 转发请求给 SpringMVC 的 DispatcherServlet
+- DispatcherServlet 请求 HandlerMapping 解析请求, 查询 Handler, HandlerMapping 返回 HandlerExecutionChain
     - HandlerMapping 就是一个 Map, Key 为 uri (eg: /user/1), Val 为 Class#Method (eg: com.harvey.controller.UserController#getById())
-- HandlerMapping 返回 HandlerExecutionChain
-    - HandlerExecutionChain 包含了 Method 和 Filter
-- DispatcherServlet 请求 HandlerAdapter
-- HandlerAdapter 请求 Handler
-    - HandlerAdapter 需要处理请求参数和返回值
+    - HandlerExecutionChain 包含了 Controller Method 和 Controller 的 Filter
+- DispatcherServlet 携带 HandlerExecutionChain 请求 HandlerAdapter
+- HandlerAdapter 根据 HandlerExecutionChain 找到对应的 Handler
+    - HandlerAdapter 会处理请求参数 (eg: Query Param, Body Param, Path Param), 将处理好的参数交给 Handler
 - Handler 执行 Method 后, 返回结果给 HandlerAdapter
+    - HandlerAdapter 接受到响应结果后, 封装成 ModelAndView
 - HandlerAdapter 返回 ModelAndView 给 DispatcherServlet
 - DispatcherServlet 携带 ModelAndView 请求 ViewResolver
 - ViewResolver 处理 ModelAndView, 返回 View Obj 给 DispatcherServlet
-    - 解析 View 中的 JSP, 替换为数据
+    - ViewResolver 会将 ModelAndVie 这个逻辑视图转成 JSP 视图或者 Thymeleaf视图
 - DispatcherServlet 响应 View 给 Client
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401181550236.png)
@@ -1253,6 +1575,138 @@ Template Pattern: JdbcTemplate, RedisTemplate 和 RestTemplate 都是采用的 T
 Strategy Pattern: MultipartResolver 采用了 Strategy Pattern, 可以选择 StandardServletMultipartResolver 或 CommonsMultipartResolver 对其进行实现, 在不同的环境或配置中选择不同的策略, 可以使得代码更灵活, 扩展性更好.
 
 Chain of Responsibility Pattern: Filter 和 Interceptor 采用了 Chain of Responsibility Pattern, 多个 Filter 和 Interceptor 按照一定顺序执行, 每个 Filter 和 Interceptor 可以拦截请求或者响应并做出相应的处理
+
+# Distributed
+
+## CAP
+
+CAP: Consistency, Availability, Partition 同时只能满足两个, 结点之间形成分区后, 要么拒绝请求, 保证 Consistency, 放弃 Availability, 要么依旧提供服务, 保证 Availability, 放弃 Consistency
+
+BASE: 对 CAP 的一种解决方案, 结点之间形成分区后, 允许 Partial Availability, 要求 Core Availability, 允许 Temporary Incosistency, 要求 Eventual Consistency
+
+- AP Mode: Sub Transaction 分别执行 Operation 和 Commit, 允许 Temporary Incosistency, 后续采用 Remedy, 保证 Eventual Consistency (eg: Redis)
+- CP mode: Sub Transaction 分别执行 Operation, 相互等待, 放弃 Partial Availability, 保证 Core Availability, 共同执行 Commit (eg: ElasticSearch)
+
+## Two Phase Commit
+
+Two Phase Commit (2PC) 是一种原子提交协议, 是 MySQL 对分布式事务的 XA Mode 的实现, 用于协调参与分布式原子事务的所有进程, 决定提交或回滚, 该协议在许多临时系统失败的情况下依然能实现其目标, 因此得到了广泛的使用. 然而, 两阶段提交协议并不能抵御所有可能的失败配置, 在极少数情况下, 需要人工干预来纠正结果, 为了从失败中恢复 (大部分情况下是自动的), 协议的参与者使用日志记录协议的状态
+
+Two Phase Commit 由两个阶段组成, 如果这两个阶段的数据不一致, 则会进行回滚, 保证数据一致性
+
+- Prepare Phase: TC 通知 RM 去执行修改操作, RM 先记录 Undo Log, 接着执行修改操作, 再记录 Redo Log, RM 通知 TC 是否执行完毕
+- Commit Phase: TC 根据 RM 的响应结果进行处理, 如果都是 Ready, 则 TC 通知 RM 进行 Commit, 如果有 Fail, 则 TC 通知 RM 进行 Rollback
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403091222615.png)
+
+Two Phase Commit 缺点
+
+- 同步阻塞问题: 在二阶段提交协议中, 所有参与者在等待协调者的决定阶段都处于阻塞状态, 无法进行其它操作
+- 单点故障: 如果在二阶段提交过程中, 协调者出现故障, 会导致所有参与者一直等待, 不能进行其它操作
+- 数据不一致: 如果 RM 接收到 Prepare 请求后, 未发送 ACK 确认就宕机, 而在此之后其它 RM 都发送了 ACK 确认, 则此时 TC 将发起 Commit 请求, 导致数据状态不一致
+
+## Three Phase Commit
+
+Three Phase Commit (3PC) 对 Two Phase Commit 进行了优化, 引入了 Timeout 和 CanCommit Phase, 以避免阻塞和单点故障问题
+
+- CanCommit Phase: TC 向所有 RM 发送 CanCommit 请求询问是否可以提交事务, RM 返回 Yes / No
+- PreCommit Phase: 如果所有 RM 都返回 Yes, TC 向 RM 发送 PreCommit 请求, 接收到请求的 RM 表示接受 TC 的决定, 并回复 ACK
+- doCommit Phase: TC 收到 RM 的 ACK 后, 向所有 RM 发送 doCommit 请求, RM 接受到请求后进行真正的事务提交并回复 ACK
+
+Three Phase Commit 的任一阶段, 只要有 RM 回复 No 或者超时未回复, TC 都会向所有 RM 发送 Abort 请求, 所有 RM 在执行完事务的回滚操作后回复 ACK
+
+Three Phase Commit 中的 TC 出现单点故障, 无法通知 RM 进行提交, 则 RM 会在等待一段时间后自动提交事务, 但是这也会导致一些问题. 如果某一个 RM 出现异常, 返回了 No, 刚好此时 TC 单点故障, 则会导致其他 RM 超时后自动提交, 造成不一致
+
+Three Phase Commit 虽然解决了 Two Phase 的一些问题, 但是增加了一次网络往返, 而且在处理网络分区和多数故障的情况下, Three Phase Commit 也无法保证一致性, 当前实际使用中更常见的是使用具有超时和故障恢复机制的 Two Phase Commit (eg: Paxos, Raft)
+
+## Quorum
+
+Quorum (法定人数机制) 是分布式系统中的重要共识技术, 被设计用来提高分布式系统的可用性和容错能力, 尤其在面对节点故障或网络问题时
+
+Quorum 的核心思想是一个请求在一个多节点分布式系统中被认为有效, 并在多数节点 (法定数量) 上一致同意后才会被执行, 所以在一个包含 N 个节点的系统中, 至少需要 N / 2 + 1 个节点同意, 这个请求才会被看做是已经达成共识
+
+Quorum 中的节点包括 R (Read) 和 W (Write), 只要 R + W > N 就可以保证系统的一致性, 通常设置 R = N / 2 + 1, W = N / 2 + 1 (eg: N = 5, R = 3, W = 3)
+
+- C1 写入数据 X, 会在 3 个节点上写入数据 (W)
+- C2 读取数据 X, 会从 3 个节点上读取数据 (R), 所以总能保证至少读取到一条最新的数据, 再通过 Version Id 去区分哪一条是最新数据
+
+Quorum 优点
+
+- 容错能力: 即使系统中一部分节点发生故障或无法达成共识, 只要有超过半数的节点可以正常运行并且能够彼此通信, 系统就能够继续提供服务, 这使得系统能够在网络分区或节点宕机时保持可用性
+- 数据一致性: 由于一个请求需要在大多数节点上被接受, 所以可以保证只要有一个最新数据的副本在正常工作的节点集合中, 那么所有的读请求都可以返回最新的数据
+
+Quorum 在许多分布式系统中都有应用 (eg: Zookeeper 的 ZAB, Google's Spanner 的 Paxos), 通过 Quorum 来保证分布式数据一致性和高容错
+
+## WARO
+
+WARO (Write All Read One) 是一种在分布式数据存储系统中常用的数据一致性策略
+
+- Write All: 所有的写操作都必须在所有的副本节点上完成, 在所有的参与节点中同步更新信息, 这保证了在完成写操作后, 所有的副本都持有最新的数据
+- Read One: 读操作只需要在任何一个副本上进行就可以了, 由于写操作保证了所有副本的数据一致性, 因此无论从哪个副本读取数据, 读取的数据都是最新的
+
+WARO 同时考虑了系统性能和数据一致性, 尽管需要在所有副本上完成写操作可能会导致性能开销, 但它可以保证数据的强一致性, 另一方面, 只需要在一个节点上完成读操作可以显著提高读操作的性能
+
+WARO 模型的性能会受到系统负载, 网络延时和副本数量等因素的影响 (eg: 如果有大量的写操作, 就需要维护大量的副本, 调整网络延时和副本数量也可能影响系统的性能)
+
+## Paxos
+
+Paxos 是解决分布式系统中的一致性问题的一种算法, 能在一个可靠的系统中, 在任何时候提供一致性的保证, 在面对网络延迟, 分区和节点故障的时候依然可以正确地工作
+
+Paxos 角色
+
+- Proposer: 提案发起者, 可以理解为客户端或者是服务请求者, 负责发起一个提议, Paxos 将程序中的操作抽象成提议 Value (eg: 修改某个变量的值)
+- Acceptor: 提案接收者, 主要负责接收 Proposer 的提议, 并对提议给予反馈, 至少 N / 2 + 1的 Acceptor 批准后, 才可以通过提议
+- Learner: 观察者, 不参与提议过程, 仅在提议决议确定后, 通过监听 Proposer 和 Acceptor 的交互, 得知决议结果, 这个角色可以实际观察到系统状态的改变, 进行相应的操作, 在实际应用中, Learner 可以是 Acceptor 自身, 也可以是独立的角色
+- Leader: Proposer 的一种特殊形式, 主要负责对外部请求的初步处理, 并发起提议, Leader 的选举是通过 Paxos 协议进行的, 通过不断抛出提案, 最终形成一个决议来达成 Leader
+
+Paxos 选举过程
+
+- Proposer 生成全局唯一且递增的 Proposal Id, 向 Paxos 集群的所有机器发送 Prepare 请求, 这里不携带 Value, 只携带 Proposal Id (N)
+- Acceptor 接受到 Prepare 后, 判断 Proposal Id 是否比 Max_N 大, Max_N 记录了之前响应的 Proposal Id
+  - 如果大, 就记录 Proposal Id 到 Max_N 中, 并返回之前的 Max_N
+  - 如果小, 就不回复或者回复 Error
+- 进行 P2a, P2b, P2c 三个步骤 (省略)
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403091509474.png)
+
+## Raft
+
+Raft 主要用于分布式集群环境下, 从众多从节点中选举一个主节点, 如 RocketMQ, Nacos, Redis Sentinel 都采用了 Raft 来选举主节点
+
+Raft 角色
+
+- Leader: 领导者负责处理所有的客户端请求, 并将日志条目复制到其他的服务器, 在任何时候, 只有一个 Leader, 在更换 Leader 的过程中, 可能会短暂的出现没有 Leader 的情况, Leader 只会在它的日志里增加新的条目, 不会去删除或修改已存在的条目
+- Follower: 响应 Leader 的请求, 如果 Leader 挂了, 会参与投票选举新的 Leader
+- Candidate: 候选者通过 RPC 请求其他节点给自己投票
+
+Log Entry 日志条目, 是一个基本的数据结构, 通常用于记录系统中发生的操作或事件, 每一次的客户端请求, 或者系统状态的改变, 都会生成一条日志条目, 添加到日志中
+
+Log Entry 组成
+
+- Term: 任期号, 也可以理解为该日志条目创建的时间点, 在 Raft 协议中, 每当有新一轮的领导者选举开始, Term 就会增加
+- Command: 命令, 这通常是客户端请求的一部分 (eg: 一个键值对的 PUT 操作)
+- Index: 索引, 这是日志条目在日志中的位置
+- Command Parameter: 一些命令可能需要附带其它参数 (eg: 一个键值对的 PUT 操作, 需要知道要 PUT 的值)
+
+Raft 选举流程
+
+1. 初始状态
+
+- A, B, C 在初始状态都是 Follower, 此时还没有 Leader, 所以不会接受到 Leader 的 PING, 都会进入超时等待的状态
+- 每个节点的超时时间都是随机的, 防止同时有多个 Candicate 去拉票导致平票的情况, 假如这里 A 150ms, B 300ms, C 200ms, 其中 A 最先完成超时等待
+- A 从 Follower 切换为 Candidate, 将自身的 Term 从 0 更新为 1
+- A 先投自己一票, 然后通过 RPC 向其他节点请求投自己一票, 这里 B, C 最先收到 A 的拉票请求后, 就会立即给他 A 投一票, 并且也跟着修改自己的 Term 为 A 的 Term, 后续如果还有节点想要来拉票, 这里的 B, C 都会直接拒绝
+- A 的票数为 3 >= 2 (N / 2 + 1 = 3 / 2 + 1 = 2) 完成选举, 成为 Leader, 开始处理客户端请求
+
+2. Leader 宕机, 选举新的 Leader
+
+- A 宕机或者网络堵塞了, B 和 C 都接受不到 A 的 PING, 进入超时等待的状态, 假如这里 B 150ms, C 300ms, 其中 B 最先完成超时等待
+- B 从 Follower 切换为 Candidate, 将自身的 Term 从 1 更新为 2
+- B 先投自己一票, 然后通过 RPC 向其他节点请求投自己一票, 这里 C 最先收到 B  的拉票请求后, 就会立即给他 B 投一票, 并且也跟着修改自己的 Term 为 B 的 Term
+- B 的票数为 2 >= 2 完成选举, 成为 Leader, 开始处理客户端请求
+
+3. Old Leader 恢复
+
+- A 恢复健康后, 发现自己的 Term 比其他节点的 Term 小, 则自动成为 Follower
 
 # Network
 
@@ -1412,3 +1866,111 @@ OSI 和 TCP/IP 的对应关系
 进程是正在运行程序的实例, 进程包含多个线程, 每个线程执行不同的任务, 不同的进程使用不同的内存空间, 在当前进程下的所有线程可以共享内存空间
 
 线程是进程内一个相对独立的, 最小执行单元, 线程更轻量, 线程上下文切换成本一般上要比进程上下文切换低, 上下文切换指的是从一个线程切换到另一个线程
+
+# Project
+
+## 断点续传
+
+- 前端调用浏览器的 API 对大文件进行分块, 每次上传分块文件前请求后端查询该分块是否已经存在后端, 如果不存在, 则不上传这一块了
+- 后端接受到分块后, 保存在 service 本地, 如果出现异常, 就返回该分块的序号给前端, 通知他重新上传
+- 前端全部上传完之后, 再发送一个请求给后端, 后端将保存在本地的分块文件进行合并, 再上传完整文件到 MINIO 中
+  - 也可以直接将分块上传到 MINIO 中, 合并时就直接调用一个 API 通知 MINIO 进行合并
+- 完整文件存储形式 `"/" + fileMd5.charAt(0) + "/" + fileMd5.charAt(1) + "/" + fileMd5 + "/" + fileName`
+- 分块文件存储形式 `"/" + fileMd5.charAt(0) + "/" + fileMd5.charAt(1) + "/" + fileMd5 + "/" + chunkNo;`
+
+## 视频处理
+
+- 上传视频的时候可以指定修改文件编码 (eg: avi -> mp4), 上传之后, 判断是否需要转换编码, 如果要转换, 就存储一个编码消息到 DB 中, 类似于 MQ, 通过 XXL-JOB 代替 MQ 实现相同的效果
+- 通过 shardIndex 和 shardTotal 给 XXL-JOB 的服务分配任务 `select * from media_process where id % #{shardTotal} = #{shardIndex} and (status = 1 or status = 3) and fail_count < #{maxFailCount} limit #{maxRecordCount};`
+- 通过 ThreadPool + CountDownLatch 处理获取到的 MediaProcessList
+- 如果要节省一部分 CPU, 就可以通过增量式的扫表方式, 通过 limit 获取 MediaProcessList
+
+## 短信登录
+
+短信登录：通过 Redis + Aliyun Web Service 实现手机验证码登录功能, 通过 Redis 存储验证码信息.
+
+- Key 2m 过期, 验证的时候如何没有查询到 Key, 就说明验证码过期
+- 创建验证码时, 先查询 Redis 中的验证码 Key 是否存在, 如果存在，就说明是频繁申请了
+- 校验成功后, 登录成功后, 就删除这个 验证码 Key, 清空验证码统计 Key
+- 通过 INCR, DECR 统计验证码, 1h 过期, 超过 3 次, 就拒绝访问
+
+## 分布式登录状态同步
+
+分布式登录状态同步：通过 Redis + JWT + Hash 解决分布式环境下登录状态同步的问题, 通过 Redis + Hash 存储用户的 Token, 限制 Token 数量, 并通过 Redis 维护了一个黑名单拦截报废的 Token.
+
+- 用户登入后, 会存储到一个 Hash 中, Key 为 `token:login:<userid>`, Field 为 Create Time, Val 为 Token, 每次存储 New Token 前会先判断 Hash 存储的 Token 数量是否达到了存储上限, 如果达到了, 就移除 Oldest Token, 并将该 Oldest Token 加入 BlackList
+- 用户登出后, 需要删除 Hash 中的 Token, 并且将 Token 加入 BlackList
+- 拦截器拒绝该 BlackList 中 Token 的访问
+
+分布式登录状态同步：通过 Redis + JWT + List 解决分布式环境下登录状态同步的问题
+
+- lpush 添加 token, 执行 ltrim 保留 0 ~ 2 的 token, 删除超出的 token
+- 每次请求都查询一次 Redis 都 Token list, 对比 token 是否相同
+- 也不需要通过 XXL-JOB 来实现周期性删除 Redis 中过期的 Token
+
+## 日活跃统计
+
+日活跃统计: 通过 MQ + Interceptor + Redis 的 HyperLogLog 统计日活跃用户数量
+
+- Interceptor 拦截到请求后, 将 IP 封装成 Msg, 由 MQ 异步处理, 以 `statistic:user:daily:2022:01:01` 的 Key, IP 为 Val 操作 HyperLogLog 统计日活跃用户
+- 讲述由 List => Set => BitMap => HyperLogLog 的选择过程
+
+## 缓存击穿处理
+
+缓存击穿处理：通过 Bitmap + Bloom Filter 解决缓存击穿
+
+- Guava -> Hutool -> Redis -> Redisson + Interceptor
+
+## 超时订单
+
+超时订单: 通过 Redis + MQ + Delayed Queue 实现超时订单处理, 通过 XXL-JOB 进行兜底处理.
+
+- 通过 RabbitMQ 的 Delayed Queue 实现超时订单, 分为 10s, 20s, 30s, 40s, 50s, 1m, 5m, 10m 去检查订单状态, 如果支付, 直接退出, 如果超过 10m 也未支付, 则直接恢复库存, 允许其他用户下单
+- 通过 XXL-JOB 每隔 10s 进行一次分页查询, 处理一部分超时订单, 总共在 10m 内完成一次全表扫描, 不仅可以兜底, 也可以防止 MQ 消息丢失和 MQ 宕机的问题
+- 成本高, 需要额外存储消息, 就需要搭建集群, 如果存储的延迟任务过多, 会导致峰值压力, 适合延时较短的任务
+
+超时订单: 通过 XXL-JOB 实现超时订单
+
+- 单独维护一个超时库, 将所有需要处理超时的任务, 塞入这个库, 通过 XXL-JOB 一次性或者增量式全部捞出来, 然后通过批量修改的方式操作数据库
+- 稳定, 成本低, 延时高, 不存在峰值压力, 适合存储延时较长的任务
+
+超时订单: 时间轮算法
+
+- MQ 的延迟消息也有用到时间轮算法
+
+## 在线人数统计
+
+在线人数统计: MySQL 实现
+
+- 登录设置 user tbl 的 is_login 为 1, 登出设置为 0, 统计时直接查询 is_login 为 1 的数量
+
+在线人数统计: Redis 实现
+
+- `sadd uid_login <uid>` 和 `srem uid_login <uid>` 维护一个登录统计缓存, 通过 scard 获取总数量
+
+在线人数统计: BitMap 实现
+
+- `setbit user_login <uid> 1` 和 `setbit user_login <uid> 0` 维护一个位图登录统计, 通过 `bitcount` 统计在线人数
+- 通过 `setbit user_ios <uid> 1` 维护一个 ios 用户位图, 通过 `user_ios & user_login` 统计 ios 用户在线人数
+
+在线人数统计: HyperLogLog 实现
+
+## 秒杀商品
+
+秒杀商品: Redis + Lua + Redissson + MQ 实现
+
+[Explain](https://www.bilibili.com/video/BV1Uz4y137UA/?spm_id_from=333.337.search-card.all.click&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+- 单机锁 -> 分布式锁 (Redis SETNX / Zookeeper)
+- 业务执行耗时太久, 就可以适当增加锁的过期时间, 或者开启一个子线程定时检查主线程是否依旧在线处理任务, 如果在就重设过期时间, 续命嘛, watch dog
+  - Watch Dog 就是通过时间轮算法实现的, 一般使用 Netty 的 HashedWheelTimer
+  - 一般续期都需要先判断是否过期, 然后再去修改过期时间, 是多个操作, 需要保证原子性, 就通过 Lua, 通过递归的方式继续进行续期操作
+- Key 设定为当前线程对应的 UUID, 每次删除 key, 只会释放属于自己的锁
+
+秒杀商品: Redis + Lua + Nginx + MQ 实现
+
+- Nginx + Lua + Redis decr 实现订单的预检和订单的扣减, 由于 Redis 执行命令是原子性的, 并且 lua 脚本也是原子性的, 所以非常安全, 在网关层就将无效的请求阻挡了
+- 订单扣减完, 通过 lua 发送一条 mq 去异步创建订单, 并且设置 MQ 的 QOS 限制一次处理的请求数量, 这里创建订单是异步创建的, 前端是无法感知的, 所以前端可以每隔一段时间发送一个请求, 检查订单状态, 前端就在那转圈圈就好了, 一般很快就能查询到订单结果
+- Redis 扛不住, 就上架构, 主从, 哨兵, 集群来干!!
+- 订单取消或者订单超时了, 需要通过 lua 去执行 incr
+
