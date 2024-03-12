@@ -173,7 +173,7 @@ boolean isInnerIP = NetUtil.isInnerIP("192.168.10.10");
 JSONArray jsonArr = JSONUtil.createArray();
 jsonArr.set(1, new User("harvey", 18));
 jsonArr.set(2, new User("bruce", 20));
-System.out.println(jsonArr); // [{"name":"harvey","age":18},{"name":"harvey","age":18}]
+System.out.println(jsonArr); // [{"name":"harvey","age":18},{"name":"bruce","age":20}]
 
 JSONObject jsonObj = JSONUtil.createObj();
 jsonObj.set("name", "harvey");

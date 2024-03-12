@@ -4,17 +4,6 @@ Canal 阿里巴巴开源的一种基于数据库增量日志解析的数据同�
 
 Canal 会模拟 MySQL Slave 的交互协议, 伪装自己为 MySQL Slave, 向 MySQL Master 发送 dump 协议
 
-
-
-
-Canal 是阿里巴巴开源的一种基于数据库增量日志解析的数据同步工具，主要用于 MySQL 数据库的 Binlog 增量订阅和消费。
-Canal 工作机制可以简述为：
-	1.	模拟Slave：Canal 模拟 MySQL Slave 的交互协议，伪装自己为 MySQL Slave，向 MySQL Master 发送dump 协议。
-	2.	解析binary log事件：MySQL Master 收到 dump 请求后，开始推送 binary log 给 Slave (即 Canal)。Canal 解析 binary log 对象成原始的 SQL 语句。
-	3.	提供增量数据订阅和消费：应用程序通过 Canal 提供的 Client-Server模式或MQ模式，订阅 Canal 中解析的增量数据进行消费。
-这样，我们就实现了MySQL的任何数据变动，Canal 都能监听到并提供给客户端进行处理。在实际应用中，Canal 通常用于数据同步，譬如同步MySQL数据到搜索引擎、缓存、其他数据库，或者用于实时数据分析等等。
-
-
 # Canal Server
 
 Pull Canal image

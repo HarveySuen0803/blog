@@ -1,3 +1,17 @@
+# DataStructure
+
+Redis 的 DB 通过 RedisDB 这个结构体实现
+
+RedisDb 的 Dict* dict 存储了所有的 Key-Val, dict 的 Key 就对应 Key-Val 的 Key, dict 的 Val 就是一个 RedisObject, RedisObject 内部有一个 ptr 指向具体存储 Val 的不同数据结构
+
+RedisDb 的 Dict* expires 存储所有 Key 的 Expiration, 根据 hash(key) % dict.size() 存储 Entry 到 Dict* dict 
+
+# Bitmap
+
+Bitmap 本质上可以抽象为一个数组, 每个索引位上存储 0 或 1, 
+
+Bitmap 是通过 SDS 实现的, char buf[] 存储的最小单位是 1B, 每次操作二进制位就是在操作这 1B 的数据, SET k1 10 1 就是在操作 buf[1] 的 1B 数据, 10 对应到第二个字节嘛
+
 # SDS
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221742538.png)
@@ -33,6 +47,8 @@
 # Dict Rehash
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221742550.png)
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403120818117.png)
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221742551.png)
 

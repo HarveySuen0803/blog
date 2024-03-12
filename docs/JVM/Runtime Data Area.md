@@ -131,7 +131,7 @@ LocalVariableTable:
 
 Local Variable Table 存储 data 的 basic unit 就是 Slot
 
-reference, int, byte, short, char, boolean 存储到 1 个 Slot 中, long, double 存储到 2 个 Slot 中, byte, short, char, boolean 存储前都会被转成 int 
+reference, int, byte, short, char, boolean 存储到 1 个 Slot 中, long, double 存储到 2 个 Slot 中, byte, short, char, boolean 存储前都会被转成 int
 
 每一个 Slot 都有一个 index, JVM 通过 index 访问 Slot, 访问一个 method 时, method 中的 local variable 都会按顺序被复制到 Slot 中, local variable 不会进行 Default Initialization, 所以不进行 Specify Initialization 就使用, 会报错
 

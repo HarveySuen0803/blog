@@ -98,6 +98,11 @@ export default createRouter({
 			name: 'user',
 			path: '/user',
 			component: () => import('@/pages/User.vue')
+		},
+		{
+			name: 'user',
+			path: '/user/:id',
+			component: () => import('@/pages/UserDetails.vue')
 		}
 	]
 })

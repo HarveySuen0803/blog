@@ -59,6 +59,21 @@
 
 - MQ 的延迟消息也有用到时间轮算法
 
+在线人数统计: MySQL 实现
+
+- 登录设置 user tbl 的 is_login 为 1, 登出设置为 0, 统计时直接查询 is_login 为 1 的数量
+
+在线人数统计: Redis 实现
+
+- `sadd uid_login <uid>` 和 `srem uid_login <uid>` 维护一个登录统计缓存, 通过 scard 获取总数量
+
+在线人数统计: BitMap 实现
+
+- `setbit user_login <uid> 1` 和 `setbit user_login <uid> 0` 维护一个位图登录统计, 通过 `bitcount` 统计在线人数
+- 通过 `setbit user_ios <uid> 1` 维护一个 ios 用户位图, 通过 `user_ios & user_login` 统计 ios 用户在线人数
+
+在线人数统计: HyperLogLog 实现
+
 秒杀商品
 
 [Explain](https://www.bilibili.com/video/BV1Uz4y137UA/?spm_id_from=333.337.search-card.all.click&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
@@ -69,4 +84,22 @@
   - 一般续期都需要先判断是否过期, 然后再去修改过期时间, 是多个操作, 需要保证原子性, 就通过 Lua, 通过递归的方式继续进行续期操作
 - Key 设定为当前线程对应的 UUID, 每次删除 key, 只会释放属于自己的锁
 
+Redis 实现功能
 
+- String 的 INCR 实现分布式环境下的自增 ID
+- Hash 实现购物车 `hset cart:<user_id> <goods_id> <goods_number>`
+- List 的 LPUSH, LRANGE 获取最新的微博消息
+- Set 实现抽奖功能 
+  - SADD 参加抽奖活动
+  - SMEMBERS 查看抽奖人员信息
+  - SRANDMEMBER 随机抽奖
+  - SPOP 抽一二三等奖, 将抽到奖的用户移除 SET, 防止重复抽奖
+- Set 实现朋友圈功能
+  - `SADD like:<msg_id> <user_id>` 实现点赞
+  - `SREM like:<msg_id> <user_id>` 实现取消点赞
+  - `SMEMBERS like<msg_id>` 查看点赞列表
+  - `SCARD like<msg_id>` 获取点赞用户数量
+- Set 实现微博关系功能
+  - `SINTER following:harvey following:bruce` 实现共同关注
+  - `SDIFF following:harvey following:brude` 实现可能认识的人
+- ZSet 实现微信点赞功能, 以时间戳作为 Priority, 实现热搜排行, 实现新闻排行- 

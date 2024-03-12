@@ -84,6 +84,12 @@ show status like 'last_query_cost';
 
 一条 Query 执行耗时太久, 就是一条 Slow Query, 一般可以通过 SkyWalking, Promotheus, Arthas 这样的监测工具去监测耗时较久的 API. MySQL 也提供了 Slow Query Log 记录 Slow Query.
 
+一般优化一些高并发场景的 Slow Query, 从 Disk IO, CPU, Network Bandwidth 三个角度来分析问题.
+
+- Disk IO: 是否正确使用了 Index
+- CPU: Order By, Distinct, Group By 是否占用太多, 针对性的添加 Index 进行优化
+- Network Bandwidth: 提升 Network Bandwidth
+
 Slow Query Log 开启后, 会影响一定性能, 一般需要调优时, 就可以打开辅助调优.
 
 ```sql
@@ -594,6 +600,8 @@ select * from sys.innodb_lock_waits;
 对于 Inner Join, Optimizer 一般会让拥有 Index 的 Field 作为 Drived Table, 会让数据量小的 Table 作为 Drivering Table, 即小表驱动大表.
 
 Table A 有 100 条记录, 每行记录 1 B, Table B 有 1000 条数据, 每行记录 2 B. 这里 A Left Join B 后, 通过 where 对 B 进行过滤, 得到 10 条数据. Table A 的数据量就是 100 * 1 B, Table B 的数据量就是 10 * 2 B, 那么 Table B 为小表, 即 Table B 驱动 Table A.
+
+Table A 有 100 条记录, Table B 有 10000 条记录, 用 Table A 驱动 Table B 就是进行 100 次连接, 每次操作 10000 条数据, 性能要优于进行 10000 次连接, 每次操作 100 条数据.
 
 Optimizer 会将 Outer Join 转换成 Inner Join, 所以最终还是 Optimizer 决定 Driving Table 和 Drived Table.
 

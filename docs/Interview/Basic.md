@@ -1,11 +1,3 @@
-# Network
-
-- HTTP
-- TCP
-- UDP
-- Cookie, Session
-- IO
-
 # JDK
 
 - Collection

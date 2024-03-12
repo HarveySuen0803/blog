@@ -496,6 +496,45 @@ public static ListNode reverseList(ListNode o1) {
 }
 ```
 
+# Reverse Linked List II
+
+[Problem Description](https://leetcode.cn/problems/reverse-linked-list-ii/description/)
+
+```java
+public static ListNode reverseBetween(ListNode head, int l, int r) {
+    ListNode nil = new ListNode(-1, head);
+    ListNode cur = nil;
+    for (int i = 0; i < l - 1; i++) {
+        cur = cur.next;
+    }
+    ListNode beforeSrt = cur;
+    ListNode srt = cur.next;
+    for (int i = 0; i < r - l + 1; i++) {
+        cur = cur.next;
+    }
+    ListNode end = cur;
+    srt = reverseList(srt, end);
+    end = srt;
+    while (end.next != null) {
+        end = end.next;
+    }
+    beforeSrt.next = srt;
+    end.next = cur.next;
+    
+    return nil.next;
+}
+
+public static ListNode reverseList(ListNode srt, ListNode end) {
+    ListNode nil = new ListNode(-1, null);
+    while (srt != end) {
+        nil.next = new ListNode(srt.val, nil.next);
+        srt = srt.next;
+    }
+    nil.next = new ListNode(srt.val, nil.next);
+    return nil.next;
+}
+```
+
 # Swap Nodes in Pairs
 
 [Problem Description](https://leetcode.cn/problems/swap-nodes-in-pairs/description/?envType=study-plan-v2&envId=top-100-liked)
