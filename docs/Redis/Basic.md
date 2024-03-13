@@ -374,11 +374,11 @@ HMGETSET user name "sun" age 18 score 99.9
 HMGETGET k1 name age score # {"sun", 18, 99.9}
 ```
 
-## HGETall HKEYS, HVALS
+## HGETALL HKEYS, HVALS
 
 ```
 # GET all key and all value
-HGETall user
+HGETALL user
 
 # GET all key
 HKEYS user

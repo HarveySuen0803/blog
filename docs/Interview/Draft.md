@@ -1,5 +1,17 @@
 # JDK
 
+## OOP
+
+POP 更注重任务执行的顺序和步骤, OOP 更注重任务的参与者, 面对复杂问题时, 先去拆分任务, 将任务对应到每个对象上, 最终由多个对象合作完成任务
+
+POP 更高效, OOP 更易于复用, 易于扩展
+
+OOP 的封装隐藏了内部实现细节, 外部调用封装好的方法, 不需要考虑内部实现细节, 如 ORM 框架, 引入 MyBatis 后, 直接帮我们省去了连接的创建和管理, 如果使用 POP, 就需要去考虑这些细节
+
+OOP 的继承保证了代码的复用问题
+
+OOP 的多态有助于扩充方法的实现效果, 同一个父类引用, 只需要更改子类实现, 即可实现不同的效果, 并且引入接口, 设计模式, 更易于项目的扩展
+
 ## HashMap
 
 HashMap 采用 Array + LinkedList + RedBlackTree 的结构, 无法保证线程安全.
@@ -310,6 +322,69 @@ JVM 进行对象定位时, 有句柄引用 和 直接引用 (def) 两种方式
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402292305667.png)
 
+## Method Area
+
+Metaspace 是 HotSpot 对 Method Area 的实现, 不存储在 JVM Memory 中, 存储在 Native Memory 中
+
+- JDK7, Method Area 存储在 JVM Memory 的 Heap 中, 非常容易导致 OOM
+  - java.lang.OutOfMemoryError: Permspace
+- JDK8, Method Area 存储在 Native Memory 中, 不容易导致 OOM
+  - java.lang.OutOfMemoryError: Metaspace
+
+Method Area 的初始化大小 MetaspaceSize 为 21MB, 当占用达到 MetaspaceSize 后, 会触发 FGC, 如果清理后还是不够用, 会向上扩容, 直到 MaxMetaspaceSize, 如果清理了很多后, 会降低 MetaspaceSize
+
+逻辑上 Runtime Constant Pool, String Constant Pool, Static Member, Class Info 存储在 Method Area 中
+
+实际上 Hotspot 将 String Constant Pool, Static Member 存储在 Heap 中, Class Info, Runtime Constant Pool 存储在 Method Area 中
+
+- JDK7, Static Obj 存储在 Heap 中, Static Obj Ref 存储在 Method Area 中
+- JDK8, Static Obj 和 Static Obj Ref 都存储在 Heap 中
+- Local Obj 存储在 Heap 中, Basic Type 和 Local Obj Ref 存储在 Stack 中
+- Member Obj 和 Member Obj Ref 都存储在 Heap 中
+
+Method Area 触发 GC 主要清理 Runtime Constant Pool 和 Class Info, 要求非常苛刻, 包括三个条件
+
+- Class 和 Sub Class 都不存在 Instance
+- 加载该 Class 的 Class Loader 已经被回收
+- 该 Class 的 Class Object 没有被引用
+
+Method Area 通过 Klass 这种数据结构表示 Class Info (Klass 和 Class 发音相同)
+
+配置 Method Area
+
+- `-XX:MetaspaceSize=21m`
+- `-XX:MaxMetaspaceSize=100m`
+
+## Class Constant Pool
+
+Class Constant Pool 存储在 Class File 中, 包含 Literal 和 Symbolic Reference, 类似于一个 Table, 每个 Literal 和 Symbolic Reference 都标识了 Index, 可以通过 Index 访问
+
+Literal 包含 Basic Field, String Field 和 Final Field
+
+Symbolic Reference 本质上还是 Literal, 用作标识, Class File 占用小, 就是因为采用了 Symbolic Reference
+
+## Runtime Constant Pool
+
+Class File 经过 Class Loader, 会将 Class Constant Pool 中必要的信息加载到 Runtime Constant Pool 中, 包括 Literal, Dynamic Ref, Symbolic Ref (有部分 Symbolic Ref 在 Class Loading 阶段无法转成 Dynamic Ref)
+
+Runtime Constant Pool 具有 Dynamic, 可以在 Code 中修改 Runtime Constant Pool (eg: String 的 Intern())
+
+## String Constant Pool
+
+SCP (String Constant Pool) 维护了一个 StringTable 通过 HashTable 实现, 存储的 String Object 都是唯一的
+
+- JDK7 时, SCP 存储在 Method Area 中, 只有触发 FGC 才会进行清理, JDK8 后, SCP 移动到 Heap 中, GC 效率稍高了一些
+- JDK8 中 StringTable 默认长度为 65536, 可以通过 `-XX:StringTableSize` 设置 HashTable 的长度
+- 存储 String Object 过多, 就会导致 Hash Complict, 导致 Linked List 过长, 性能下降
+
+通过 intern() 也可以保证存储唯一的 String Object. 调用 intern() 后会先去 SCP 中寻找该 String Object
+
+- 如果找得到, 就会返回该 String Object 的 Reference
+- 如果找不到, 就会创建该 String Object, 然后返回 Reference
+- 通过 intern() 创建 String Object, 可以节省 Memory, 并且 GC 也会容易很多
+
+new String("ab") 可以在 Compile Stage 确定, 不仅仅会在 Heap 中创建 "ab", 还会在 SCP 中创建 "ab"
+
 ## Direct Memory
 
 Direct Memory 不存储在 JVM Memory 中, 存储在 Native Memory 中, 通过 NIO 直接操作 Native Memory
@@ -391,7 +466,7 @@ ThreadLocalMap 的 Entry 继承了 WeakReference, 所有的 Key 都是通过 Wea
 
 ## Thread Pool Memory Leak
 
-Thread Obj 执行完方法, 就会断开对 ThreadLocal Obj 对 Strong Ref, Key 的 Weak Ref 断开后, ThreadLocal Obj 就会被销毁, 而 Entry 中的 Val 此时并没有被清空
+Thread Obj 执行完方法, 就会断开对 ThreadLocal Obj 的 Strong Ref, Key 的 Weak Ref 断开后, ThreadLocal Obj 就会被销毁, 而 Entry 中的 Val 此时并没有被清空
 
 Thread Pool 中, Thread Obj 会被重复利用, 不会销毁, 那么 Thread Obj 对 ThreadLocalMap Obj 的 Strong Ref 就一直存在, 所以 Entry 的 Val 中存储的 ThreadLocal Obj 的副本, 就会一直存在, 导致 Memory Leak
 
@@ -879,6 +954,16 @@ LongAdder 不保证 Strong Consistency, 有可能在得到 sum 后, 又有 threa
 LongAdder, LongAccumulator, DoubleAdder, DoubleAccumulator 低层原理一致, 使用了一种类似于分段锁的机制
 
 # MySQL
+
+# Transaction ACID
+
+Atomicity 是指一个 TRX 是一个不可分割的工作单元, 要么全成功提交, 要么全失败回滚, 成王败寇, 没有妥协之说, 通过 Undo Log 保证.
+
+Consistency 是指数据需要从一个合法性状态变化到另一个合法性状态, 这个合法是业务层面的合法 (eg: A 扣钱, 扣成了负数, 则不符合业务层面的要求, 即不合法). 
+
+Isolation 是指一个 TRX 内部使用到的数据对其他 TRX 隔离, 不会受到其他 TRX 的影响, 通过 MVCC 保证.
+
+Durability 是指一个 TRX 一旦被提交, 它对数据库中数据的改变就是永久性的, 通过 Redo Log 保障的, 先将数据库的变化信息记录到 Redo Log 中, 再对数据进行修改, 这样做, 即使数据库崩掉了, 也可以根据 Redo Log 进行恢复.
 
 ## Transaction Status
 
@@ -1378,6 +1463,24 @@ User user = userMapper2.selectById(1);
 
 # Spring
 
+## Spring IOC
+
+IOC (Inversion of Control) 一种设计原则, 用于减小计算机程序中各模块之间的依赖关系. 我们只需要定义一个 Bean 的创建过程, 而真正的创建, 初始化, 装配, 生命周期都由 Container (eg: ApplicationContext, BeanFactory) 管理. 通过 DI 注入对象, 只需要关注自己的核心逻辑, 而不需要关注如何获取其他对象.
+
+IOC 最佳实践了 Singleton 和 Fast Fail, 不仅可以节省大量不必要的对象创建, 防止 GC, 还在项目启动时, 就实例化所有的 Bean, 可以将 Bean 的创建由运行期提前至启动期, 在启动时期就可以检测出问题, 而不是在运行时遇到问题停机. Singleton 是不可变状态, 可以保证线程安全.
+
+IOC 最佳实践了 DIP (Dependence Inversion Principle), 高层模块不直接依赖低层模块, 而是依赖低层模块的抽象, 低层模块去实现抽象 (eg: Controller 通过 Service 访问 ServcieImpl), 实现 Decoupling, 同时接口的引入便于后续扩展, 便于引入 Design Pattern (JDK's Dynamic Proxy).
+
+## Spring IOC Process
+
+IOC 的核心思想就将对象的管理交给容器, 应用需要使用某个对象的实例, 就去容器中获取即可, 降低了程序中对象和对象之间的耦合性
+
+IOC 初始化: 加载声明的 Bean, 保存到 IOC 中, IOC 的初始化就是保存这些 Bean Instance 到 singletonObjects 中功能
+
+IOC 的 Bean 的初始化: 通过反射去初始化那些没有设置 Layz Init 的 Bean
+
+IOC 的 Bean 的使用: 通过 DI 获取的 Bean 实例, 对于设置了 Lazy Init 的 Bean 则是在通过 DI 获取时, 才会进行初始化
+
 ## Spring Lifecycle
 
 Starting: 通过 BootstrapContext 启动 Application, 发布 ﻿ApplicationStartingEvent
@@ -1457,14 +1560,6 @@ SpringMVC 处理 JSON 的流程
 - DispatcherServlet 再返回给 Client
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221740209.png)
-
-## IOC
-
-IOC (Inversion of Control) 一种设计原则, 用于减小计算机程序中各模块之间的依赖关系. 我们只需要定义一个 Bean 的创建过程, 而真正的创建, 初始化, 装配, 生命周期都由 Container (eg: ApplicationContext, BeanFactory) 管理. 通过 DI 注入对象, 只需要关注自己的核心逻辑, 而不需要关注如何获取其他对象.
-
-IOC 最佳实践了 Singleton 和 Fast Fail, 不仅可以节省大量不必要的对象创建, 防止 GC, 还在项目启动时, 就实例化所有的 Bean, 可以将 Bean 的创建由运行期提前至启动期, 在启动时期就可以检测出问题, 而不是在运行时遇到问题停机. Singleton 是不可变状态, 可以保证线程安全.
-
-IOC 最佳实践了 DIP (Dependence Inversion Principle), 高层模块不直接依赖低层模块, 而是依赖低层模块的抽象, 低层模块去实现抽象 (eg: Controller 通过 Service 访问 ServcieImpl), 实现 Decoupling, 同时接口的引入便于后续扩展, 便于引入 Design Pattern (JDK's Dynamic Proxy).
 
 ## Spring AOP
 
@@ -1892,7 +1987,11 @@ OSI 和 TCP/IP 的对应关系
 - Key 2m 过期, 验证的时候如何没有查询到 Key, 就说明验证码过期
 - 创建验证码时, 先查询 Redis 中的验证码 Key 是否存在, 如果存在，就说明是频繁申请了
 - 校验成功后, 登录成功后, 就删除这个 验证码 Key, 清空验证码统计 Key
-- 通过 INCR, DECR 统计验证码, 1h 过期, 超过 3 次, 就拒绝访问
+- `code:<phone>` 统计一个账户在一段时间内校验的次数, 通过 INCR, DECR 统计验证码, 1h 过期, 超过 3 次, 就拒绝访问
+
+短信登录: 通过 Redis + Web Service + Hash 实现手机验证码登录功能
+
+- Hash 的 key 为 `code:<phone>`, field 为 code, val 为校验次数
 
 ## 分布式登录状态同步
 
@@ -1907,6 +2006,10 @@ OSI 和 TCP/IP 的对应关系
 - lpush 添加 token, 执行 ltrim 保留 0 ~ 2 的 token, 删除超出的 token
 - 每次请求都查询一次 Redis 都 Token list, 对比 token 是否相同
 - 也不需要通过 XXL-JOB 来实现周期性删除 Redis 中过期的 Token
+
+分布式登录状态同步: 使用同一个 JWT
+
+- 第一次登录, 就创建一个 token, 后续复用这个 token, 不合理, 无法分别对多态设备进行管理
 
 ## 日活跃统计
 
@@ -1974,3 +2077,101 @@ OSI 和 TCP/IP 的对应关系
 - Redis 扛不住, 就上架构, 主从, 哨兵, 集群来干!!
 - 订单取消或者订单超时了, 需要通过 lua 去执行 incr
 
+## Idempotent
+
+Idempotent 要求重复多次调用接口不会改变业务状态, 保证单次调用结果和多次调用结果一致 (eg: 用户重复点击下单, 要求只能有一个订单生效)
+
+- GET 和 DELETE 符合 Idempotent, PUT 和 POST 不符合 Idempotent
+
+通过 Token + Redis 实现 Idempotent, 适合高并发场景, 前端压力大, 性能最强
+
+- 前端生成 Token 连着表单一块传递给后端, 后端通过 SETNX + TTL 处理 Token. 如果操作失败, 就直接报错或者返回空结果. 如果操作成功, 就执行后续业务逻辑
+- 这种方法只能防止 RPC 或 MQ 的重试导致的非幂等问题, 而用户重复点击提交, 造成的 Repeated Request 就无法解决了, 一般需要搭配前端的按钮置灰进行处理
+
+```js
+import axios from 'axios'; 
+import { nanoid } from 'nanoid';
+
+const token = nanoid();
+const formData = {};
+
+axios({
+    method: 'post',
+    url: '/your-endpoint',
+    data: formData,
+    headers: {
+        'X-Token': token,
+    },
+}).then((response) => {
+    console.log(response.data);
+}).catch((error) => {
+    console.log(error);
+});
+```
+
+```java
+@Aspect
+@Component
+public class IdempotentAspect {
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+    @Around("@annotation(Idempotent)")
+    public Object around(ProceedingJoinPoint point) throws Throwable {
+        ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
+        HttpServletRequest request = attributes.getRequest();
+        String token = request.getHeader("X-Token");
+        if (StringUtils.isBlank(token)) {
+            throw new RuntimeException("Token does not exists");
+        }
+        if (!redisTemplate.setIfAbsent(token, "", 60, TimeUnit.SECONDS)) {
+            throw new RuntimeException("Repetitive operation");
+        }
+        Object result = point.proceed();
+        return result;
+    }
+}
+```
+
+通过 Token + Redis 实现 Idempotent, 适合高并发场景, 前端压力小, 但是资源耗费多
+
+- 进入表单提交页面时, 就先向后端申请一个 Token, 前端提交表单时携带上 Token, 后端通过 SETNX + TTL 或者 DEL 来处理 Token. 如果操作失败, 就直接报错或者返回空结果. 如果操作成功, 就执行后续业务逻辑
+- 这种方法可以解决所有幂等问题, 也不需要担心用户重复点击提交导致的非幂等问题, 因为在进入表单提交页面时, 就确定了 Token
+
+通过 Business 实现 Idempotent, 不适合高并发场景
+
+- 后端执行业务前先查询 Status, 判断是否已经操作过
+
+通过 MessageId + Redis 解决 MQ 的 Idempotent, 专用于保证 MQ 的 Idempotent, 效率高, 性能强
+
+- RabbitMQ 发送的消息默认不会生成 Message Id, 需要配置 MessageConverter 生成 Message Id
+- RabbitMQ 的每条 Message 都可以设置 Message Id, 将 Message Id 作为 Token, 通过 SETNX + TTL 处理 Token 实现 Idempotent.
+
+```java
+@Bean
+public MessageConverter messageConverter() {
+    Jackson2JsonMessageConverter jackson2JsonMessageConverter = new Jackson2JsonMessageConverter();
+    jackson2JsonMessageConverter.setCreateMessageIds(true);
+    return jackson2JsonMessageConverter;
+}
+```
+
+```java
+@Autowired
+RedisTemplate redisTemplate;
+
+@RabbitListener(queues = {"direct.queue"})
+public void listener(Message message) {
+    // Store message into Redis, key is message id, val is message
+    Boolean isAbsent = redisTemplate.opsForValue().setIfAbsent(
+        message.getMessageProperties().getMessageId(), 
+        new String(message.getBody()), 
+        60, TimeUnit.SECONDS);
+
+    if (!isAbsent) {
+        return;
+    }
+    
+    System.out.println("deal non-idempotent business");
+}
+```
