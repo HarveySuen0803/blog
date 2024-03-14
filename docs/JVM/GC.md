@@ -1,5 +1,10 @@
 # GC
 
+GC 的标准就是判断该对象有没有被引用
+
+- Stack Frame 会存储 Ref 去指向对象, 所以等 Stack Frame 弹出后, 就会断开引用
+- JVM 中的 Thread 本身就是一个对象, 而 Thread 正常执行过程中, JVM 会持有该 Thread Obj 的引用, 保证该 Thread 不会被垃圾回收
+
 GC Process
 
 - Marking Stage: 判断对象是否存活, 一般有两个方法, 分别是 Reference Counting 和 GC Roots.

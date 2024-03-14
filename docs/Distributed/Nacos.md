@@ -20,7 +20,6 @@ Server Load Balancing: Server 通过 Hardware (eg: F5) 或 Software (eg: Nginx) 
 
 Client Load Balancing: Client 通过 Software (eg: Ribbon, LoadBalancer) 拦截请求, 转发请求, 实现 Load Balancing
 
-
 pull Nacos image
 
 ```shell

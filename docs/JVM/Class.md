@@ -1,3 +1,11 @@
+# Class Lifecycle
+
+Class Lifecycle 是指类从被加载到虚拟机中开始, 直到卸载出虚拟机为止的整个过程
+
+- Class Loading: 使用 new 关键字实例化对象, 访问静态字段, 调用静态方法等操作都会触发 Class Loading, 在这个阶段, JVM 会将 class 文件读入内存, 并为之创建一个 java.lang.Class 对象, 不仅是应用程序直接引用到的类需要加载, 被这些类引用的类也会被递归加载
+- Class Using: 类的正常使用阶段, 可以创建实例, 调用方法, 在此阶段, 类完全加载完成, 可以自由地被应用程序使用
+- Class Unloading: 类卸载的情况比较少见, 只有当该类的 ClassLoader 实例被垃圾回收时, 这个类才会被卸载, 这通常意味着没有任何活跃的引用指向该 ClassLoader 实例和它加载的类
+
 # Class Loading
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241741801.png)

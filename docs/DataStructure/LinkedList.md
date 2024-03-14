@@ -513,25 +513,34 @@ public static ListNode reverseBetween(ListNode head, int l, int r) {
         cur = cur.next;
     }
     ListNode end = cur;
+    ListNode afterEnd = cur.next;
     srt = reverseList(srt, end);
     end = srt;
     while (end.next != null) {
         end = end.next;
     }
     beforeSrt.next = srt;
-    end.next = cur.next;
-    
+    end.next = afterEnd;
     return nil.next;
 }
 
 public static ListNode reverseList(ListNode srt, ListNode end) {
     ListNode nil = new ListNode(-1, null);
-    while (srt != end) {
-        nil.next = new ListNode(srt.val, nil.next);
-        srt = srt.next;
+    ListNode cur = srt;
+    while (cur != end.next) {
+        nil.next = new ListNode(cur.val, nil.next);
+        cur = cur.next;
     }
-    nil.next = new ListNode(srt.val, nil.next);
     return nil.next;
+}
+
+public static void main(String[] args) {
+    ListNode head = new ListNode(1);
+    head.next = new ListNode(2);
+    head.next.next = new ListNode(3);
+    head.next.next.next = new ListNode(4);
+    head.next.next.next.next = new ListNode(5);
+    System.out.println(reverseBetween(head, 2, 4)); // 1 -> 4 -> 3 -> 2 -> 5
 }
 ```
 
@@ -624,6 +633,60 @@ public static ListNode reverseGroup(ListNode srt, ListNode end) {
         srt = srt.next;
     }
     return nil.next;
+}
+```
+
+# Reverse Nodes in k-Group
+
+```java
+public static ListNode reverseKGroup(ListNode head, int k) {
+    ListNode nil = new ListNode(-1, head);
+    ListNode beforeSrt = nil;
+    ListNode srt = nil.next;
+    ListNode cur = nil.next;
+    int i = 0;
+    while (cur != null) {
+        if (++i % k == 0) {
+            ListNode end = cur;
+            ListNode afterEnd = cur.next;
+            srt = reverseList(srt, end);
+            end.next = null;
+            end = srt;
+            while (end.next != null) {
+                end = end.next;
+            }
+            beforeSrt.next = srt;
+            end.next = afterEnd;
+            beforeSrt = end;
+            srt = end.next;
+            cur = end;
+        }
+        cur = cur.next;
+    }
+    return nil.next;
+}
+
+public static ListNode reverseList(ListNode srt, ListNode end) {
+    ListNode nil = new ListNode(-1, null);
+    ListNode cur = srt;
+    while (cur != end) {
+        nil.next = new ListNode(cur.val, nil.next);
+        cur = cur.next;
+    }
+    nil.next = new ListNode(cur.val, nil.next);
+    return nil.next;
+}
+
+public static void main(String[] args) {
+    ListNode head = new ListNode(1);
+    head.next = new ListNode(2);
+    head.next.next = new ListNode(3);
+    head.next.next.next = new ListNode(4);
+    head.next.next.next.next = new ListNode(5);
+    head.next.next.next.next.next = new ListNode(6);
+    head.next.next.next.next.next.next = new ListNode(7);
+    head.next.next.next.next.next.next.next = new ListNode(8);
+    System.out.println(reverseKGroup(head, 3)); // 3 -> 2 -> 1 -> 6 -> 5 -> 4 -> 7 -> 8
 }
 ```
 
@@ -729,6 +792,21 @@ public static ListNode removeElements(ListNode node, int val) {
 }
 ```
 
+# Remove Element by Value
+
+```java
+public static ListNode removeElements(ListNode node, int val) {
+    if (node.next == null) {
+        return node;
+    }
+    ListNode next = removeElements(node.next, val);
+    if (next.val == val) {
+        node.next = next.next;
+    }
+    return node;
+}
+```
+
 # Remove Nth Element from End
 
 ```java
@@ -795,6 +873,9 @@ public static ListNode removeNthFromEnd(ListNode head, int n) {
     }
  */
 public static ListNode removeNthFromEnd(ListNode head, int n) {
+    if (n == 0) {
+        return head;
+    }
     ListNode nil = new ListNode(-1, head);
     rec(nil, n);
     return nil.next;
@@ -810,50 +891,19 @@ public static int rec(ListNode cur, int n) {
     }
     return nth + 1;
 }
-```
 
-# Remove Duplicates from Sorted List
-
-[Problem Description](https://leetcode.cn/problems/remove-duplicates-from-sorted-list/description/)
-
-```java
-/*
-    p
-    n1 (1) -> n2 (1) -> n3 (1) ->  n4 (2) -> n5(3) -> n6 (3) -> n7 (4)
-        n1 -> n3
-        
-    p
-    n1 (1) -> n3 (1) ->  n4 (2) -> n5(3) -> n6 (3) -> n7 (4)
-        n1 -> n4
-        
-    p
-    n1 (1) -> n4 (2) -> n5 (3) -> n6 (3) -> n7 (4)
-    
-              p
-    n1 (1) -> n4 (2) -> n5 (3) -> n6 (3) -> n7 (4)
-    
-                        p
-    n1 (1) -> n4 (2) -> n5 (3) -> n6 (3) -> n7 (4)
-        n5 -> n7
-                        p
-    n1 (1) -> n4 (2) -> n5 (3) -> n7 (4)
- */
-public static ListNode deleteDuplicates(ListNode head) {
-    if (head == null || head.next == null) {
-        return head;
-    }
-    
-    ListNode p = head;
-    
-    while (p.next != null) {
-        if (p.val == p.next.val) {
-            p.next = p.next.next;
-        } else {
-            p = p.next;
-        }
-    }
-    
-    return head;
+public static void main(String[] args) {
+    ListNode head = new ListNode(1);
+    head.next = new ListNode(2);
+    head.next.next = new ListNode(3);
+    head.next.next.next = new ListNode(4);
+    head.next.next.next.next = new ListNode(5);
+    head.next.next.next.next.next = new ListNode(6);
+    head.next.next.next.next.next.next = new ListNode(7);
+    head.next.next.next.next.next.next.next = new ListNode(8);
+    System.out.println(removeElements(head, 3));
+    System.out.println(removeElements(head, 8));
+    System.out.println(removeElements(head, 0));
 }
 ```
 
@@ -863,45 +913,39 @@ public static ListNode deleteDuplicates(ListNode head) {
 
 ```java
 /*
-    p1        p2
+    cur
     n1 (1) -> n2 (1) -> n3 (1) ->  n4 (2) -> n5(3) -> n6 (3) -> n7 (4)
         n1 -> n3
         
-    p1        p2
+    cur
     n1 (1) -> n3 (1) ->  n4 (2) -> n5(3) -> n6 (3) -> n7 (4)
         n1 -> n4
         
-    p1        p2
-    n1 (1) -> n4 (2) -> n5(3) -> n6 (3) -> n7 (4)
+    cur
+    n1 (1) -> n4 (2) -> n5 (3) -> n6 (3) -> n7 (4)
     
-              p1        p2
-    n1 (1) -> n4 (2) -> n5(3) -> n6 (3) -> n7 (4)
+              cur
+    n1 (1) -> n4 (2) -> n5 (3) -> n6 (3) -> n7 (4)
     
-                        p1       p2
-    n1 (1) -> n4 (2) -> n5(3) -> n6 (3) -> n7 (4)
+                        cur
+    n1 (1) -> n4 (2) -> n5 (3) -> n6 (3) -> n7 (4)
         n5 -> n7
-                        p1       p2
-    n1 (1) -> n4 (2) -> n5(3) -> n7 (4)
+                        cur
+    n1 (1) -> n4 (2) -> n5 (3) -> n7 (4)
  */
 public static ListNode deleteDuplicates(ListNode head) {
-    // The size of list < 2
     if (head == null || head.next == null) {
         return head;
     }
-    
-    ListNode p1 = head;
-    ListNode p2 = head.next;
-    
-    while (p2 != null) {
-        if (p1.val == p2.val) {
-            p1.next = p2.next;
-            p2 = p1.next;
-        } else {
-            p1 = p1.next;
-            p2 = p2.next;
+    ListNode nil = new ListNode(-1, head);
+    ListNode cur = head.next;
+    while (cur.next != null) {
+        while (cur.val == cur.next.val) {
+            cur.next = cur.next.next;
         }
+        cur = cur.next;
     }
-    return head;
+    return nil.next;
 }
 ```
 
@@ -1110,7 +1154,7 @@ public static ListNode mergeTwoLists(ListNode p1, ListNode p2) {
         return p1;
     }
     
-    if (p1.val <= p2.val) {
+    if (p1.val < p2.val) {
         p1.next = mergeTwoLists(p1.next, p2);
         return p1;
     } else {
