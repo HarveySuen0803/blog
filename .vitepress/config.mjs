@@ -55,7 +55,7 @@ export default withMermaid({
       {text: 'JVM', link: '/docs/JVM/Basic'},
       {text: 'JUC', link: '/docs/JUC/Basic'},
       {text: 'SpringBoot', link: '/docs/SpringBoot/Basic'},
-      {text: 'SpringCloud', link: '/docs/SpringCloud/Basic'},
+      {text: 'Distributed', link: '/docs/Distributed/Basic'},
       {text: 'MySQL', link: '/docs/MySQL/Basic'},
       {text: 'Redis', link: '/docs/Redis/Basic'},
       {text: 'RabbitMQ', link: '/docs/RabbitMQ/Basic'}

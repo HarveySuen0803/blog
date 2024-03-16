@@ -1033,3 +1033,118 @@ public void consume() throws InterruptedException {
     }
 }
 ```
+
+# Lock and Transaction
+
+应该避免在 Transaction 内部使用 Lock, 这里 T1 获取锁, 修改数据, 释放锁之后, 如果发生了等待 (CPU 时间片导致), 此时事务还没有提交, 即还是 old data, T2 获取锁进来, 发现还是 old data, 就又会去执行修改
+
+```java
+@Resource
+private UserDao userDao;
+
+@Transactional
+public void test() {
+    boolean isLock = distributedLock.lock();
+
+    if (!isLock) {
+        return;
+    }
+
+    try {
+        if (userDao.getData() == "new") {
+            return;
+        }
+        userDao.updData("new")
+    } finally {
+        distributedLock.unlock();
+        // waiting...
+    }
+}
+```
+
+Transaction 内部使用锁, 处理 DCL 时, 可能由于 Isolation Level 导致读取的数据都是同一份数据, 造成并发问题
+
+这里在事务内部使用 DCL, 由于事务设置的是 RR Isolation Level, 就会在第二次 Check 时, 读取到的依旧是第一次 Check 时读取到的值, 这里 T1 第一次 Check 时读取到 old, 此时 Page View 已经生成, 已经不会再变动了, 导致第二次 Check 读取时, 依旧读取的 old
+
+```java
+@Resource
+private UserDao userDao;
+
+@Transactional
+public void test() {
+    if (userDao.getData() == "new") {
+        return;
+    }
+    
+    boolean isLock = distributedLock.lock();
+    if (!isLock) {
+        return;
+    }
+    try {
+        if (userDao.getData() == "new") {
+            return;
+        }
+        userDao.updData("new")
+    } finally {
+        distributedLock.unlock();
+        // waiting...
+    }
+}
+```
+
+可以在 Lock 内部使用 Transaction
+
+```java
+@Resource
+private UserDao userDao;
+@Resource
+private UserService userService;
+
+public void test() {
+    boolean isLock = distributedLock.lock();
+    if (!isLock) {
+        return;
+    }
+    try {
+        if (userDao.getData() == "new") {
+            return;
+        }
+        userService.updData();
+    } finally {
+        distributedLock.unlock();
+    }
+}
+
+@Transactional(propagation = Propagation.REQUIRES_NEW)
+public void updData() {
+    userDao.updData("new")
+}
+```
+
+一般项目中会采用编程式事务进行处理
+
+```java
+@Resource
+private UserDao userDao;
+@Resource
+private UserService userService;
+
+public void test() {
+    boolean isLock = distributedLock.lock();
+    if (!isLock) {
+        return;
+    }
+    try {
+        if (userDao.getData() == "new") {
+            return;
+        }
+        
+        transactionTemplate.execute((status) -> {
+            userDao.updData("new")
+            return null;
+        });
+    } finally {
+        distributedLock.unlock();
+    }
+}
+```

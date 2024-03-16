@@ -291,3 +291,119 @@ t1.start();
 t2.start();
 t3.start();
 ```
+
+# Exercise Print 1 ~ 100
+
+```java
+public static volatile int count = 0;
+public static final Object obj = new Object();
+public static ExecutorService executorService = Executors.newFixedThreadPool(2);
+
+public static void main(String[] args) {
+    executorService.submit(new Task());
+    executorService.submit(new Task());
+    executorService.shutdown();
+}
+
+public static class Task implements Runnable {
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (obj) {
+                obj.notify();
+                System.out.println(Thread.currentThread().getName() + ": " + ++count);
+                if (count >= 99) {
+                    return;
+                }
+                try {
+                    obj.wait();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }
+}
+```
+
+# Exercise Print 1 ~ 100
+
+```java
+public static volatile int count = 0;
+public static volatile boolean isOdd = true;
+
+public static void main(String[] args) {
+    new Thread(() -> {
+        while (true) {
+            if (isOdd) {
+                System.out.println(Thread.currentThread().getName() + ": " + ++count);
+                isOdd = !isOdd;
+                if (count >= 99) {
+                    return;
+                }
+            }
+        }
+    }).start();
+    
+    new Thread(() -> {
+        while (true) {
+            if (!isOdd) {
+                System.out.println(Thread.currentThread().getName() + ": "+ ++count);
+                isOdd = !isOdd;
+                if (count >= 99) {
+                    return;
+                }
+            }
+        }
+    }).start();
+}
+```
+
+# Exercise Print 1 ~ 100
+
+```java
+public static volatile int count = 0;
+public static final Object obj = new Object();
+
+public static void main(String[] args) {
+    // 0 -> 1, 2 -> 3, 98 -> 99
+    new Thread(() -> {
+        while (true) {
+            synchronized (obj) {
+                obj.notify();
+                
+                System.out.println(Thread.currentThread().getName() + ": " + count++);
+                if (count == 99) {
+                    return;
+                }
+                
+                try {
+                    obj.wait();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }).start();
+    
+    // 1 -> 2, 3 -> 4, 99 -> 100
+    new Thread(() -> {
+        while (true) {
+            synchronized (obj) {
+                obj.notify();
+                
+                System.out.println(Thread.currentThread().getName() + ": " + count++);
+                if (count == 100) {
+                    return;
+                }
+                
+                try {
+                    obj.wait();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+    }).start();
+}
+```

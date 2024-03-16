@@ -38,7 +38,12 @@
 
 强制, Field 尽量使用缩写 (eg: 使用 `corp_id`, 不要使用 `corporation_id`), 可以节省存储资源, 提升查询性能.
 
-建议, Field 尽量添加 Not Null 约束, 不仅可以省去 Null List 的占用, 还不用再去判断是否非空, 避免索引失效.
+建议, Field 尽量添加 Not Null 约束
+
+- 可以省去 Null List 的占用
+- 不需要再去查询 Null List, 可以提高查询性能
+- 不用再去判断是否非空, 避免索引失效
+- 减少开发时对空值处理的考虑
 
 建议, Field 尽量分配 Default Value, 减少判断空的操作, 避免 Index Invalidation.
 
@@ -256,18 +261,20 @@ explain select key1 from s order by key1 desc, key2 desc, key3 desc;
 select * from s limit 1000000, 10
 ```
 
-Primary Key 是 Auto Increment 的, 并且还是 Index. 可以对 Primary Key 进行排序, 再通过 `where` 来过滤. 测试下来发现 Sub Query 和 Join 没啥区别.
+Primary Key 是 Auto Increment 的, 并且还是 Index. 可以根据 Primary Key 进行定位数据行, 而不是一行一行的扫, 再通过 `where` 来过滤. 测试下来发现 Sub Query 和 Join 没啥区别.
+
+从业务上讲, 这种需要翻很多页来查询的数据, 本身就离谱, 属于冷数据, 最好进行冷热隔离
 
 ```sql
-select * from s where id > (
-  select id from s order by id limit 1000000, 1
+select * from s where id >= (
+  select id from s order by id limit 1 offset 1000000
 ) limit 10;
 ```
 
 ```sql
 select * from s as s1
-join (select id from s order by id limit 1000000, 1) as s2
-on s1.id > s2.id
+join (select id from s order by id limit 1 offset 1000000) as s2
+on s1.id >= s2.id
 limit 10;
 ```
 

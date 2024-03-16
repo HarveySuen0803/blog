@@ -57,9 +57,44 @@ Java NIO (New IO) 提供了 Channel 和 Selector, 通过他们配置可以实现
 - Channel 相当于 IO Stream, 但支持非阻塞数据流的读写
 - Selector 相当于 OS Level 的 Multiplexer, 可以注册多个 Channel, 并通过轮询方式检查哪个 Channel 的 IO 事件已经就绪, 从而实现高效处理多个连接
 
+## Serialization
+
+Serialization 是将 object 转成 binary byte stream, 存储 data 和 data type
+
+Deserialization 是将 binary byte stream 转成 object, 恢复 data 和 data type
+
+Serilization 会对 class 的所有 member 进行 Serialization, 除了 static member 和 transient member
+
+Serializable 可以被继承, Integer 继承 Number, Number 继承 Serializable, 则 Integer 也可以进行 Serializatioin
+
+Serialization file
+
+```
+aced 0005 7715 6400 0000 c801 004d 000b
+6865 6c6c 6f20 776f 726c 6473 7200 0141
+6090 9788 d5e1 af30 0200 0078 70
+```
+
+class 实现 Serializable 表示该 class 的 object 需要进行序列化, 这仅仅是一个标识作用, 明确指定哪些 object 需要进行序列化, 防止不需要进行序列化的 object 也被序列化了
+
+```java
+public class User implements Serializable {}
+```
+
+serialVersionUID 标识了 class 的 version, 每次修改完 class, 就会自动生成不同的 serialVersionUID, 进行 Deserialization 时, 会去比较 serialVersionUID 是否相同, 如果我们在 Deserialization 之前就修改了 class, 则会报错
+
+手动固定 serialVersionUID 就不会有这样的问题了
+
+```java
+public class User implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+}
+```
+
 # JVM
 
-# Class Lifecycle
+## Class Lifecycle
 
 Class Lifecycle 是指类从被加载到虚拟机中开始, 直到卸载出虚拟机为止的整个过程
 
@@ -122,13 +157,21 @@ other thread 无法访问 current thread 的 Stack Frame, 只有 Stack Frame 执
 
 一个 Stack Frame 中存储了 Local Variable Table, Operand Stack, Dynamic Linking, Return Address 和 Additional Info
 
+## Static Linking
+
+Static Linking (Early Binding) 在 Compile Stage 可以确定 Symbolic Reference 对应的 Direct Reference, 不具备 Polymorphism 的 class 就可以进行 Static Linking, 不能被 override 的 method 也可以进行 Static Linking (eg: Static Method, Private Method, Final Method, Constructor) 
+
+Dynamic Linking (Late Binding) 在 Compile Stage 无法确定 Symbolic Reference 对应的 Direct Reference, 需要在 Runtime Stage 的 Class Loading 的 Linking 的 Resolve 中确定
+
+Static Linking 相比 Dynamic Linking 具有更快的启动时间和执行速度, 生成的可执行文件独立于外部环境, 不再依赖于外部的库文件, 但是可重用性较差, 资源占用也较多
+
 ## Dynamic Linking
 
 Dynamic Linking 会发生在两个阶段. 如果能在 Class Loading 期间确定的 Reference, 则会在 Resolve 这一步将 Symbolic Reference 转成 Direct Reference. 由于 Dynamic Binding 的存在, 很多引用需要在 Runtime 时确定, 将 Symbolic Reference 转成 Direct Reference
 
 Symbolic Reference 是一个标识, 用于描述所引用的目标的各种符号信息, 包括类和接口的全限定名, 字段的名称和描述符, 方法的名称和描述符等, 存储在 class file 的 Class Constant Pool
 
-Direct Reference 指向 Heap 中的 instance 的地址, 存储在 class file 的 Runtime Constant Pool
+Direct Reference 指向 Heap 中的 instance 的地址, 存储在 JVM 的 Runtime Constant Pool
 
 ## Class Constant Pool
 
@@ -320,6 +363,35 @@ Instance size: 32 bytes
 Space losses: 3 bytes internal + 0 bytes external = 3 bytes total
 ```
 
+## Execution Engine
+
+Class File 包含 Class Instruction, 只有 JVM 能识别 Class Instruction, 需要通过 Eexecution Engine 将 Class Instruction 编译成对应 CPU 的 Machine Instruction.
+
+Execution Engine 既可以从 PC Register 中获取下一条 Instruction 的 Address, 也可以通过 Local Variable Table 的 Reference 找到 Heap 中的 Object.
+
+Execution Engine 包含 Interpreter 和 JIT 两种 Compiler, 负责将 Class Instruction 转成 Machine Instruction.
+
+Interpreter 是逐行编译 Class Instruction. 现在主流的 Template Interpreter 是一条 Class Instruction 关联一个 Template Function, Template Function 可以直接产出对应的 Machine Instruction, 提供性能. 
+
+HotSpotVM 的 Template Interpreter 包含 Interpreter Template 和 Code Template. Interpreter Template 负责主要核心功能. Code Template 负责管理生成的 Machine Instruction.
+
+JIT (Just In Time Compiler) 是 Dynamic Compile, 会将整个 Function 编译成 Machine Instruction, 保存在 Cache 中, 后续再次执行 Function 只要调用对应的一系列 Machine Instruction, 不需要像 Interpreter 一样去重新编译.
+
+JIT 包含 C1 Compiler (Client Compiler) 和 C2 Compiler (Server Compiler, def).
+
+- C1 适合 Client Program, 编译时的优化较浅, 编译耗时较短, 响应快, 资源占用少. 可以设置 `-client` 开启 C1. C1 主要采用方法内联, 栈上替代, 去虚拟化, 冗余消除进行优化.
+- C2 适合 Server Program, 编译时的优化较深, 编译耗时较长, 执行效率更高. 可以设置 `-server` 开启 C2. C2 主要采用方法内联, 标量替换, 栈上分配, 同步消除进行优化.
+
+HotSpotVM 为了实现 Java 的跨平台, 避免采用 Static Compilation, 通过 Interpreter 保留 JVM 的动态性. 可以设置 `-Xint` 只采用 Interpreter, 设置 `-Xcomp` 只采用 JIT, 设置 `-Xmixed` 采用 Interpreter + JIT.
+
+HotSpotVM 刚启动时, 会由 Interpreter 先进行解释, 不需要等待全部编译完. 执行过程中, HotSpot Detection 会统计 Method 的调用次数, 达到一定阈值, 就会触发 OSR (On Stack Replacement), 调用 JIT 对一些常用的 Class Instruction 进行优化, 编译成 Machine Instruction 存储到 Cache 中. Cache 存储在 Method Area 中, 即 Native Memory.
+
+C1 触发 OSR 的阈值默认为 1500 次, C2 触发 OSR 的阈值默认为 10000 次. 可以通过 `-XX:CompileThreashold` 设置阈值.
+
+HotSpot Detection 统计的是一段时间内代码的热度, 减少长时间不活跃的代码的计数值, 有助于保持对热点代码的准确性, 如果超过一定的时间限度还不达不到阈值, 就会触发 Counter Decay, 减半统计的次数, 这个时间限度就是 Counter Half Life Time. 可以通过 `-XX:-UseCounterDecay` 关闭 Counter Decay. 可以通过 `-XX:CounterHalfLifeTime` 设置 Counter Half Life Time.
+
+JDK9 引入了 AOT (Ahead Of Time Compiler), 借助 Graal Compiler, 牺牲了动态性, 在程序执行前, 将 Class Instruction 全部转成 Machine Instruction. 
+
 ## Object Reference
 
 JVM 进行对象定位时, 有句柄引用 和 直接引用 (def) 两种方式
@@ -458,25 +530,58 @@ Monitor 的 Field
 - 当一个线程想要获取 Mointor 时, 就会去尝试获取 Entry Lock
 - 当一个线程进入 WaitSet 时, 就会尝试去获取 WaitSet Lock
 
+## ThreadLocal
+
+ThreadLocal 提供了一系列用于访问和操作线程局部变量的方法, 使得每个线程都可以拥有自己的变量副本, 而不需要考虑线程安全性, 不同的方法之间就不需要通过全局变量实现通信了
+
+```java
+ThreadLocal<Integer> threadLocal = ThreadLocal.withInitial(() -> 0);;
+
+for (int i = 0; i < 10; i++) {
+    new Thread(() -> {
+        try {
+            for (int j = 0; j < 10; j++) {
+                threadLocal.set(threadLocal.get() + 1);
+            }
+            System.out.println(Thread.currentThread().getName() + " " + threadLocal.get());
+        } finally {
+            threadLocal.remove();
+        }
+    }).start();
+}
+```
+
 ## ThreadLocalMap
 
-每一个线程都有一个关联的 ThreadLocal.ThreadLocalMap 用于存储线程局部变量, 每创建一个 ThreadLocal Obj, 就会创建一个 Entry, Key 指向 ThreadLocal Obj, Val 为 ThreadLocal Obj 维护的局部变量的副本, 通过 ThreadLocal Obj 的 get() 和 set() 就会去操作当前线程的 ThreadLocalMap 中存储的副本, 不影响其他线程, 保证了线程安全
+每一个 Thread 都有一个关联的 ThreadLocal.ThreadLocalMap 用于存储线程局部变量, 每次第一次通过 get(), set() 去操作一个 ThreadLocal Obj 时, 都会去创建一个 ThreadLocal Obj 的副本 Entry 存储到当前 Thread 的 ThreadLocalMap Obj 中, 后续通过 get(), set() 或 remove() 去操作 ThreadLocal Obj 都是在操作 Entry 副本, 不影响其他线程, 保证了线程安全
+
+```java
+public class Thread implements Runnable {
+    ThreadLocal.ThreadLocalMap threadLocals = null;
+}
+```
+
+```java
+public class ThreadLocal<T> {
+    static class ThreadLocalMap {
+        static class Entry extends WeakReference<ThreadLocal<?>> {}
+    }
+}
+```
 
 JDK7 中, ThreadLocal 维护 ThreadLocal.ThreadLocalMap Obj, 如果 Thread Obj 销毁后, ThreadLocal Obj 没有销毁, 内部的 ThreadLocalMap Obj 就不会销毁, 导致 Memory Leak
 
-JDK8 中, Thread 维护 ThreadLocal.ThreadLocalMap Obj, 当 Thread Obj 销毁后, ThreadLocalMap Obj 也会一块销毁, 避免了 Memory Leak
+JDK8 中, Thread 维护 ThreadLocal.ThreadLocalMap Obj, 当 Thread Obj 销毁后, 就会断开对 ThreadLocalMap Obj 的引用, 就会自然的回收 ThreadLocalMap Obj, 避免了 Memory Leak
 
-ThreadLocalMap 的 Entry 继承了 WeakReference, 所有的 Key 都是通过 Weak Ref 指向 ThreadLocal Obj
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403141417049.png)
 
-当 Thread Obj 不再引用 ThreadLocal Obj 后, 只有 ThreadLocalMap 中的 Key 通过 Weak Ref 引用 ThreadLocal Obj, 只要发生 GC, 就会断开 Weak Ref, 当 Thread Obj 销毁后, 就会断开 ThreadLocalMap Obj 和 ThreadLocal Obj 的 Strong Ref, 就会一块销毁 ThreadLocalMap Obj 和 Thread Local Obj
+## ThreadLocal Memory Leak
 
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402021217146.png)
+ThreadLocalMap 的 Entry 继承了 WeakReference, 所有的 Key 都是通过 Weak Ref 指向 ThreadLocal Obj, 如果发生 GC, Key 就会断开对 Weak Ref, 此时 Key 为 Null, Val 为 ThreadLocal Obj 的副本
 
-## Thread Pool Memory Leak
+ThreadPool 中的线程不会销毁, 所以就不会断开对 ThreadLocalMap Obj 的 Strong Ref, 就无法销毁 ThreadLoacalMap Obj, 所以存储的 Entry 就不会销毁, 这会导致 Entry 的 Val 一直存储着之前 ThreadLocal Obj 的副本, 导致 Memory Leak
 
-Thread Obj 执行完方法, 就会断开对 ThreadLocal Obj 的 Strong Ref, Key 的 Weak Ref 断开后, ThreadLocal Obj 就会被销毁, 而 Entry 中的 Val 此时并没有被清空
-
-Thread Pool 中, Thread Obj 会被重复利用, 不会销毁, 那么 Thread Obj 对 ThreadLocalMap Obj 的 Strong Ref 就一直存在, 所以 Entry 的 Val 中存储的 ThreadLocal Obj 的副本, 就会一直存在, 导致 Memory Leak
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403141345757.png)
 
 ThreadLocal 的 set(), get(), remove() 底层都会调用 expungeStaleEntry() 销毁 key 为 null 的 Stale Entry
 
@@ -507,6 +612,160 @@ ThreadLocal 能实现 Data Isolation, 重点在于 ThreadLocalMap, 所以 Thread
 ```java
 static ThreadLocal<Integer> threadLocal = ThreadLocal.withInitial(() -> 0);;
 ```
+
+## ThreadLocal Dirty Read
+
+这里 T1 和 T2 是两个不同的线程, 第一次调用 set(), get() 或 remove() 时, 都会去创建一个 ThreadLocalMap Obj, 然后存储 userId 的副本, 所以相互之间不会有任何影响
+
+```java
+private static final ThreadLocal<Integer> userId = ThreadLocal.withInitial(() -> null);
+
+public static void main(String[] args) {
+    new Thread(() -> {
+        userId.set(1);
+        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // t1 get 1
+    }, "t1").start();
+    try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
+    new Thread(() -> {
+        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // t2 get null
+    }, "t2").start();
+}
+```
+
+因为 ThreadPool 中的线程不会销毁, 所以同一个线程就会一直反复使用同一个 ThreadLocalMap Obj, 导致了第二次执行任务时的脏读
+
+```java
+private static final ThreadLocal<Integer> userId = ThreadLocal.withInitial(() -> null);
+
+public static void main(String[] args) {
+    ExecutorService threadPool = Executors.newFixedThreadPool(1);
+    threadPool.submit(() -> {
+        userId.set(1);
+        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
+    });
+    try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
+    threadPool.submit(() -> {
+        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
+    });
+    threadPool.shutdown();
+}
+```
+
+这里通过 remove() 去清除了 ThreadLocalMap 中该 ThreadLocal Obj 的副本, 第二次执行任务时, 在 ThreadLocalMap 中找不到该 ThreadLocal Obj 的副本, 就会去创建一个 ThreadLocal Obj 的副本, 从而解决了 Dirty Read 问题
+
+```java
+private static final ThreadLocal<Integer> userId = ThreadLocal.withInitial(() -> null);
+
+public static void main(String[] args) {
+    ExecutorService threadPool = Executors.newFixedThreadPool(1);
+    threadPool.submit(() -> {
+        userId.set(1);
+        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
+        userId.remove();
+    });
+    try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
+    threadPool.submit(() -> {
+        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
+    });
+    threadPool.shutdown();
+}
+```
+
+## InheritableThreadLocal
+
+InheritableThreadLocal 是 ThreadLocal 的一个扩展, 它不仅提供了线程局部变量, 而且还能将父线程的局部变量值传递给子线程, 这意味着当一个线程创建一个新的线程时, InheritableThreadLocal 可以将父线程中的局部变量的值传递给子线程的局部变量
+
+ThreadLocal 仅限于当前线程, 而 InheritableThreadLocal 允许父线程向子线程传递变量
+
+```java
+ThreadLocal<Integer> userId = new ThreadLocal<>();
+userId.set(1);
+new Thread(() -> {
+    System.out.println(userId.get()); // null
+}).start();
+```
+
+```java
+InheritableThreadLocal<Integer> userId = new InheritableThreadLocal<>();
+userId.set(1);
+new Thread(() -> {
+    System.out.println(userId.get()); // 1
+}).start();
+```
+
+使用 InheritableThreadLocal 在父线程和子线程之间共享用户会话信息
+
+```java
+private static final InheritableThreadLocal<String> sessionInfo = new InheritableThreadLocal<>();
+
+public static void main(String[] args) {
+    sessionInfo.set("UserSessionID: 123456");
+
+    System.out.println("Par Thread: " + sessionInfo.get());
+
+    new Thread(() -> {
+        System.out.println("Sub Thread: " + sessionInfo.get());
+    }).start();
+
+    sessionInfo.remove();
+}
+```
+
+Thread 底层维护了一个 `ThreadLocal.ThreadLocalMap inheritableThreadLocals`, Thread 的 init() 中进行线程的初始化时, 会根据 `boolean inheritThreadLocals` 判断是否需要处理 InheritableThreadLocal, 然后根据父线程的 InheritableThreadLocal 进行配置
+
+```java
+public class Thread implements Runnable {
+    ThreadLocal.ThreadLocalMap threadLocals = null;
+    ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;
+}
+```
+
+```java
+private void init(ThreadGroup g, Runnable target, String name,
+                  long stackSize, AccessControlContext acc,
+                  boolean inheritThreadLocals) {
+    // 这里的 currentThread() 是父线程 (当前执行 init() 的线程), this 是子线程 (正在被创建的线程)
+    Thread parent = currentThread();
+    
+    if (inheritThreadLocals && parent.inheritableThreadLocals != null)
+        this.inheritableThreadLocals =
+            ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+
+    // ...
+}
+```
+
+通过 get(), set(), remove() 操作的 ThreadLocal 时都会去调用 getMap() 获取 ThreadLocalMap, 从而来操作 Entry 副本
+
+InheritableThreadLocal 继承 ThreadLocal, 也重写了 ThreadLocal 的 getMap(), 所以调用的其实是 InheritableThreadLocal 的 getMap(), 返回的是 inheritableThreadLocals 而不是 threadLocals 了
+
+```java
+public class ThreadLocal<T> {
+    public T get() {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        // Do something with the map
+    }
+}
+```
+
+```java
+public class InheritableThreadLocal<T> extends ThreadLocal<T> {
+    ThreadLocalMap getMap(Thread t) {
+       return t.inheritableThreadLocals;
+    }
+}
+```
+
+## ThreadPool
+
+当一个新任务提交给线程池时, 线程池会判断其中的工作线程数量, 如果当前的工作线程数量小于核心线程数, 线程池会创建一个新的工作线程来执行这个任务, 如果大于或等于核心线程数, 线程池则不会立即创建新的线程
+
+如果线程池中的工作线程数目达到了核心线程数, 新的任务就会被存入到任务队列, 等待被执行, 当任务队列已满, 且当前线程数小于最大线程数时, 线程池会创建新的工作线程来执行任务
+
+当任务队列已满, 并且当前线程数达到了最大线程数, 那么线程池会根据其 RejectedExecutionHandler 策略来处理这个任务
+
+工作线程从任务队列中取出任务执行, 执行完毕后, 继续从队列中取出下一个任务执行, 直到队列为空, 如果设置了 allowCoreThreadTimeOut, 那么核心线程在等待时间超过 keepAliveTime 之后也会被回收
 
 ## Lock Escalation
 
@@ -645,6 +904,22 @@ new Thread(() -> {
 
 CAS 由 JDK 提供, 通过 hardware 保证了 NoBlocking, Atomicity, 本质是 cmpxchg instruction, 执行 cmpxchg 时, 由 thread 先给 bus 加 lock, 再去执行 CAS 操作, 相比 synchronized 更高效
 
+JUC 提供了的 AtomicInteger, AtomicLong, AtomicReference, AtomicStampReference 都是基于 CAS 实现的, 通过 compareAndSet() 去调用操作系统级别的 cmpxchg 指令
+
+- AtomicReference 存在 ABA 问题, AtomicStampReference 不存在 ABA 问题
+
+## LongAdder
+
+LongAdder 专用于高并发场景下, 原子累加一个长整型变量, 与 AtomicLong 相比, AtomicLong 操作 CAS, 每次只有一个 thread 修改成功, 其他的 thread 一直在 Spining, 导致 CPU 消耗过多
+
+在 Low Concurrency 下, LongAdder 只操作 base, 效果和 AtomicLong 没有区别
+
+在 High Concurrency 下, LongAdder 通过 add() 判断是否需要调用 longAcumulate(), 将单个的变量分解成多个独立的单元 Cell, 每个单元都独自维护一个独立的计数值, 首次会新建 2 个 Cell, 效果和 base 相同, 帮助 base 分散压力, 通过 Hash Algo 保证分布均匀, 当 Cell 不够用时, 会每扩容 2 个 Cell, 全部计算完后调用 sum() 叠加 base 和 Cell 得到结果
+
+LongAdder 不保证 Strong Consistency, 有可能在得到 sum 后, 又有 thread 修改了 Cell 导致 Inconsistency
+
+LongAdder, LongAccumulator, DoubleAdder, DoubleAccumulator 低层原理一致, 使用了一种类似于分段锁的机制
+
 ## Spin Lock
 
 CAS 通过 Spin Lock 实现 Atomicity 不需要 wait, thread 获取 memoryValue, 记录为 exptecedValue, 当 thread 修改完, 需要同步 newValue 到内存时, 先比较 expectedValue 和 memoryValue 是否相同, 如果不同, 则说明在此期间有其他线程修改过了, 本次运算作废, 重新获取 value 进行重试
@@ -748,7 +1023,7 @@ ReentrantLock 采用 Exclusive Mode, 不适合多线程中, 读多写少的场�
 
 ## JMM
 
-JMM (Java Memory Model) 是一个 standard, 规定所有的 variable 都存储在 memory 中, 并且规定了 variable 的访问方式, 保证了 multithreaded program 在不同 CPU, 不同 OS 下, 访问 memory 时达到一致的访问效果, 实现 Atomicity, Visibility, Orderliness
+JMM (Java Memory Model) 是一个 standard, 规定了 variable 在 memory 中的访问方式, 保证了 multithreaded program 在不同 CPU, 不同 OS 下, 访问 memory 时达到一致的访问效果, 实现 Atomicity, Visibility, Orderliness
 
 thread 从 global memory 中拷贝 shared variable 到 local memory 中操作, 修改完再推送到 global memory 中, 实现修改, 不同 thread 之间, 无法访问对方的 local memory, 必须依靠 global memory 实现交互
 
@@ -949,18 +1224,6 @@ class DoubleCheckSingleton {
 }
 ```
 
-## LongAdder
-
-LongAdder 专用于高并发场景下, 原子累加一个长整型变量, 与 AtomicLong 相比, AtomicLong 操作 CAS, 每次只有一个 thread 修改成功, 其他的 thread 一直在 Spining, 导致 CPU 消耗过多
-
-在 Low Concurrency 下, LongAdder 只操作 base, 效果和 AtomicLong 没有区别
-
-在 High Concurrency 下, LongAdder 通过 add() 判断是否需要调用 longAcumulate(), 将单个的变量分解成多个独立的单元 Cell, 每个单元都独自维护一个独立的计数值, 首次会新建 2 个 Cell, 效果和 base 相同, 帮助 base 分散压力, 通过 Hash Algo 保证分布均匀, 当 Cell 不够用时, 会每扩容 2 个 Cell, 全部计算完后调用 sum() 叠加 base 和 Cell 得到结果
-
-LongAdder 不保证 Strong Consistency, 有可能在得到 sum 后, 又有 thread 修改了 Cell 导致 Inconsistency
-
-LongAdder, LongAccumulator, DoubleAdder, DoubleAccumulator 低层原理一致, 使用了一种类似于分段锁的机制
-
 # MySQL
 
 ## Transaction ACID
@@ -1007,6 +1270,124 @@ select @@transaction_isolation;
 ```sql
 set session transaction_isolation = 'read-uncommitted';
 ```
+
+## Redo Log
+
+Redo Log 和 Undo Log 都是一种恢复操作, 他们回滚数据是逻辑层面的回滚, 而不是物理层面的回滚. 插入一条记录后, 就会记录一条对应的删除操作. 开辟了一个数据页后回滚, 是无法回滚到开辟数据页之前的, 只是通过操作相反的命令达到数据上的统一. 
+
+```txt
+start transaction;
+
+select col; -- ''
+
+-- Record col = '' to Undo Log
+update col = 'a';
+-- Record col = 'a' to Redo Log
+
+-- Record col = 'a' to Undo Log
+update col = 'b';
+-- Record col = 'b' to Redo Log
+
+-- Flush Disk
+commit;
+```
+
+InnoDB 采用 WAL (Write-Ahead Logging), 先写日志, 再写硬盘, 只有日志写成功了, 才算事务提交成功. 发生宕机且数据未刷到磁盘时, 就可以根据 Redo Log 恢复数据, 保证了 ACID 的 D.
+
+如果不采用 Redo Log, 为了保证数据安全性, 每次执行 SQL, 就需要进行 Random IO, 将硬盘的数据读取到内存中, 修改完再进行刷盘, 不仅效率低, 丢失数据的风险更高, 而且为了修改一点数据, 就将 Page 来回折腾, 非常不划算.
+
+Redo Log 可以保障一定的安全性, 所以就没有必要实时进行内存到硬盘的刷盘操作, 可以稍微间隔长一点 (eg: 1s 刷盘一次).
+
+Redo Log 占用非常小, 而且是通过 Sequential IO 存储到硬盘上的, 可以说成本非常低.
+
+Redo Log 是在 Storage Engine 层面产生的, Bin Log 是 DB 层面产生的, 两者有着很大的区别 (eg: 插入 100 的过程中, Redo Log 是不断更新的, 等全部加载完, 再一次性写入到 Bin Log 中).
+
+MySQL Server 启动后, 会立即申请一块 Redo Log Buffer, 用来存储 Redo Log, 这块空间被分成若干个连续的 Redo Log Block, 1 个 Block 占 512B.
+
+执行一个修改操作后, 会生成一条 Redo Log 写入到 Redo Log Buffer 中, 记录的是修改后的数值, 当提交后, 就会将 Redo Log Buffer 中的数据追加写入到 OS 的 Page Cache 中, 再进行刷盘, 追加写入到硬盘的 Log File 中.
+
+通过 `innodb_log_buffer_size` 设置 Redo Log Buffer 的大小 (def: 16M).
+
+通过 `innodb_flush_log_at_trx_commit` 设置不同的刷新策略 (def: 1).
+
+- `0`: 提交后, 不会进行任何操作, 等待 Server 自动进行一秒一次自动同步. 将数据存储在 Buffer 中, 依靠自动同步, 风险最高, 但是性能最强.
+- `1`: 提交后, 将数据写入到 Page Cache, 再从 Page Cache 写入到硬盘. 直接写会到了硬盘中, 非常安全, 但是性能最差, 默认就是如此.
+- `2`: 提交后, 将数据写入到 Page Cache. 将数据写入到 OS 到 Page Cache 中, 一般 OS 宕机的几率是非常低的, 还是蛮安全的, 性能也比较好.
+
+## Undo Log
+
+Undo Log 可用于回滚数据, 可用于 MVCC. 
+
+InnoDB 默认有 2 个提供给 Undo Log 的 Table Space, 共包含 128 个 Rollback Segment, 每个 Rollback Segment 中包含 1024 个 Undo Log Segment.
+
+1 个 Rollback Segment 可能同时服务于 n 个 TRX, 开启 1 个 TRX 后, 就会去制定 1 个 Rollback Segment, 如果 TRX 中的数据被修改了, 原始的数据就会记录到 Rollback Segment 中.
+
+通过 `innodb_undo_directory` 设置 Rollback Segment 的存储位置 (def: ./).
+
+通过 `innodb_undo_tablespaces` 设置 Rollback Segment 的文件数量 (def: 2).
+
+通过 `innodb_rollback_segments` 设置 Rollback Segment 的数量 (def: 128).
+
+InnoDB 的 Record Header 还会有一些隐藏列.
+
+- `DB_TRX_ID`: 每个 TRX 都会自动分配一个 TRX ID.
+- `DB_ROLL_PTR`: 指向 Undo Log 的 Pointer.
+
+执行 `insert` 后, 会产生一个 Undo Log, 提交后, 立即删除.
+
+执行 `delete` 和 `update` 后, 会产生一个 Undo Log, 提交后, 放入 Linked List 中, 提供 MVCC 使用, 等待 Purge Thread 删除. Purge Thread 在删除数据时, 只是进行逻辑删除, 将 deletemark 标记为 1, 后续采用覆盖的方式插入数据实现删除.
+
+Undo Log 的存储是离散的, 要回收非常麻烦, 所以 TRX 提交后, 不会立即删除 Undo Log, 而会放入到一个 Linked List 中, 然后判断 Undo Log 所属 Page 的使用空间是否小于 3/4, 如果小于 3/4, 那么它就不会被回收, 其他 TRX 的 Undo Log 会继续使用当前 Page.
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241733175.png)
+
+更新 Priamry Key 时, 会将 Old Record 的 deletemark 标识为 1, 再新建一个 New Record, 递增 Undo Log 的 no, 保证回滚时向前可以找到 Undo log.
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241733176.png)
+
+## Bin Log
+
+在 TRX 提交之前, 会记录 DDL 和 DML 到 Bin Log 中, 以达到重放 SQL 语句的目的, 主要用于数据库回滚、复制、数据恢复.
+
+Bin Log 可以用于数据恢复, 如果 MySQL Server 挂掉了, 可以通过 Bin Log 查询到用户执行了哪些修改操作, 可以根据 Bin Log 来恢复数据.
+
+Bin Log 可以用于主从复制, Log 具有延续性和时效性, 可以根据 Bin Log 同步 Master 和 Slave 之间的数据.
+
+查看 Bin Log 状态.
+
+```sql
+show variables like '%log_bin%';
+
+show binary logs;
+```
+
+配置 Bin Log. (file: my.cnf)
+
+```
+[mysqld]
+log-bin=mysql-bin
+binlog_expire_logs_seconds=600
+max_binlog_size=100M
+```
+
+Bin Log 是一对二进制文件, 所以无法直接查看, 这里通过 `mysqlbinlog` 查看 Bin Log
+
+```shell
+mysqlbinlog '/var/lib/mysql/mysql-bin.000004'
+```
+
+查看 Bin Log Events.
+
+```sql
+show binlog events \G
+
+show binlog events in 'msyql-bin.000004';
+
+-- 从 236 行开始向后查 5 条
+show binlog events in 'msyql-bin.000004' from 236 limit 5;
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241732538.png)
 
 ## MVCC
 
@@ -1140,6 +1521,32 @@ MySQL 数据库的分库分表主要是为了应对大数据量或者高并发�
 
 - eg: user(id, name, desc) 拆分成 user(id, name) 和 user_detail(id, desc)
 
+## SQL Injection
+
+查看 Log 和 DB 确认是否存在 SQL Injection, 立即隔离受影响的系统, 降低风险
+
+PrepareStatement 会对 SQL 进行预处理, 不需要 "+" 拼接字符串, 不存在 SQL Injection, 尽量不要使用字符串拼接
+
+```java
+Scanner scanner = new Scanner(System.in);
+// name 输入 1' or
+String name = scanner.nextLine();
+// password 输入 or '1' = '1
+String password = scanner.nextLine();
+// select * from accounts where name = '1' or' and password = 'or '1' = '1';
+String sql = "select * from accounts where name = '" + name + "' and password = '" + password + "';";
+```
+
+```sql
+select * from accounts where name = '1' or ' and password = ' or '1' = '1';
+```
+
+对入参进行校验, 过滤
+
+用户的权限应该控制在最小粒度, 避免权限过高导致的大问题
+
+定期进行安全审计, 设置监控和告警机制
+
 # Redis
 
 ## Redis Replication
@@ -1202,6 +1609,8 @@ Redis 共有 16384 个 Slot, 通过 Slot 存储数据, 添加结点, 删除结�
 如果 Key 有 {} 包裹的部分, 就会根据 {} 里的内容计算 Hash. 如果 Key 没有 {}, 就会直接根据 Key 计算 Hash. 所以想要同一批数据存储在同一个 Slot 中, 就可以通过 {} 赋予共同的前缀
 
 Slot 越少, 压缩比率就越高, 请求头就越小, 占用的带宽就越少, 一般不建议 Redis Cluster 超过 1000 个结点, 所以 16384 个 Slot 绝对够用
+
+Redis Cluster 中, 节点之间需要同步心跳包, 这个心跳包的大小就取决于 Slot 的数量, 如果数据包太大, 数据之间的心跳同步就会占用很多带宽
 
 Client 发送写请求后, 如果 Master 停机, Slave 还来不及进行 Replication, 就会造成数据丢失
 
@@ -1811,6 +2220,10 @@ Raft 选举流程
 
 - A 恢复健康后, 发现自己的 Term 比其他节点的 Term 小, 则自动成为 Follower
 
+## Micro Service
+
+Micro Service 是 Distributed 下的一种架构风格, 将一个大型服务拆分成多个小型服务, 实现服务之间的解耦, 每个服务都运行在自己的进程中, 通过一些轻量的通信协议进行通信 (eg: RPC), 每个服务都可以独立部署, 独立扩展, 独立更新, 可维护性, 可伸缩性大大提升
+
 ## Nacos
 
 Nacos Server 是一个 Registration Center 和 Configuration Center
@@ -1845,6 +2258,26 @@ Micro Service 同一个模块可能有多个实例, 就需要通过 Load Balanci
 - Weighted Round Robin Load Balancing: 权重轮询算法, 在轮询算法的基础上加入了权重的考虑
 - Least Connections Load Balancing: 最少连接算法, 将新的请求分配给当前连接数最少的服务器, 适用于处理请求所需时间差异较大的情况
 - Source IP Hash Load Balancing: 源地址哈希算法, 根据请求的源地址进行哈希计算, 将请求分配给服务器, 可以保证来自同一源地址的请求总是被分配到同一台服务器
+
+## RPC
+
+RPC 和 HTTP 是两种常用的网络通信协议, 它们在设计理念, 使用场景, 优势和限制等方面有所不同
+
+RPC 允许一台计算机上的程序调用另一台计算机上的程序, 就像调用本地程序一样, 目的是为了使分布式系统中的跨网络的程序调用变得透明, RPC 可以基于多种底层传输协议实现 (eg: TCP, UDP, HTTP)
+
+- RPC 更适用于构建分布式系统和微服务架构中服务间的通信, 特别是在需要高效, 紧密耦合的系统组件间进行远程过程调用时
+- RPC 协议通常需要服务提供者和消费者之间有更紧密的协作和协议一致性, RPC 客户端和服务器可能需要使用相同的技术栈或遵循特定的协议规范
+- RPC 的安全性取决于所使用的底层传输协议和额外的安全措施 (eg: TLS/SSL 加密, 认证机制)
+
+HTTP 是一种应用层协议, 设计用于 Web 浏览器和服务器之间的通信, 但也被广泛用于不同系统之间的数据交换, HTTP 遵循请求响应模式, 主要用于传输 HTML 文档, 图片, 视频等超媒体信息
+
+- HTTP 相对简单, 易于理解和调试, 虽然 HTTP2 提供了性能改进 (eg: 头部压缩, 多路复用), 但通常来说，HTTP 在性能上可能不及专为远程调用优化的 RPC
+- HTTP 作为 Web 的基石, 具有极高的互操作性和灵活性, 它支持多种数据格式和编码标准, 使得不同技术栈的系统能够轻松集成和通信
+- HTTP 本身支持通过 HTTPS 进行加密通信, 提供了数据传输的安全性
+
+Dubbo 是基于 RPC 的分布式框架, 支持服务注册发现, 远程通信, 负载均衡, 超时处理, 熔断降级, 适用于构建高性能且复杂的微服务架构
+
+OpenFeign 是一个声明式的 Http 客户端, 简化了 Http 的远程通信过程, 可以像调用本地接口一样实现 Http 请求, 适用于构建简单的微服务
 
 # Network
 
@@ -1997,6 +2430,36 @@ OSI 和 TCP/IP 的对应关系
 - OSI 的 网络层 对应 TCP/IP 的 网络互联层
 - OSI 的 数据链路层, 物理层 对应 TCP/IP 的 网络接口和硬件层
 
+## Symmetric Key Cryptography
+
+Client 通过 Secret Key 对 Plaintext 进行 Encode 得到 Ciphertext, 发送给 Server
+
+Server 通过 Secret Key 对 Ciphertext 进行 Decode 得到 Plaintext
+
+Algo 必须内置在 Client 和 Server 中, 而 Nginx 又是 Open Source, 所以 Algo 也是公开的, 无法保障安全, Secret Key 需要通过 Network 传输, 也不安全
+
+## Asymmetric Key Cryptography
+
+Client 访问 Server, Server 生成 Public Key 返回给 Client
+
+Client 通过 Publich Key 进行 Encode, 发送给 Server, Server 通过 Private Key 进行 Decode 得到 Plaintext
+
+Server 通过 Private Key 进行 Encode, 发送给 Client, Client 通过 Private Key 进行 Decode 得到 Plaintext
+
+Public Key 通过 Network 传输, Private Key 保存在 Server 不丢失
+
+Hacker 无法伪造 Client 通过 Publich Key 进行 Decode
+
+Hacker 伪造 Server, 发送 Fake Public Key 给 Client, 让 Client 和 Hacker 交互, Hacker 再去跟 Server 交互, 所以只靠 Asymmetric Key Cryptography 无法保障安全
+
+## Certification
+
+Server 提交 Public Key 给 Ca 认证, Ca 通过 Publich Key 进行 Encode得到 Certification 返回给 Server, Server 返回 Certification 给 Client
+
+Client 通过 Ca 的 Public Key 对 Certification 进行 Decode 得到 Server 的 Public Key, 再通过 Asymmetric Encryption 和 Server 进行交互
+
+Hacker 拦截到 Server 返回的 Certification 后, 可以通过 Public Key 进行 Decode, 但是没有 Private Key 就无法进行 Encode, 再次发送给 Client 后, Client 无法 Decode, 就会校验失败, 解决了 Hacker 伪造 Server 的问题
+
 # Computer
 
 ## Thread, Process
@@ -2015,6 +2478,7 @@ OSI 和 TCP/IP 的对应关系
   - 也可以直接将分块上传到 MINIO 中, 合并时就直接调用一个 API 通知 MINIO 进行合并
 - 完整文件存储形式 `"/" + fileMd5.charAt(0) + "/" + fileMd5.charAt(1) + "/" + fileMd5 + "/" + fileName`
 - 分块文件存储形式 `"/" + fileMd5.charAt(0) + "/" + fileMd5.charAt(1) + "/" + fileMd5 + "/" + chunkNo;`
+- 服务端记录一个 tmp 文件, 记录当前已经上传的分片序号, 后续合并失败, 就去查看缺少哪个分片序号, 通知前端补发就可以了
 
 ## 视频处理
 
@@ -2038,7 +2502,7 @@ OSI 和 TCP/IP 的对应关系
 
 ## 分布式登录状态同步
 
-分布式登录状态同步：通过 Redis + JWT + Hash 解决分布式环境下登录状态同步的问题, 通过 Redis + Hash 存储用户的 Token, 限制 Token 数量, 并通过 Redis 维护了一个黑名单拦截报废的 Token.
+分布式登录状态同步：通过 Redis + JWT + Hash 解决分布式环境下登录状态同步的问题.
 
 - 用户登入后, 会存储到一个 Hash 中, Key 为 `token:login:<userid>`, Field 为 Create Time, Val 为 Token, 每次存储 New Token 前会先判断 Hash 存储的 Token 数量是否达到了存储上限, 如果达到了, 就移除 Oldest Token, 并将该 Oldest Token 加入 BlackList
 - 用户登出后, 需要删除 Hash 中的 Token, 并且将 Token 加入 BlackList
@@ -2050,9 +2514,25 @@ OSI 和 TCP/IP 的对应关系
 - 每次请求都查询一次 Redis 都 Token list, 对比 token 是否相同
 - 也不需要通过 XXL-JOB 来实现周期性删除 Redis 中过期的 Token
 
-分布式登录状态同步: 使用同一个 JWT
+分布式登录状态同步: JWT + 黑名单 + 定时调度清理黑名单
 
-- 第一次登录, 就创建一个 token, 后续复用这个 token, 不合理, 无法分别对多态设备进行管理
+- JWT 无法修改过期时间, 所以就无法在用户退出后, 就将移除其登录状态, 所以可以搭配黑名单实现登出
+
+## SSO
+
+SSO: 共享 Cookie 的方式
+
+- 存储 Cookie 时指定存储到相同域名后缀中, 访问多个相同域名后缀的网站时, 都可以携带上这个 Token
+
+SSO: OAuth2 实现
+
+- User 请求 Client A, Client A 发现 User 没有 Token, 就引导 User 携带 Client Id 和 Redirect URL 去请求 Authorization Server, Authorizationi Server 会返回 code 给 User, User 携带 code ...
+  - User 登录 Authorization Server 后, 会存储一个 Authorization Server 的 Token 到本地, 方便后续请求 Authorization Server 时, 判断该 User 是否已登陆, 通过 `token:login:auth:<user_agent>:<user_id>` list 进行存储
+  - 由于 Authorization Server 的实现很多, 最好是前端请求后端, 后端返回对应 Authorization Server URL
+- User 请求 Client B, Client A 发现 User 没有 Token, 就引导 User 携带 Client Id 和 Redirect URL 去请求 Authorization Server, 此时 Authorizationi Server 发现 User 已经登录过了, 就直接返回 code 给 User, 不需要 User 登录, User 携带 ...
+- 不同 Client 的权限策略是不同的, 共用同一个 Token, 明显不合适, 所以每次的 code 申请的 Token 都应该不同, 如果一个站点退出了, 就应该清除其他所有的 Token, Token 都使用 Redis 进行存储
+- 不同 User Agent 之间的 Token 管理应该相互隔离, 如果一个站点退出了, 也应该退出其他相同 User Agent 的 Token, 而不应该退出其他 User Agent 的 Token, 可以根据 `token:login:<client_id>:<user_agent>:<user_id>` list 进行存储
+- 用户修改密码后, 立即清空其他 Token, 或者删除所有 Token, 然后给当前用户再颁发一个新的 Token
 
 ## 日活跃统计
 
@@ -2218,3 +2698,23 @@ public void listener(Message message) {
     System.out.println("deal non-idempotent business");
 }
 ```
+
+## Log
+
+使用统计的日志框架记录日志, 而不是使用自定义的接口, 系统日志切换时, 可以很迅速
+
+通过异步的方式记录日志, 基于 Disruptor 高性能队列记录日志
+
+使用占位符记录日志, 性能和使用便捷性上都要优于使用字符串拼接记录日志
+
+- 当使用占位符记录日志时, 只会在实际需要记录该日志级别的消息时发生, 如果日志级别配置得足够高, 使得当前的日志消息不会被记录, 那么消息字符串的构建过程就会被完全跳过, 这种延迟构建的机制可以节省不必要的字符串创建和拼接开销, 尤其是当日志内容包含了复杂的表达式或方法调用时
+
+所有的日志保存 15 天, 敏感数据保存 6 个月 (eg: 金钱的更改, 金钱的提现)
+
+少使用 error, 多使用 warn
+
+日志记录 Class#Method, 方便定位
+
+灵活切换日志级别, 避免无用日志
+
+方法调用前打印日志, 确定入参, 方法调用后打印日志, 确定返回值

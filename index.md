@@ -18,25 +18,21 @@ hero:
       link: /docs/Vue/Basic
 
 features:
-  - icon: 
-      src: /feature1.png
-    title: Java
+  - icon:
+      src: java.png
     link: /docs/Java/Basic
     details: A rookie learning Java for two and a half years
-  - icon: 
-      src: feature2.png
-    title: Web
+  - icon:
+      src: javascript.png
     link: /docs/Vue/Basic
     details: A rookie learning Web for two and a half years
-  - icon: 
-      src: feature3.png
-    title: Linux
+  - icon:
+      src: linux.png
     link: docs/Linux/Basic
     details: A rookie learning Linux for two and a half years
   - icon:
-      src: feature4.png
-    title: Algorithm
-    link: docs/Algorithm/Sort
+      src: twitter.png
+    link: /docs/Algorithm/Sort
     details: A rookie learning Algorithm for two and a half years
 ---
 

@@ -113,7 +113,11 @@ Hash 存储的数据无法保证顺序, 需要使用 Order By 时, 还需要对�
 
 Hash 无法处理 Unified Index, 多个 Field 组合后, 计算得到 Hash 可能相同.
 
+Hash 的桶分布是随机的, 所以存储的数据也是分散的, 是 Random IO.
+
 如果 Hash Col 重复的结果太多, 对 Single Linked List 进行遍历时, 性能太差. 所以 Hash 适合存储少量临时数据, 如 Cache.
+
+Hash 在插入和删除上非常简单, B+ Tree 需要去考虑树的平衡问题已经分页的问题, 设计数据库时要非常小心.
 
 # Clustered Index
 

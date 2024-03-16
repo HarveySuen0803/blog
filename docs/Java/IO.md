@@ -414,7 +414,7 @@ aced 0005 7715 6400 0000 c801 004d 000b
 6090 9788 d5e1 af30 0200 0078 70
 ```
 
-class 需要实现 Serializable 标记为是需要进行 Serialization 的 object
+class 实现 Serializable 表示该 class 的 object 需要进行序列化, 这仅仅是一个标识作用, 明确指定哪些 object 需要进行序列化, 防止不需要进行序列化的 object 也被序列化了
 
 ```java
 public class User implements Serializable {}

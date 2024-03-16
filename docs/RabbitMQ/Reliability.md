@@ -352,3 +352,12 @@ Message Accumulation 解决方案
 - 通过 ThreadPool 提高消费速度
 - 通过 Lazy Queue 提高消息的存储能力
 
+# Message Orderliness
+
+有些场景我们需要保证消息的顺序 (eg: 对数据的加减操作, 不能先执行减导致了负数的情况)
+
+想要保证消息的有序性, 就得从 Publisher 和 和 Consumer 两个角度考虑
+
+- 只能有一个 Publisher 发送消息, 并且只能是串行发送, 保证消息到达 Queue 的顺序是一致的
+- Publisher 发送的消息只能发送到同一个 Queue 中
+- 保证 Consumer 消费消息的顺序, 要么只设置一个 Consumer 消费, 要么设置多个 Consumer, 但是通过 `x-single-active-consumer` 设置单活模式, 每次只有一个消费者可以消费消息

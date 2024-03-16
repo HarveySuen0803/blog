@@ -139,6 +139,92 @@ public static void main(String[] args) {
 }
 ```
 
+# InheritableThreadLocal
+
+InheritableThreadLocal 是 ThreadLocal 的一个扩展, 它不仅提供了线程局部变量, 而且还能将父线程的局部变量值传递给子线程, 这意味着当一个线程创建一个新的线程时, InheritableThreadLocal 可以将父线程中的局部变量的值传递给子线程的局部变量
+
+ThreadLocal 仅限于当前线程, 而 InheritableThreadLocal 允许父线程向子线程传递变量
+
+```java
+ThreadLocal<Integer> userId = new ThreadLocal<>();
+userId.set(1);
+new Thread(() -> {
+    System.out.println(userId.get()); // null
+}).start();
+```
+
+```java
+InheritableThreadLocal<Integer> userId = new InheritableThreadLocal<>();
+userId.set(1);
+new Thread(() -> {
+    System.out.println(userId.get()); // 1
+}).start();
+```
+
+使用 InheritableThreadLocal 在父线程和子线程之间共享用户会话信息
+
+```java
+private static final InheritableThreadLocal<String> sessionInfo = new InheritableThreadLocal<>();
+
+public static void main(String[] args) {
+    sessionInfo.set("UserSessionID: 123456");
+
+    System.out.println("Par Thread: " + sessionInfo.get());
+
+    new Thread(() -> {
+        System.out.println("Sub Thread: " + sessionInfo.get());
+    }).start();
+
+    sessionInfo.remove();
+}
+```
+
+Thread 底层维护了一个 `ThreadLocal.ThreadLocalMap inheritableThreadLocals`, Thread 的 init() 中进行线程的初始化时, 会根据 `boolean inheritThreadLocals` 判断是否需要处理 InheritableThreadLocal, 然后根据父线程的 InheritableThreadLocal 进行配置
+
+```java
+public class Thread implements Runnable {
+    ThreadLocal.ThreadLocalMap threadLocals = null;
+    ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;
+}
+```
+
+```java
+private void init(ThreadGroup g, Runnable target, String name,
+                  long stackSize, AccessControlContext acc,
+                  boolean inheritThreadLocals) {
+    // 这里的 currentThread() 是父线程 (当前执行 init() 的线程), this 是子线程 (正在被创建的线程)
+    Thread parent = currentThread();
+    
+    if (inheritThreadLocals && parent.inheritableThreadLocals != null)
+        this.inheritableThreadLocals =
+            ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+
+    // ...
+}
+```
+
+通过 get(), set(), remove() 操作的 ThreadLocal 时都会去调用 getMap() 获取 ThreadLocalMap, 从而来操作 Entry 副本
+
+InheritableThreadLocal 继承 ThreadLocal, 也重写了 ThreadLocal 的 getMap(), 所以调用的其实是 InheritableThreadLocal 的 getMap(), 返回的是 inheritableThreadLocals 而不是 threadLocals 了
+
+```java
+public class ThreadLocal<T> {
+    public T get() {
+        Thread t = Thread.currentThread();
+        ThreadLocalMap map = getMap(t);
+        // Do something with the map
+    }
+}
+```
+
+```java
+public class InheritableThreadLocal<T> extends ThreadLocal<T> {
+    ThreadLocalMap getMap(Thread t) {
+       return t.inheritableThreadLocals;
+    }
+}
+```
+
 # Exercise Shared Variable
 
 这里线程池中的多个线程共享同一个变量, 当一个线程修改了该变量的值时, 其他线程也会受到影响, 导致数据不一致性和竞争条件
