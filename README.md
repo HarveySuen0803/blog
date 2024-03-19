@@ -5,4 +5,3 @@
   <h3>Harvey's Awesome Blog</h3>
   <p>An awesome vitepress template for your projects! <a href="https://harveysuen0803.github.io/blog/">Example</a></p>
 </div>
-

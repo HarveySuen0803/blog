@@ -351,6 +351,38 @@ public static List<List<Integer>> zigzagLevelOrder(TreeNode root) {
 }
 ```
 
+# Binary Tree Right Side View
+
+[Problem Description](https://leetcode.cn/problems/binary-tree-right-side-view/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static List<Integer> rightSideView(TreeNode root) {
+    if (root == null) {
+        return new ArrayList();
+    }
+    
+    List<Integer> level1 = new ArrayList<>();
+    LinkedList<TreeNode> que = new LinkedList<>();
+    que.offer(root);
+    while (!que.isEmpty()) {
+        LinkedList<Integer> level2 = new LinkedList<>();
+        int size = que.size();
+        for (int i = 0; i < size; i++) {
+            TreeNode cur = que.poll();
+            level2.addLast(cur.val);
+            if (cur.left != null) {
+                que.offer(cur.left);
+            }
+            if (cur.right != null) {
+                que.offer(cur.right);
+            }
+        }
+        level1.add(level2.peekLast());
+    }
+    return level1;
+}
+```
+
 # Symmetric Tree
 
 [Problem Description](https://leetcode.cn/problems/symmetric-tree/description/)
@@ -514,6 +546,29 @@ public static int minDepth(TreeNode root) {
 }
 ```
 
+# Diameter of Binary Tree
+
+[Problem Description](https://leetcode.cn/problems/diameter-of-binary-tree/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static int maxDepth = 1;
+
+public static int diameterOfBinaryTree(TreeNode root) {
+    depth(root);
+    return maxDepth - 1;
+}
+
+public static int depth(TreeNode node) {
+    if (node == null) {
+        return 0;
+    }
+    int leftDepth = depth(node.left);
+    int rightDepth = depth(node.right);
+    maxDepth = Math.max(maxDepth, leftDepth + rightDepth + 1);
+    return Math.max(leftDepth, rightDepth) + 1;
+}
+```
+
 # Invert Binary Tree
 
 [Explain](https://www.bilibili.com/video/BV1Lv4y1e7HL/?p=158&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
@@ -573,6 +628,27 @@ public static void main(String[] args) throws FileNotFoundException, Interrupted
     TreeNode root = suffixExpressionTree(new String[]{"2", "1", "-", "3", "*"});
     // Performing a post-order traversal of the suffix expression binary tree to obtain the suffix expression
     BinaryTree.postOrder(root); // 21-3*
+}
+```
+
+# Convert Sorted Array to Binary Search Tree
+
+[Problem Description](https://leetcode.cn/problems/convert-sorted-array-to-binary-search-tree/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static TreeNode sortedArrayToBST(int[] nums) {
+    return buildTree(nums, 0, nums.length - 1);
+}
+
+public static TreeNode buildTree(int[] nums, int l, int r) {
+    if (l > r) {
+        return null;
+    }
+    int m = (l + r) / 2;
+    TreeNode root = new TreeNode(nums[m]);
+    root.left = buildTree(nums, l, m - 1);
+    root.right = buildTree(nums, m + 1, r);
+    return root;
 }
 ```
 
@@ -637,3 +713,243 @@ public static TreeNode buildTree(int[] inOrder, int[] postOrder) {
 }
 ```
 
+# Validate Binary Search Tree
+
+[Problem Description](https://leetcode.cn/problems/validate-binary-search-tree/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static boolean isValidBST(TreeNode node) {
+    LinkedList<TreeNode> stk = new LinkedList<>();
+    TreeNode cur = node;
+    TreeNode par = null;
+    long last = Long.MIN_VALUE;
+    
+    while (cur != null || !stk.isEmpty()) {
+        if (cur != null) {
+            stk.push(cur);
+            cur = cur.left;
+        } else {
+            par = stk.pop();
+            if (par.val <= last) {
+                return false;
+            } else {
+                last = par.val;
+            }
+            cur = par.right;
+        }
+    }
+    return true;
+}
+```
+
+# Validate Binary Search Tree
+
+```java
+public static boolean isValidBST(TreeNode node) {
+    return isValidBST(node, Long.MIN_VALUE, Long.MAX_VALUE);
+}
+
+public static boolean isValidBST(TreeNode node, long lower, long upper) {
+    if (node == null) {
+        return true;
+    }
+    if (node.val <= lower || node.val >= upper) {
+        return false;
+    }
+    return isValidBST(node.left, lower, node.val) && isValidBST(node.right, node.val, upper);
+}
+```
+
+# Kth Smallest Element in a BST
+
+[Problem Description](https://leetcode.cn/problems/kth-smallest-element-in-a-bst/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static int kthSmallest(TreeNode root, int nth) {
+    LinkedList<TreeNode> stk = new LinkedList<>();
+    TreeNode cur = root;
+    int n = 0;
+    while (cur != null || !stk.isEmpty()) {
+        if (cur != null) {
+            stk.push(cur);
+            cur = cur.left;
+        } else {
+            TreeNode par = stk.pop();
+            if (++n == nth) {
+                return par.val;
+            }
+            cur = par.right;
+        }
+    }
+    return 0;
+}
+```
+
+# Flatten Binary Tree to Linked List
+
+[Problem Description](https://leetcode.cn/problems/flatten-binary-tree-to-linked-list/description/?envType=study-plan-v2&envId=top-100-liked)
+
+[Explain](https://leetcode.cn/problems/flatten-binary-tree-to-linked-list/solutions/17274/xiang-xi-tong-su-de-si-lu-fen-xi-duo-jie-fa-by--26/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+public static void flatten(TreeNode root) {
+    TreeNode cur = root;
+    while (cur != null) {
+        if (cur.left != null) {
+            TreeNode pre = cur.left;
+            while (pre.right != null) {
+                pre = pre.right;
+            }
+            pre.right = cur.right;
+            cur.right = cur.left;
+            cur.left = null;
+        } 
+        cur = cur.right;
+    }
+}
+```
+
+# Path Sum
+
+[Problem Description](https://leetcode.cn/problems/path-sum/description/)
+
+```java
+public static boolean hasPathSum(TreeNode root, int tarSum) {
+    if (root == null) {
+        return false;
+    }
+    LinkedList<TreeNode> queNode = new LinkedList<>();
+    LinkedList<Integer> queSum = new LinkedList<>();
+    queNode.offer(root);
+    queSum.offer(root.val);
+    while (!queNode.isEmpty()) {
+        TreeNode cur = queNode.poll();
+        Integer curSum = queSum.poll();
+        if (cur.left == null && cur.right == null) {
+            if (curSum == tarSum) {
+                return true;
+            }
+        } else {
+            if (cur.left != null) {
+                queNode.offer(cur.left);
+                queSum.offer(cur.left.val + curSum);
+            }
+            if (cur.right != null) {
+                queNode.offer(cur.right);
+                queSum.offer(cur.right.val + curSum);
+            }
+        }
+    }
+    return false;
+}
+```
+
+# Path Sum
+
+```java
+public boolean hasPathSum(TreeNode root, int tarSum) {
+    return hasPathSum(root, 0, tarSum);
+}
+
+public boolean hasPathSum(TreeNode node, int curSum, int tarSum) {
+    if (node == null) {
+        return false;
+    }
+    curSum += node.val;
+    if (node.left == null && node.right == null) {
+        return curSum == tarSum;
+    }
+    return hasPathSum(node.left, curSum, tarSum) || hasPathSum(node.right, curSum, tarSum);
+}
+```
+
+# Path Sum
+
+```java
+public boolean hasPathSum(TreeNode node, int tarSum) {
+    if (node == null) {
+        return false;
+    }
+    if (node.left == null && node.right == null) {
+        return node.val == tarSum;
+    }
+    return hasPathSum(node.left, tarSum - node.val) || hasPathSum(node.right, tarSum - node.val);
+}
+```
+
+# Path Sum II
+
+[Problem Description](https://leetcode.cn/problems/path-sum-ii/description/)
+
+```java
+public static List<List<Integer>> pathSum(TreeNode root, int tarSum) {
+    if (root == null) {
+        return new ArrayList<>();
+    }
+    List<List<Integer>> lv1 = new ArrayList<>();
+    Map<TreeNode, TreeNode> map = new HashMap<>();
+    LinkedList<TreeNode> queNode = new LinkedList<>();
+    LinkedList<Integer> queSum = new LinkedList<>();
+    queNode.offer(root);
+    queSum.offer(root.val);
+    while (!queNode.isEmpty()) {
+        TreeNode cur = queNode.poll();
+        Integer curSum = queSum.poll();
+        if (cur.left == null && cur.right == null) {
+            if (curSum == tarSum) {
+                LinkedList<Integer> lv2 = new LinkedList<>();
+                while (cur != null) {
+                    lv2.addFirst(cur.val);
+                    cur = map.get(cur);
+                }
+                lv1.add(lv2);
+            }
+        } else {
+            if (cur.left != null) {
+                map.put(cur.left, cur);
+                queNode.offer(cur.left);
+                queSum.offer(cur.left.val + curSum);
+            }
+            if (cur.right != null) {
+                map.put(cur.right, cur);
+                queNode.offer(cur.right);
+                queSum.offer(cur.right.val + curSum);
+            }
+        }
+    }
+    return lv1;
+}
+```
+
+# Path Sum II
+
+```java
+public static List<List<Integer>> pathSum(TreeNode root, int tarSum) {
+    List<List<Integer>> lv1 = new ArrayList<>();
+    dfs(root, tarSum, lv1, new LinkedList<>());
+    return lv1;
+}
+
+public static void dfs(TreeNode node, int tarSum, List<List<Integer>> lv1, LinkedList<Integer> lv2) {
+    if (node == null) {
+        return;
+    }
+    lv2.addLast(node.val);
+    if (node.left == null && node.right == null) {
+        if (node.val == tarSum) {
+            lv1.add(new ArrayList<>(lv2));
+        }
+    }
+    dfs(node.left, tarSum - node.val, lv1, lv2);
+    dfs(node.right, tarSum - node.val, lv1, lv2);
+    lv2.removeLast();
+}
+```
+
+# Path Sum III
+
+[Problem Description](https://leetcode.cn/problems/path-sum-iii/description/?envType=study-plan-v2&envId=top-100-liked)
+
+```java
+
+```
