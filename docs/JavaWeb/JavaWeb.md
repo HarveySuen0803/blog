@@ -65,8 +65,8 @@ pom.xml, 配置 JDK 版本
 
 ```xml
 <properties>
-    <maven.compiler.source>18</maven.compiler.source>
-    <maven.compiler.target>18</maven.compiler.target>
+    <maven.compiler.source>17</maven.compiler.source>
+    <maven.compiler.target>17</maven.compiler.target>
 </properties>
 ```
 
