@@ -96,7 +96,7 @@ public static void dfs(int[] nums, boolean[] visited, LinkedList<Integer> stk, L
 }
 
 public static void main(String[] args) {
-    System.out.println(permute(new int[]{1, 2, 3}));
+    System.out.println(permute(new int[]{1, 1, 3}));
 }
 ```
 
@@ -195,6 +195,10 @@ public static void dfs(int srt, int tar, int[] cands, LinkedList<Integer> stk, L
         stk.pop();
     }
 }
+
+public static void main(String[] args) throws IOException {
+    System.out.println(combinationSum(new int[]{2, 3, 6, 7}, 7)); // [[3, 2, 2], [7]]
+}
 ```
 
 # Combination Sum II
@@ -237,12 +241,8 @@ public static void dfs(int srt, int tar, int[] cands, boolean[] visited, LinkedL
     }
 }
 
-public static void main(String[] args) {
-    int[] candidates = {10, 1, 2, 7, 6, 1, 5};
-    List<List<Integer>> lists = combinationSum2(candidates, 8);
-    for (List<Integer> list : lists) {
-        System.out.println(list);
-    }
+public static void main(String[] args) throws IOException {
+    System.out.println(combinationSum2(new int[]{10, 1, 2, 7, 6, 1, 5}, 8)); // [[1, 1, 6], [1, 2, 5], [1, 7], [2, 6]]
 }
 ```
 
@@ -253,37 +253,32 @@ public static void main(String[] args) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=172&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-public List<List<Integer>> combinationSum3(int len, int tar) {
+public static List<List<Integer>> combinationSum3(int len, int tar) {
     List<List<Integer>> res = new ArrayList<>();
-    dfs(len, tar, 1, new LinkedList<>(), res);
+    dfs(1, 9, len, tar, new LinkedList<>(), res);
     return res;
 }
 
-public static void dfs(int len, int tar, int srt, LinkedList<Integer> stk, List<List<Integer>> res) {
-    if (stk.size() == len && tar == 0) {
-        res.add(new ArrayList<>(stk));
+public static void dfs(int srt, int end, int len, int tar, LinkedList<Integer> stk, List<List<Integer>> res) {
+    if (stk.size() == len) {
+        if (tar == 0) {
+            res.add(new ArrayList<>(stk));
+        }
         return;
     }
     
-    
-    for (int i = srt; i <= 9; i++) {
+    for (int i = srt; i <= end; i++) {
         if (i > tar) {
             return;
         }
-        if (stk.size() == len) {
-            return;
-        }
         stk.push(i);
-        dfs(len, tar - i, i + 1, stk, res);
+        dfs(i + 1, end, len, tar - i, stk, res);
         stk.pop();
     }
 }
 
-public static void main(String[] args) {
-    List<List<Integer>> lists = combinationSum3(3, 7);
-    for (List<Integer> list : lists) {
-        System.out.println(list);
-    }
+public static void main(String[] args) throws IOException {
+    System.out.println(combinationSum3(3, 7)); // [[1, 2, 4]]
 }
 ```
 
