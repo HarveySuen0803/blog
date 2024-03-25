@@ -1,0 +1,164 @@
+{
+  "main": {
+    "id": "35845b8322aeab84",
+    "type": "split",
+    "children": [
+      {
+        "id": "cc23fb40c2c55f2f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "2e515edb5c70a398",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Linux/Personal Config.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "c46cf0faf91febee",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Maven/Maven.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          }
+        ],
+        "currentTab": 1
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "57bafa2f7c757d7f",
+    "type": "split",
+    "children": [
+      {
+        "id": "918ab5b6fe18b1de",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "6e1c1ced07a7bd34",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "0b726dc200cee691",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "right": {
+    "id": "09a176cbda932313",
+    "type": "split",
+    "children": [
+      {
+        "id": "38e41cd860b36a98",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b11a643be764633e",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Maven/Maven.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "command-palette:Open command palette": false,
+      "graph:Open graph view": false,
+      "workspaces:Manage workspace layouts": false
+    }
+  },
+  "active": "c46cf0faf91febee",
+  "lastOpenFiles": [
+    "Linux/Personal Config.md",
+    "Schedule/2024.md",
+    "RabbitMQ/Reliability.md",
+    "Redis/MQ.md",
+    "Java/NIO.md",
+    "ElasticSearch/Analyzer.md",
+    "DesignPattern/Template Pattern.md",
+    "Interview/Basic.md",
+    "DesignPattern/Singleton Pattern.md",
+    "MySQL/Index.md",
+    "Redis/Availability.md",
+    "Network/IO.md",
+    "SpringBoot/Design Pattern.md",
+    "MyBatis/MyBatis.md",
+    "ElasticSearch/Mapping.md",
+    "ElasticSearch/Basic.md",
+    "ElasticSearch/DSL.md",
+    "ElasticSearch/API.md",
+    "SpringBoot/ElasticSearch.md",
+    "Java/AIO.md",
+    "Draft/NIO.md",
+    "SpringBoot/Docker.md",
+    "Draft/Dubbo.md",
+    "DesignPattern/Visitor Pattern.md",
+    "Java/BIO.md",
+    "Algorithm/Backtracking.md",
+    "Netty",
+    "Log",
+    "Draft/image/Pasted image 20240319204616.png",
+    "Draft/image/Pasted image 20240319204541.png",
+    "Draft/image/Pasted image 20240319203653.png",
+    "Draft/image/Pasted image 20240319202750.png",
+    "Draft/image/Pasted image 20240319195459.png",
+    "Draft/image/Pasted image 20240319172744.png",
+    "Draft/image/Pasted image 20240319172732.png",
+    "Draft/image/Pasted image 20240319131736.png",
+    "Draft/image/Pasted image 20240319121207.png",
+    "Draft/image/Pasted image 20240319121154.png",
+    "Draft/image",
+    "Draft 1",
+    "SpringBoot/image",
+    "JUC/image",
+    "Architecture",
+    "bilibili.com/video/BV1Lv4y1e7HL",
+    "bilibili.com/video",
+    "bilibili.com",
+    "test.canvas"
+  ]
+}
