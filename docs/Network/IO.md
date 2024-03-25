@@ -10,9 +10,25 @@ User 想要写入数据时, 也需要先写入到 User Space 的 Buffer 中, 再
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139646.png)
 
-# Synchronous, Asynchronous
+# IO Type
 
-IO 的 Synchronous 和 Asynchronous 要看两个阶段是否堵塞, 第一个阶段是 User 发送请求给 Kernel 这个过程, 第二个阶段是从 Kernel Space 复制数据到 User Space 这个过程, 所以 IO 真正的 Asynchronous 就只有 Asynchronous IO 这一种模式
+Blocking, NonBlocking
+
+- Blocking 是线程发送请求后, 线程进入堵塞状态, 等待请求后的结果
+- NonBlocking 是线程发送请求后, 不会去堵塞等待, 而是继续去执行其他任务, 通过轮询或者被通知的方式去处理请求后的结果
+
+Synchronous, Asynchronous
+
+- Synchronous 是自己去获取结果
+- Asynchronous 是自己不获取结果, 由其他线程来送结果
+
+常见的 IO Mode 的 IO Type
+
+- Blocking IO 是 Synchronous Blocking
+- NonBlocking IO 是 Synchronous NonBlocking
+- Multiplexing IO 是 Synchronous NonBlocking
+- Signal Dirven IO 是 Synchronous NonBlocking
+- Asynchronous IO 是 Asynchronous NonBlocking
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139648.png)
 

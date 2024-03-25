@@ -1,6 +1,11 @@
 # NIO
 
-Java NIO (New IO) 通过非阻塞模式的 IO 操作增强性能和可伸缩性, 特别是在构建需要高速 IO 的网络应用时
+NIO (New IO) 通过非阻塞模式的 IO 操作增强性能和可伸缩性, 特别是在构建需要高速 IO 的网络应用时
+
+NIO vs BIO
+
+- BIO 通过 Stream 实现, 双工, 仅支持阻塞式 API, 不会自动缓存数据, 更高层
+- NIO 通过 Channel 实现, 双工, 支持阻塞式 API 和 非堵塞式 API, 可以利用系统提供的发送缓冲区和接受缓冲区, 可以配合 Selector 实现 Multiplexing IO, 更底层
 
 如果每建立一个 Socket 连接, 就开启一个线程去处理 Socket, 资源消耗非常多, 上下文切换成本也非常高, 只适合连接数较少的情况
 
@@ -922,4 +927,92 @@ public class Server {
         }
     }
 }
+```
+
+# Zero Copy
+
+传统 IO 进行下面这种读取本地文件, 再传输给客户端的操作, 涉及四次数据拷贝, 三次状态切换, 步骤非常繁琐
+
+- 调用 read(), 从 User Space 切换为 Kernel Space, 从 Disk 读取数据到 Kernel Buffer 中
+  - Java 本身并不具备 IO 读写能力, 因此需要从 Java 程序的 User Space 切换为 Kernel Space, 调用 Kernel 的 IO 函数实现 IO
+  - 这里可以利用 DMA (Direct Memory Access) 来进行数据传输, 不需要 CPU 参与, 非常适合数据传输
+- 从 Kernel Buffer 拷贝数据到 User Buffer 中, 从 Kernel Space 切换为 User Space
+  - 这里无法利用 DMA 进行数据传输, 需要 CPU 参与
+- 调用 write(), 从 User Buffer 拷贝数据到 Socket Buffer 中
+  - 这里无法利用 DMA 进行数据传输, 需要 CPU 参与
+- 从 Kernel Space 切换为 User Space, 从 Socket Buffer 拷贝数据到 NIC 中
+  - 这里可以利用 DMA 来进行数据传输, 不需要 CPU 介入, 非常适合数据传输
+
+```java
+RandomAccessFile raf = new RandomAccessFile(new File("test.txt"), "r");
+byte[] buf = new byte[16];
+raf.read(buf);
+socket.getOutputStream().write(buf);
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119803.png)
+
+通过 DirectByteBuffer 进行优化, Java NIO 的 ByteBuffer.allocateDirect() 使用的是操作系统内存, 不同于 ByteBuffer.allocate() 使用的是 Java 内存, 总共涉及三次数据拷贝, 三次状态切换
+
+- DirectByteBuffer 将堆外内存映射到 JVM 内存中来直接访问使用, 这块内存不受 JVM 垃圾回收的影响, 内存地址固定, 有助于 IO
+- DirectByteBuffer Obj 只维护了内存的虚引用, 垃圾回收时, DirectByteBuffer Obj 被垃圾回收, 虚引用加入引用队列, 通过专门线程访问引用队列, 根据虚引用释放堆外内存
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119804.png)
+
+Linux v2.1 提供了 sendFile() 可以进一步优化, 实现 Zero Copy, Java 对 sendFile() 又进行了一步封装得到 transferTo() 和 transferFrom() 方便我们使用, 总共涉及三次数据拷贝, 一次状态切换, 效率非常高了
+
+- 调用 transferTo(), 从 User Space 切换为 Kernel Space, 使用 DMA 从 Disk 读取数据到 Kernel Buffer 中
+- 使用 CPU 从 Kernel Buffer 拷贝数据到 Socket Buffer 中
+- 使用 DMA 从 Socket Buffer 拷贝数据到 INC 中
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119805.png)
+
+Linux v2.4 对 sendFile() 又进一步优化, 还是对于 Java 的 transferTo() 和 transferFrom(), 总共涉及两次数据拷贝, 一次状态切换, 效率拉满了
+
+- 调用 transferTo(), 从 User Space 切换为 Kernel Space, 使用 DMA 从 Disk 读取数据到 Kernel Buffer 中
+- 使用 DMA 从 Kernel Space 拷贝一些 Offset 和 Length 到 Socket Buffer 中, 这个过程几乎没有损耗
+- 使用 DMA 从 Kernel Space 拷贝数据到 INC 中
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119806.png)
+
+Zero Copy 并不是真正无拷贝, 而是不拷贝重复数据到 JVM 内存中, 适合小文件传输, 通过 DMA 减少 CPU 压力, 减少 CPU 缓存伪共享
+
+# AIO
+
+AIO (Asynchronous IO), 也称为 NIO.2, 是 JDK7 中引入的一种新的 IO模型, 是对 NIO 的扩展, 引入了异步通道的概念, 使得 IO 操作可以完全异步执行, 从而提高了大规模 IO 处理的性能和可伸缩性
+
+AIO 中, 应用程序可以直接向操作系统发起 IO 请求, 并立即返回继续执行其他任务, 当 IO 操作完成后, 操作系统会通知应用程序
+
+AIO 在 Windows 上的实现非常好, 但是在 Linux 上的实现就很糟糕了, Linux 的 AIO 本质上还是 Multiplexing IO, 所以下面的代码图个乐就行
+
+```java
+try (AsynchronousFileChannel channel = AsynchronousFileChannel.open(Paths.get("test.txt"), StandardOpenOption.READ)) {
+    ByteBuffer bufferDist = ByteBuffer.allocate(16);
+    ByteBuffer bufferAttach = ByteBuffer.allocate(16);
+
+    System.out.println("bf reading...");
+
+    // void read(ByteBuffer dst, long position, A attachment, CompletionHandler<Integer,? super A> handler)
+    channel.read(bufferDist, 0, bufferAttach, new CompletionHandler<Integer, ByteBuffer>() {
+        @Override
+        public void completed(Integer result, ByteBuffer attachment) {
+            System.out.println("on reading..." + result);
+            attachment.flip();
+            ByteBufferUtil.debugAll(attachment);
+            attachment.clear();
+        }
+
+        @Override
+        public void failed(Throwable exc, ByteBuffer attachment) {
+            exc.printStackTrace();
+        }
+    });
+
+    System.out.println("af reading");
+} catch (IOException e) {
+    e.printStackTrace();
+}
+
+// AsynchronousFileChannel 的 read() 绑定的回掉函数是通过 Daemon Thread 执行的, 所以这里需要等待其执行完, 不然看不到输出结果
+System.in.read();
 ```

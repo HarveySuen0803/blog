@@ -1846,6 +1846,7 @@ Redisson 底层通过 RedLock 解决 Master-Slave 和 Cluster 环境下, Lock �
 MyBatis 通过 CGLIB 创建 Proxy Obj, 在需要时去加载关联数据, 提高查询性能, 当调用 getOrderList() 时, 会被 Proxy Obj 的 invoke() 拦截, 判断 orderList 是否为空, 如果为空才去执行 SQL 查询数据, 填充到 orderList, 再去调用 getOrderList() 执行后续逻辑, 实现 Lazy Loading
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221740212.png)
+
 ## MyBatis Cache
 
 Local Cache 基于 PerpetualCache, 本质是一个 HashMap
