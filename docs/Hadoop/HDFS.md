@@ -352,9 +352,9 @@ jack	2
 world	2
 ```
 
-# Shell
+# Command
 
-[Shell p19 ~ p28](https://www.bilibili.com/video/BV1VQ4y157wK/?p=19)
+[Command p19 ~ p28](https://www.bilibili.com/video/BV1VQ4y157wK/?p=19)
 
 # Garbage Collection
 
