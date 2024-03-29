@@ -19,8 +19,35 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "c2729426b9d809f4",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Hadoop/HDFS.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "bb9a19890c68ee7c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Hadoop/Yarn.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -79,7 +106,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Hadoop/MapReduce.md"
+                "file": "Hadoop/Yarn.md"
               }
             }
           }
@@ -97,11 +124,11 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "d4219065b2d24de5",
+  "active": "bb9a19890c68ee7c",
   "lastOpenFiles": [
-    "Hadoop/Yarn.md",
     "Hadoop/HDFS.md",
     "Hadoop/MapReduce.md",
+    "Hadoop/Yarn.md",
     "Draft/ForkJoin.md",
     "JUC/ForkJoin.md",
     "JUC/ThreadPool.md",

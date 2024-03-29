@@ -354,53 +354,91 @@ world	2
 
 # Command
 
-[Command p19 ~ p28](https://www.bilibili.com/video/BV1VQ4y157wK/?p=19)
+Command
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=19
 
 # Garbage Collection
 
-[Garbage Collection](https://www.bilibili.com/video/BV1VQ4y157wK/?p=29)
+Garbage Collection
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=29
 
 # Block
 
-[Block p30 ~ p34](https://www.bilibili.com/video/BV1VQ4y157wK/?p=30)
+Block Info
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=30
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=31
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=32
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=33
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=34
 
 # Architecture
 
-[Architecture](https://www.bilibili.com/video/BV1VQ4y157wK?p=35&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+HDFS Architecture
+
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=35
 
 # fsimage
 
-[fsimage, edit log p36 ~ p41](https://www.bilibili.com/video/BV1VQ4y157wK?p=36&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+fsimage
+
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=36
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=37
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=38
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=39
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=40
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=41
+
 
 # IO
 
-[IO p42 ~ p43](https://www.bilibili.com/video/BV1VQ4y157wK?p=42&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+IO
+
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=42
 
 # Java Client SDK
 
-[Java Client SDK p44 ~ p50](https://www.bilibili.com/video/BV1VQ4y157wK/?p=51&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+Java Client SDK 
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=44 p44 ~ p50
 
 # fsck
 
-[fsck](https://www.bilibili.com/video/BV1VQ4y157wK/?p=51&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+fsck
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=51
 
 # Node
 
-[Add a node to the running cluster](https://www.bilibili.com/video/BV1VQ4y157wK/?p=52&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+动态添加一个节点
 
-[Load Balancing](https://www.bilibili.com/video/BV1VQ4y157wK?p=53&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=52
 
-[Remove a node from the running cluster](https://www.bilibili.com/video/BV1VQ4y157wK/?p=54&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+节点之间数据的负载均衡
+
+- https://www.bilibili.com/video/BV1VQ4y157wK?p=53
+
+动态删除一个节点
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=54
 
 # Disk Balancer
 
-[Disk Balancer](https://www.bilibili.com/video/BV1VQ4y157wK/?p=55&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+Disk Balancer
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=55
 
 # Distributed Copy
 
-[Distributed Copy](https://www.bilibili.com/video/BV1VQ4y157wK/?p=56&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+Distributed Copy
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=56
 
 # Archive
 
-[Archive](https://www.bilibili.com/video/BV1VQ4y157wK/?p=57&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+Archive
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=57
 

@@ -1,31 +1,49 @@
 # Yarn
 
-MapReduce v1.0 时代使用 JobTracker 和 TaskTracker 实现分布式计算  [Details](https://www.bilibili.com/video/BV1VQ4y157wK/?p=59&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+MapReduce v1.0 时代使用 JobTracker 和 TaskTracker 实现分布式计算
 
-Yarn (Yet Another Resource Negotiator) 用来协调 Hadoop 上的资源  [Details p60 ~ 062](https://www.bilibili.com/video/BV1VQ4y157wK/?p=60)
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=59
 
-# Command
+Yarn (Yet Another Resource Negotiator) 用来协调 Hadoop 上的资源
 
-[Command](https://www.bilibili.com/video/BV1VQ4y157wK/?p=65&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=60
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=61
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=62
 
-# Process
+Yarn Command
 
-[Yarn Process](https://www.bilibili.com/video/BV1VQ4y157wK/?p=64&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=65
+
+Yarn 的工作流程
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=64
 
 # Scheduler
 
-[Yarn Scheduler](https://www.bilibili.com/video/BV1VQ4y157wK/?p=66&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+Yarn Scheduler
 
-[Add queue](https://www.bilibili.com/video/BV1VQ4y157wK/?p=67&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=66
 
-[Submit task to queue](https://www.bilibili.com/video/BV1VQ4y157wK/?p=68&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+添加一个 Scheduler Queue
 
-[Set a default queue](https://www.bilibili.com/video/BV1VQ4y157wK/?p=69&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=67
 
-# Label
+提交任务到指定的 Scheduler Queue
 
-[Label](https://www.bilibili.com/video/BV1VQ4y157wK/?p=70&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=68
+
+设置一个默认的 Scheduler Queue
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=69
+
+# Node Label
+
+Node Label
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=70
 
 # History Log
 
-[History Log](https://www.bilibili.com/video/BV1VQ4y157wK/?p=63&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+History Log
+
+- https://www.bilibili.com/video/BV1VQ4y157wK/?p=63

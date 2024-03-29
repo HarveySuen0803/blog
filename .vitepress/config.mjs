@@ -34,7 +34,7 @@ export default withMermaid({
     attrs: {
       disable: true
     },
-    linkify: true,
+    linkify: false,
     image: {
       lazyLoading: true
     }
