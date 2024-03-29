@@ -117,8 +117,10 @@ export all_proxy="socks5://172.20.10.2:7890"
 # Alias
 alias c="clear"
 alias to="touch"
+alias md="mkdir -p"
+alias cp="cp -R"
 alias o="open"
-alias v="sudo -E nvim"
+alias v="nvim"
 alias u="echo $USER@$HOST"
 ```
 
@@ -162,7 +164,7 @@ source ~/.zshrc
 # basic denpendency
 
 ```shell
-sudo apt install -y build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libgd-dev libxml2 libxml2-dev uuid-dev libgeoip-dev net-tools ninja-build gettext cmake zip unzip curl g++ vsftpd openssh-server
+sudo apt install -y build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libgd-dev libxml2 libxml2-dev uuid-dev libgeoip-dev net-tools ninja-build gettext cmake zip unzip curl g++ vsftpd openssh-server sudo
 ```
 
 # neovim
@@ -202,7 +204,7 @@ git clone https://github.com/HarveySuen0803/nvim-config.git ~/.config/nvim
 check SSH 
 
 ```shell
-systemctl status ssh
+sudsudo service ssh restart
 ```
 
 install SSH
@@ -220,7 +222,7 @@ PermitRootLogin yes
 restart SSH server
 
 ```shell
-sudo systemctl restart ssh
+sudo systemctl enable ssh && sudo systemctl start ssh
 ```
 
 # jdk
@@ -235,6 +237,6 @@ curl -LJO https://download.oracle.com/graalvm/17/latest/graalvm-jdk-17_linux-aar
 export path
 
 ```shell
-export PATH=/usr/local/lib/jdk-17/bin:$PATH
-# export PATH=/usr/local/lib/graalvm-jdk-17/bin:$PATH
+export PATH=/usr/local/lib/jdk-17:$PATH
+# export PATH=/usr/local/lib/graalvm-jdk-17:$PATH
 ```

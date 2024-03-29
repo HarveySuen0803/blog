@@ -82,6 +82,25 @@ for (int num : nums) {
 }
 ```
 
+# Iteration Error
+
+Java 集合框架的迭代器设计遵循了 Fast Fail 原则, 如果不通过 Iterator 进行迭代删除, 则会造成集合的结构修改, 存在并发访问问题, 不同的 Java 实现不同, 具体原因不清楚, 总之想要修改集合元素结构, 就得使用 Iterator
+
+这里通过增强 for 删除 1 和 2 不会报错, 但是删除 3 会报错
+
+```java
+List<String> list = new ArrayList<>();
+list.add("1");
+list.add("2");
+list.add("3");
+
+for (String item : list) {
+    if ("3".equals(item)) {
+        list.remove(item);
+    }
+}
+```
+
 # Collection
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202206170912678.png)
