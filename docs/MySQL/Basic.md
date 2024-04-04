@@ -324,7 +324,7 @@ select count(math), avg(math), max(math), min(math), sum(math) from grade;
 
 -- group by deptno, put the same deptno in a group, query the avg(sal), max(sal), min(sal), sum(sal) of each group
 -- in addition to the grouping function, each attribute in select must be given in group
-select deptno, avg(sal), max(sal), min(sal), sum(sal) from stu group by deptno;
+select deptno, avg(sal), max(sal), min(sal), sum(sal)3 from stu group by deptno;
 ```
 
 # having

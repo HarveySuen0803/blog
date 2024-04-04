@@ -21,7 +21,7 @@ for (int i = 0; i < 10; i++) {
 
 # ThreadLocalMap
 
-每一个 Thread 都有一个关联的 ThreadLocal.ThreadLocalMap 用于存储线程局部变量, 每次第一次通过 get(), set() 去操作一个 ThreadLocal Obj 时, 都会去创建一个 ThreadLocal Obj 的副本 Entry 存储到当前 Thread 的 ThreadLocalMap Obj 中, 后续通过 get(), set() 或 remove() 去操作 ThreadLocal Obj 都是在操作 Entry 副本, 不影响其他线程, 保证了线程安全
+每一个 Thread 都有一个关联的 ThreadLocal.ThreadLocalMap 用于存储线程局部变量, 第一次调用 ThreadLocal Obj 的 get(), set() 时, 就会去创建一个 ThreadLocal Obj 的副本 Entry 存储到当前 Thread 的 ThreadLocalMap Obj 中, 后续通过 get(), set() 或 remove() 去操作 ThreadLocal Obj 都是在操作 Entry 副本, 不影响其他线程, 保证了线程安全
 
 ```java
 public class Thread implements Runnable {
@@ -100,7 +100,7 @@ public static void main(String[] args) {
 }
 ```
 
-因为 ThreadPool 中的线程不会销毁, 所以同一个线程就会一直反复使用同一个 ThreadLocalMap Obj, 导致了第二次执行任务时的脏读
+因为 ThreadLocal Obj 没有销毁, 所以 ThreadPool 中的 Thread 的 ThreadLocalMap Obj 的 Entry 的 Key 一直指向该 ThreadLocal Obj, 导致第二次循环时, 同一个 Thread 依旧访问的是同一个 ThreadLocal Obj, 从而导致了脏读
 
 ```java
 private static final ThreadLocal<Integer> userId = ThreadLocal.withInitial(() -> null);
@@ -133,7 +133,7 @@ public static void main(String[] args) {
     });
     try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
     threadPool.submit(() -> {
-        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
+        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get null
     });
     threadPool.shutdown();
 }

@@ -8,46 +8,19 @@
         "type": "tabs",
         "children": [
           {
-            "id": "d4219065b2d24de5",
+            "id": "7e9b6e7cd7c6ce7c",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Hadoop/MapReduce.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "c2729426b9d809f4",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Hadoop/HDFS.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "bb9a19890c68ee7c",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Hadoop/Yarn.md",
+                "file": "Netty/Basic.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
               }
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -76,7 +49,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "event loop",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -106,7 +79,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Hadoop/Yarn.md"
+                "file": "Netty/Basic.md"
               }
             }
           }
@@ -124,35 +97,44 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "bb9a19890c68ee7c",
+  "active": "7e9b6e7cd7c6ce7c",
   "lastOpenFiles": [
-    "Hadoop/HDFS.md",
-    "Hadoop/MapReduce.md",
-    "Hadoop/Yarn.md",
-    "Draft/ForkJoin.md",
-    "JUC/ForkJoin.md",
-    "JUC/ThreadPool.md",
-    "JUC/Future.md",
-    "Java/Collection.md",
-    "Linux/Personal Config.md",
-    "JavaWeb/JavaWeb.md",
     "Java/NIO.md",
+    "SpringBoot/Basic.md",
     "Netty/Basic.md",
-    "Nginx/Nginx.md",
-    "Docker/Image.md",
-    "Docker/Network.md",
-    "Docker/container.md",
-    "Hadoop/Basic.md",
+    "SpringBoot/Log.md",
+    "JavaScript/Detail.md",
+    "Meituan/CorePage/Refactor.md",
+    "Meituan/CorePage/image/Pasted image 20240403173945.png",
+    "Meituan/CorePage/image/Pasted image 20240403173932.png",
+    "Meituan/CorePage/image",
+    "Meituan/DC/Info.md",
+    "Meituan/DC",
+    "Spark/Basic.md",
+    "Meituan/CorePage",
+    "Spark",
     "Linux/Shell.md",
-    "Hadoop",
-    "Maven/Maven.md",
-    "Schedule/2024.md",
-    "RabbitMQ/Reliability.md",
-    "Redis/MQ.md",
-    "ElasticSearch/Analyzer.md",
-    "DesignPattern/Template Pattern.md",
+    "Network/IO.md",
+    "Redis/Network.md",
     "Interview/Basic.md",
-    "DesignPattern/Singleton Pattern.md",
+    "Redis/Availability.md",
+    "JUC/ThreadLocal.md",
+    "SpringBoot/IOC.md",
+    "Spring/IOC by Anno.md",
+    "Draft/ThreadLocal.md",
+    "JavaWeb/JavaWeb.md",
+    "Draft/Meituan.md",
+    "Meituan 1",
+    "Hadoop/MapReduce.md",
+    "SpringBoot/Devtools.md",
+    "Meituan",
+    "Calcite/Calcite.md",
+    "Calcite",
+    "MySQL/Transaction.md",
+    "JUC/Lock.md",
+    "MySQL/Log.md",
+    "MySQL/Index.md",
+    "Hadoop",
     "Netty",
     "Log",
     "Draft/image/Pasted image 20240319204616.png",
@@ -163,15 +145,6 @@
     "Draft/image/Pasted image 20240319172744.png",
     "Draft/image/Pasted image 20240319172732.png",
     "Draft/image/Pasted image 20240319131736.png",
-    "Draft/image/Pasted image 20240319121207.png",
-    "Draft/image/Pasted image 20240319121154.png",
-    "Draft/image",
-    "Draft 1",
-    "SpringBoot/image",
-    "JUC/image",
-    "Architecture",
-    "bilibili.com/video/BV1Lv4y1e7HL",
-    "bilibili.com/video",
     "test.canvas"
   ]
 }
