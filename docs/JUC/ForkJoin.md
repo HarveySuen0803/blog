@@ -182,3 +182,65 @@ public class SumTask extends RecursiveTask<Long> {
 }
 ```
 
+# ManagedBlocker
+
+假设 ForkJoinPool 限定了只有 A, B, C 三个线程, 此时 A, B, C 都很繁忙, A 又要执行这个耗时任务, ForkJoinPool 就可能内部决定开启一个 D 线程来接替上 A 的位置, 来补偿并行效率, 即会超出原先设定的 3 个线程
+
+```java
+// 模拟耗时的任务
+public static class ComplexTask implements Callable<String> {
+    @Override
+    public String call() throws Exception {
+        Thread.sleep(1000);
+        return "calculation result";
+    }
+}
+
+// 处理耗时任务的 Blocker
+public static class ComplexTaskBlocker implements ForkJoinPool.ManagedBlocker {
+    private Future<String> future;
+    private String result;
+    
+    public ComplexTaskBlocker(Future<String> future) {
+        this.future = future;
+    }
+
+    // 让一个线程在这堵塞执行任务
+    @Override
+    public boolean block() throws InterruptedException {
+        try {
+            result = future.get();
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        return true;
+    }
+
+    // 判断当前任务是否已经执行完成, 如果返回的是 false, 就会去调用 block() 执行耗时任务
+    @Override
+    public boolean isReleasable() {
+        return future.isDone();
+    }
+    
+    public String getResult() {
+        return result;
+    }
+}
+
+public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
+    ExecutorService threadPool = Executors.newFixedThreadPool(1);
+    
+    Future<String> future = threadPool.submit(new ComplexTask());
+
+    // 将耗时的 Future 任务封装成一个 Blocker 交给 ForkJoinPool 管理
+    ComplexTaskBlocker complexTaskBlocker = new ComplexTaskBlocker(future);
+
+    // 由 ForkJoinPool 来管理该 Blocker, ForkJoinPool 会在内部决定, 判断当前压力是否需要启动或唤醒一个额外的线程
+    ForkJoinPool.managedBlock(complexTaskBlocker);
+    
+    // 获取任务执行结果
+    System.out.println(complexTaskBlocker.getResult());
+    
+    threadPool.shutdown();
+}
+```

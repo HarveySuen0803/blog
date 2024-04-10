@@ -8,7 +8,7 @@
         "type": "tabs",
         "children": [
           {
-            "id": "7e9b6e7cd7c6ce7c",
+            "id": "8038809aafdefbcb",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -19,8 +19,61 @@
                 "source": false
               }
             }
+          },
+          {
+            "id": "96c93b4b0dded91f",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Netty/Packet Problem.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "cbe4d4a68282c6aa",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Netty/Protocol.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "507f5872e87ce5e3",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Java/Stream.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "72fe523e7fb248b6",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Redis/RESP.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
           }
-        ]
+        ],
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -49,7 +102,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "event loop",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -79,7 +132,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Netty/Basic.md"
+                "file": "Java/Stream.md"
               }
             }
           }
@@ -87,7 +140,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -97,46 +151,46 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "7e9b6e7cd7c6ce7c",
+  "active": "507f5872e87ce5e3",
   "lastOpenFiles": [
-    "Java/NIO.md",
-    "SpringBoot/Basic.md",
+    "Netty/Protocol.md",
+    "Distributed/Dubbo.md",
+    "Vue/Vue3.md",
+    "Netty/Packet Problem.md",
     "Netty/Basic.md",
-    "SpringBoot/Log.md",
-    "JavaScript/Detail.md",
+    "Meituan/DC/Info.md",
+    "Redis/RESP.md",
+    "JUC/ForkJoin.md",
+    "Redis/Network.md",
+    "Meituan/DC/Calcite.md",
+    "Interview/Other.md",
+    "Meituan/KeywordRank/Info.md",
+    "Python/API.md",
+    "Java/NIO.md",
+    "SpringBoot/MyBatisPlus.md",
+    "SpringBoot/MyBatis.md",
+    "MyBatis/MyBatis.md",
+    "SpringBoot/PageHelper.md",
     "Meituan/CorePage/Refactor.md",
+    "Meituan/KeywordRank",
+    "Distributed/SpringCloud.md",
+    "Hadoop/Yarn.md",
+    "MySQL/API.md",
+    "MySQL/Exercise.md",
+    "MySQL/Window Function.md",
+    "MySQL/Stored Procedure.md",
+    "MySQL/Basic.md",
     "Meituan/CorePage/image/Pasted image 20240403173945.png",
     "Meituan/CorePage/image/Pasted image 20240403173932.png",
     "Meituan/CorePage/image",
-    "Meituan/DC/Info.md",
     "Meituan/DC",
-    "Spark/Basic.md",
     "Meituan/CorePage",
     "Spark",
-    "Linux/Shell.md",
-    "Network/IO.md",
-    "Redis/Network.md",
-    "Interview/Basic.md",
-    "Redis/Availability.md",
-    "JUC/ThreadLocal.md",
-    "SpringBoot/IOC.md",
-    "Spring/IOC by Anno.md",
-    "Draft/ThreadLocal.md",
-    "JavaWeb/JavaWeb.md",
-    "Draft/Meituan.md",
     "Meituan 1",
-    "Hadoop/MapReduce.md",
-    "SpringBoot/Devtools.md",
     "Meituan",
-    "Calcite/Calcite.md",
     "Calcite",
-    "MySQL/Transaction.md",
-    "JUC/Lock.md",
-    "MySQL/Log.md",
-    "MySQL/Index.md",
     "Hadoop",
     "Netty",
-    "Log",
     "Draft/image/Pasted image 20240319204616.png",
     "Draft/image/Pasted image 20240319204541.png",
     "Draft/image/Pasted image 20240319203653.png",

@@ -185,7 +185,7 @@ create table t01 (
     status bit(8),
     balance1 float,
     balance2 double,
-	balance3 decimal(30,20),
+  	balance3 decimal(30,20),
     content1 text,
     content2 mediumtext,
     content3 longtext,

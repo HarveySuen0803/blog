@@ -246,3 +246,346 @@ end;
 
 call update_sal;
 ```
+
+# Rising Temperature
+
+[Problem Description](https://leetcode.cn/problems/rising-temperature/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select today.id
+from Weather yesterday, Weather today
+where yesterday.recordDate = date_sub(today.recordDate, interval 1 day) and yesterday.Temperature < today.Temperature;
+```
+
+# Average Time of Process per Machine
+
+[Problem Description](https://leetcode.cn/problems/average-time-of-process-per-machine/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select a.machine_id as machine_id, round(avg(a.item_processing_time), 3) as processing_time
+from (
+    select machine_id, process_id, max(timestamp) - min(timestamp) as item_processing_time
+    from activity
+    group by machine_id, process_id
+) a
+group by a.machine_id;
+```
+
+# Employee Bonus
+
+[Problem Description](https://leetcode.cn/problems/employee-bonus/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select e.name as name, b.bonus as bonus
+from employee e
+left join bonus b
+on b.empId = e.empId
+where b.bonus is null or b.bonus < 1000;
+```
+
+# Students and Examinations
+
+[Problem Description](https://leetcode.cn/problems/students-and-examinations/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    s.student_id as student_id,
+    s.student_name as student_name,
+    s.subject_name as subject_name,
+    ifnull(e.attended_exams, 0) as attended_exams
+from (
+    select
+        stu.student_id as student_id,
+        stu.student_name as student_name,
+        sub.subject_name as subject_name
+    from 
+        students stu
+    cross join
+        subjects sub
+) s
+left join (
+    select
+        e.student_id as student_id,
+        e.subject_name as subject_name,
+        count(e.subject_name) as attended_exams
+    from
+        examinations e
+    group by
+        e.student_id,
+        e.subject_name
+) e 
+on
+    s.student_id = e.student_id and
+    s.subject_name = e.subject_name
+order by
+    s.student_id,
+    s.subject_name;
+```
+
+```sql
+select
+    st.student_id as student_id,
+    st.student_name as student_name,
+    st.subject_name as subject_name,
+    count(ex.subject_name) as attended_exams 
+from (
+    select
+        st.student_id as student_id,
+        st.student_name as student_name,
+        su.subject_name as subject_name
+    from
+        students as st 
+    cross join
+        subjects as su
+) st
+left join
+    examinations ex 
+on
+    ex.student_id = st.student_id and st.subject_name = ex.subject_name
+group by
+    st.student_id, st.subject_name 
+order by
+    st.student_id, st.subject_name 
+```
+
+```sql
+select
+    st.student_id as student_id,
+    st.student_name as student_name,
+    su.subject_name as subject_name,
+    count(ex.subject_name) as attended_exams 
+from
+    students st
+cross join
+    subjects su
+left join
+    examinations ex 
+on
+    ex.student_id = st.student_id and su.subject_name = ex.subject_name
+group by
+    st.student_id, su.subject_name 
+order by
+    st.student_id, su.subject_name 
+```
+
+# Managers with at Least 5 Direct Reports
+
+[Problem Description](https://leetcode.cn/problems/managers-with-at-least-5-direct-reports/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    e.name as name
+from
+    employee as e
+where
+    e.id in (
+        select
+            e.managerId as managerId
+        from
+            employee as e
+        group by
+            e.managerId
+        having
+            count(e.managerId) >= 5
+    )
+```
+
+```sql
+select
+    e1.name
+from
+    employee e1
+inner join
+    employee e2
+on
+    e1.id = e2.managerId
+group by
+    e1.id
+having
+    count(e1.id) >= 5
+```
+
+# Confirmation Rate
+
+[Problem Description](https://leetcode.cn/problems/confirmation-rate/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    s.user_id as user_id,
+    round(count(case when c.action = 'confirmed' then s.user_id end) / count(s.user_id), 2) as confirmation_rate
+from
+    signups as s
+left join
+    confirmations as c
+on
+    s.user_id = c.user_id
+group by
+    s.user_id
+```
+
+# Average Selling Price
+
+[Problem Description](https://leetcode.cn/problems/average-selling-price/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    *
+from
+    prices as p
+left join
+    unitssold as u
+on
+    u.product_id = p.product_id and
+    u.purchase_date >= p.start_date and
+    u.purchase_date <= p.end_date
+```
+
+```txt
+| product_id | start_date | end_date   | price | product_id | purchase_date | units |
+| ---------- | ---------- | ---------- | ----- | ---------- | ------------- | ----- |
+| 1          | 2019-02-17 | 2019-02-28 | 5     | 1          | 2019-02-25    | 100   |
+| 1          | 2019-03-01 | 2019-03-22 | 20    | 1          | 2019-03-01    | 15    |
+| 2          | 2019-02-01 | 2019-02-20 | 15    | 2          | 2019-02-10    | 200   |
+| 2          | 2019-02-21 | 2019-03-31 | 30    | 2          | 2019-03-22    | 30    |
+| 3          | 2019-02-21 | 2019-03-31 | 30    | null       | null          | null  |
+```
+
+```sql
+select
+    p.product_id,
+    ifnull(round(sum(p.price * u.units) / sum(u.units), 2), 0) as average_price
+from
+    prices as p
+left join
+    unitssold as u
+on
+    u.product_id = p.product_id and
+    u.purchase_date >= p.start_date and
+    u.purchase_date <= p.end_date
+group by
+    p.product_id
+```
+
+```sql
+select
+    p.product_id,
+    case
+        when count(u.product_id) = 0 then 0
+        else round(sum(p.price * u.units) / sum(u.units), 2)
+    end as average_price
+from
+    prices as p
+left join
+    unitssold as u
+on
+    u.product_id = p.product_id and
+    u.purchase_date >= p.start_date and
+    u.purchase_date <= p.end_date
+group by
+    p.product_id
+```
+
+# Percentage of Users Attended a Contest
+
+[Problem Description](https://leetcode.cn/problems/percentage-of-users-attended-a-contest/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    r.contest_id as contest_id,
+    round(count(r.contest_id) / (select count(1) from users) * 100, 2) as percentage
+from
+    register r
+group by
+    r.contest_id
+order by
+    percentage desc,
+    r.contest_id
+```
+
+# Queries Quality and Percentage
+
+[Problem Description](https://leetcode.cn/problems/queries-quality-and-percentage/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    q.query_name as query_name,
+    round(avg(q.rating / q.position), 2) as quality,
+    round(count(if(q.rating < 3, 1, null)) / count(1) * 100, 2) as poor_query_percentage
+from
+    queries as q
+where
+    q.query_name is not null
+group by
+    q.query_name
+```
+
+# Monthly Transactions I
+
+[Problem Description](https://leetcode.cn/problems/monthly-transactions-i/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    date_format(trans_date,'%Y-%m') as month,
+    country,
+    count(1) as trans_count,
+    sum(if(state = 'approved', 1, 0)) as approved_count,
+    sum(amount) as trans_total_amount,
+    sum(if(state = 'approved', amount, 0)) as approved_total_amount
+from
+    transactions
+group by
+    month, country
+```
+
+# Immediate Food Delivery II
+
+[Problem Description](https://leetcode.cn/problems/immediate-food-delivery-ii/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    round(
+        count(
+            if(order_date = customer_pref_delivery_date, 1, null)
+        ) / count(1) * 100, 2
+    ) as immediate_percentage
+from
+    delivery
+where
+    (customer_id, order_date) in (
+        select
+            customer_id, min(order_date) as min_order_date
+        from
+            delivery
+        group by
+            customer_id
+    )
+```
+
+# Game Play Analysis IV
+
+[Problem Description](https://leetcode.cn/problems/game-play-analysis-iv/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    round((
+        select
+            count(1)
+        from
+            activity
+        where
+            (player_id, event_date) in (
+                select
+                    player_id, date_add(min(event_date), interval 1 day) as second_date
+                from
+                    activity
+                group by
+                    player_id
+            )
+    ) / count(distinct player_id), 2) as fraction
+from
+    activity
+```
+
+```sql
+
+```

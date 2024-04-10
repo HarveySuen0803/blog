@@ -103,7 +103,7 @@ select ename, () as job
 from emp;
 
 select
-    case 
+  case 
     	when job = 'CLERK' then 'clerk'
     	when job = 'MANAGER' then 'manager'
     	when job = 'SALESMAN' then 'salesman'
