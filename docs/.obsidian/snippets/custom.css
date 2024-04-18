@@ -116,3 +116,7 @@ thead {
     color: var(--text-normal);
 }
 
+svg:not(:root) {
+    height: 100%;
+    width: 100%;
+}

@@ -330,7 +330,11 @@ while (true) {
 }
 ```
 
-通过 ctx.close() 关闭 Channel, 类似于 channel.close() 都是通过 Nio Thread 去异步的关闭 Thread, 而且返回的是一个 ChannelFuture, 所以依旧可以采用上面的几种方式来处理, 下面就列出一个最基本的用法, 其他的关闭方法就省略了
+ctx.channel.close() 类似于上面的 bootstrap.connect().sync().channel.close() 都是先获取当前的 Channel Obj, 然后调用该 Channel Obj 的 close(), 断开底层的连接
+
+ctx.close() 是从当前的 Handler 开始, 沿着管道向前和向后传播关闭事件 (eg: Pipeline 中有一些特定的 Handler 来发送一个告别消息或者进行清理工作处理)
+
+ctx.channel.close() 和 ctx.close() 都是通过 Nio Thread 去异步的关闭 Thread, 而且会返回的是一个 ChannelFuture, 所以依旧可以采用上面的几种方式来处理, 下面就列出一个最基本的用法, 其他的关闭方法就省略了
 
 ```java
 bootstrap.handler(new ChannelInitializer<Channel>() {
@@ -409,7 +413,7 @@ try {
 
 # LoggingHandler
 
-LoggingHandler 是一个方便的工具, 用于在 Netty 应用程序中添加日志记录功能, 它是一个 ChannelHandler, 可以很容易地添加到 ChannelPipeline 中, 用于自动记录 IO Event, 开发者可以快速获得网络事件的详细日志输出, 这对于调试和监控网络应用的行为至关重要
+LoggingHandler 用于记录进入和离开当前 ChannelHandler 的所有事件, 包括入站事件和出站事件
 
 ```java
 ChannelInitializer<SocketChannel> initializer = new ChannelInitializer<SocketChannel>() {
@@ -420,6 +424,26 @@ ChannelInitializer<SocketChannel> initializer = new ChannelInitializer<SocketCha
         // other handlers ...
     }
 };
+```
+
+LoggingHandler 既是 ChannelInboundHandler 也是 ChannelOutboundHandler, 所以他的位置至关重要
+
+- 这里, 入站事件会先经过 LoggingHandler, 然后经过 MessageCodec 的 decode(). 出站事件会先经过 MessageCodec 的 encode(), 然后经过 LoggingHandler
+
+```java
+EmbeddedChannel channel = new EmbeddedChannel(
+    new LoggingHandler(LogLevel.DEBUG),
+    new MessageCodec()
+);
+```
+
+- 这里, 入站事件会先经过 MessageCodec 的 decode(), 然后经过 LoggingHandler. 出站事件会先经过 LoggingHandler, 然后经过 MessageCodec 的 encode()
+
+```java
+EmbeddedChannel channel = new EmbeddedChannel(
+    new LoggingHandler(LogLevel.DEBUG),
+    new MessageCodec()
+);
 ```
 
 # Future
@@ -583,6 +607,23 @@ ChannelInboundHandlerAdapter h3 = new ChannelInboundHandlerAdapter() {
 
 EmbeddedChannel embeddedChannel = new EmbeddedChannel(h1, h2, h3);
 embeddedChannel.writeInbound(ByteBufAllocator.DEFAULT.buffer().writeBytes("hello world".getBytes()));
+```
+
+EmbeddedChannel 内部有出站和入站两种缓冲区来分别模拟网络的写出和读入操作
+
+- Outbound Data: 当你使用 writeOutbound(msg) 时, EmbeddedChannel 会通过它的 ChannelPipeline 处理这个消息, 处理完成后的数据会被存储在内部的出站缓冲区中
+- Inbound Data: 当你使用 writeInbound(msg) 时, EmbeddedChannel 会通过它的 ChannelPipeline 处理这个消息, 处理完成后的数据会被存储在内部的入站缓冲区中
+
+```java
+EmbeddedChannel channel = new EmbeddedChannel(h1, h2, h3);
+
+ByteBuf buf1 = ByteBufAllocator.DEFAULT.buffer();
+
+// 写入数据, 经过出站处理器
+channel.writeOutbound(buf1)
+
+// 从出站缓冲区读数据
+ByteBuf buf2 = channel.readOutbound();
 ```
 
 # ByteBuf
@@ -831,3 +872,67 @@ echo server
 Java IO 双工? Netty IO 双工?
 ```
 
+# Sharable
+
+这里的 FrameDecoder 会维护一些内部状态来处理分段接收的数据包, 存在线程安全问题
+
+- Client A 访问 Server, 发送了一个半包, 暂时存储在共享的 FrameDecoder 中
+- Client B 访问 Server, 发送了一个半包, 又存储到了同一个 FrameDecoder 中, 甚至积累到指定长度后, 还会得到一个错误的拼接包
+
+```java
+LengthFieldBasedFrameDecoder frameDecoder = new LengthFieldBasedFrameDecoder(1024, 12, 4, 0, 0);
+
+EmbeddedChannel channel = new EmbeddedChannel(
+    frameDecoder,
+    new MessageCodec()
+);
+```
+
+这里的 LoggingHandler 用于记录日志, 不存在线程安全问题
+
+```java
+LoggingHandler loggingHandler = new LoggingHandler();
+
+EmbeddedChannel channel = new EmbeddedChannel(
+    loggingHandler,
+    new MessageCodec()
+);
+```
+
+Netty 通过 @Sharable 来标记一个 ChannelHandler 可以被安全地共享, 即可以被添加到多个 ChannelPipeline 中而不会出现线程安全问题
+
+- 当 Handler 不保存状态时, 就可以安全地在多线程下被共享
+
+```java
+@Sharable
+public class LoggingHandler extends ChannelDuplexHandler {}
+```
+
+# IdleStateHandler
+
+IdleStateHandler 是一种处理器, 用于检测连接的空闲状态 (eg: 没有数据读, 数据写), 这可以帮助实现如超时断开, 心跳机制等功能
+
+```java
+// IdleStateHandler(int readerIdleTimeSeconds, int writerIdleTimeSeconds, int allIdleTimeSeconds)
+//   如果 10s 内没有读事件发生, 将触发一个 IdleState.READER_IDLE
+//   如果 15s 内没有写事件发生, 将触发一个 IdleState.WRITE_IDLE
+//   如果 20s 内没有读或写事件发生, 将触发一个 IdleState.ALL_IDLE
+ch.pipeline().addLast(new IdleStateHandler(10, 15, 20));
+
+ch.pipeline().addLast(new ChannelDuplexHandler() {
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        IdleStateEvent event = (IdleStateEvent) evt;
+        
+        if (event.state() == IdleState.READER_IDLE) {
+            log.debug("No read for 10 seconds, closing channel");
+            ctx.channel().close();
+        } else if (event.state() == IdleState.WRITER_IDLE) {
+            log.debug("No write for 15 seconds, sending heartbeat");
+            ctx.writeAndFlush("HEARTBEAT");
+        } else if (event.state() == IdleState.ALL_IDLE) {
+            log.debug("No read or write for 20 seconds, do something");
+        }
+    }
+})
+```
