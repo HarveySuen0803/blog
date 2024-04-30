@@ -3,8 +3,8 @@
   "cssTheme": "",
   "enabledCssSnippets": [
     "test",
-    "github",
-    "custom"
+    "custom",
+    "github"
   ],
   "baseFontSizeAction": false,
   "baseFontSize": 15,

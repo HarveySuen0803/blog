@@ -146,9 +146,24 @@ bootstrap.option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
 # RCVBUF_ALLOCATOR
 
-RCV_BUFALLOCATOR 是一个用于控制接收缓冲区分配的选项, 
+RCV_BUFALLOCATOR 用于控制如何分配数据的缓冲区, 该缓冲区用于存储从网络中接收到的数据
+
+- ALLOCATOR 配置控制整个 Netty 应用中的 ByteBuf 的分配方式, 包括但不限于接收缓冲区
+
+配置自适应接收缓冲区分配器
+
+- 这是 Netty 默认的缓冲区分配器, 它会自动调整缓冲区的大小以响应不同的负载情况, 旨在减少内存占用和避免数据分段, 自适应分配器会根据实际读取的数据量动态调节下一次读操作的缓冲区大小
 
 ```java
+bootstrap.option(ChannelOption.RCVBUF_ALLOCATOR, AdaptiveRecvByteBufAllocator.DEFAULT);
+```
+
+配置固定大小的接收缓冲区分配器
+
+- 这种分配器为 Netty 的每个读操作分配一个固定大小的缓冲区, 它适用于那些消息大小相对固定的场景, 能够有效减少缓冲区调整的开销
+
+```java
+bootstrap.option(ChannelOption.RCVBUF_ALLOCATOR, new FixedRecvByteBufAllocator(2048));
 ```
 
 # ulimit

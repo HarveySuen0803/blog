@@ -47,21 +47,22 @@ Dynamic Proxy Pattern 的 Proxy Object 是在 Runtime Stage 生成的, 直接自
 ```java
 public class Main {
     public static void main(String[] args) {
-        UserService UserServiceImpl = new UserServiceImpl();
-        UserService UserServiceImplProxy = (UserService) Proxy.newProxyInstance(
-            UserServiceImpl.getClass().getClassLoader(),
-            UserServiceImpl.getClass().getInterfaces(),
+        UserService userService = new UserServiceImpl();
+        
+        UserService userServiceProxy = (UserService) Proxy.newProxyInstance(
+            userService.getClass().getClassLoader(),
+            new Class[]{UserService.class},
             new InvocationHandler() {
                 @Override
                 public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                     System.out.println("Before method invoked");
-                    Object result = method.invoke(UserServiceImpl, args);
+                    Object result = method.invoke(userService, args);
                     System.out.println("After method invoked");
                     return result;
                 }
             }
         );
-        UserServiceImplProxy.show();
+        userServiceProxy.show();
     }
 }
 

@@ -116,7 +116,7 @@ thead {
     color: var(--text-normal);
 }
 
-svg:not(:root) {
+.mermaid > * {
     height: 100%;
     width: 100%;
 }

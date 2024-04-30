@@ -444,7 +444,7 @@ public class Server {
 
 # New Network IO
 
-Selector 允许单个线程处理多个 Channel 的 IO 事件, 类似于 Multiplexing IO, 这种机制提高了网络应用的效率和性能  
+Selector 允许单个线程处理多个 Channel 的 IO 事件, 类似于 Multiplexing IO, 这种机制提高了网络应用的效率和性能
 
 - 通过 selector.select() 去监听 IO 事件, 如果 Channel 有就绪的 IO 事件就会将事件封装成 SelectionKey 存储到 Set 中, 后续只需要遍历该 Set 去处理事件即可
 - 每个 IO 操作都采用非堵塞的方式进行处理, 当没有可读可写的数据时, 就会立即返回, 不会一直堵塞
@@ -467,7 +467,7 @@ public class Server {
         // 通过 Selector 来管理多个 channel
         Selector selector = Selector.open();
         // 注册 SocketChannel 到 Selector 上, 封装为 SelectionKey 存储到 SelectionKey[] 中, 后续通过 SelectionKey 处理 Event
-        // SelectionKey register(Selector sel, int ops)
+        // SelectionKey register(Selector sel, int ops, Object att)
         //   ops: OP_ACCEPT, OP_CONNECT, OP_WAITE, OP_READ
         SelectionKey sscKey = ssc.register(selector, SelectionKey.OP_ACCEPT);
         
@@ -481,7 +481,7 @@ public class Server {
                 SelectionKey key = iter.next();
                 
                 // 将 SelectionKey 从 Set<SelectionKey> 中移除
-                // 如果一直不将 SelectionKey 从 Set<SelectionKey> 中移除, 就会导致下次循环依旧需要去处理该 SelectionKey, 而如果 SelectionKey 已经处理完
+                // 如果一直不将 SelectionKey 从 Set<SelectionKey> 中移除, 就会导致下次循环依旧需要去处理该 SelectionKey
                 iter.remove();
                 
                 // Server 的 SocketChannel 触发了 Accept Event, 即 Client 想要建立连接
@@ -512,8 +512,8 @@ public class Server {
                         // 如果读到了数据
                         else {
                             // 处理 Packet Problem
-                            split(buffer);
                             // 如果读取的内容过长, 超出了 ByteBuffer 的 capacity 也没有遇到 '\n', split() 会执行 compact() 进行压缩, 压缩后 pos 就和 lim 指向了同一个位置, 此时进行扩容
+                            split(buffer);
                             if (buffer.position() == buffer.limit()) {
                                 ByteBuffer bufferNew = ByteBuffer.allocate(buffer.capacity() * 2);
                                 buffer.flip();
