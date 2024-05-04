@@ -1044,9 +1044,8 @@ private UserDao userDao;
 
 @Transactional
 public void test() {
-    boolean isLock = distributedLock.lock();
-
-    if (!isLock) {
+    boolean isAcquire = lock.acquire();
+    if (!isAcquire) {
         return;
     }
 
@@ -1056,7 +1055,7 @@ public void test() {
         }
         userDao.updData("new")
     } finally {
-        distributedLock.unlock();
+        lock.release();
         // waiting...
     }
 }
@@ -1076,17 +1075,18 @@ public void test() {
         return;
     }
     
-    boolean isLock = distributedLock.lock();
-    if (!isLock) {
+    boolean isAcquire = lock.acquire();
+    if (!isAcquire) {
         return;
     }
+    
     try {
         if (userDao.getData() == "new") {
             return;
         }
         userDao.updData("new")
     } finally {
-        distributedLock.unlock();
+        lock.release();
         // waiting...
     }
 }
@@ -1101,17 +1101,18 @@ private UserDao userDao;
 private UserService userService;
 
 public void test() {
-    boolean isLock = distributedLock.lock();
-    if (!isLock) {
+    boolean isAcquire = lock.acquire();
+    if (!isAcquire) {
         return;
     }
+    
     try {
         if (userDao.getData() == "new") {
             return;
         }
         userService.updData();
     } finally {
-        distributedLock.unlock();
+        lock.release();
     }
 }
 
@@ -1130,10 +1131,11 @@ private UserDao userDao;
 private UserService userService;
 
 public void test() {
-    boolean isLock = distributedLock.lock();
-    if (!isLock) {
+    boolean isAcquire = lock.acquire();
+    if (!isAcquire) {
         return;
     }
+    
     try {
         if (userDao.getData() == "new") {
             return;
@@ -1144,8 +1146,7 @@ public void test() {
             return null;
         });
     } finally {
-        distributedLock.unlock();
+        lock.release();
     }
 }
 ```
-

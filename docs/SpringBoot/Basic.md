@@ -28,33 +28,6 @@ SpringProject
                     └── SpringProjectApplicationTests.java
 ```
 
-# create project by IDEA
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241809358.png)
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241809359.png)
-
-# create project by Spring initializr
-
-access https://start.spring.io, to create project
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241809360.png)
-
-# parent dependency
-
-```xml
-<parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.1.0</version>
-    <relativePath/>
-</parent>
-
-<properties>
-    <java.version>17</java.version>
-</properties>
-```
-
 # starter class
 
 ```java
@@ -104,7 +77,18 @@ public class SpringBootDemo1Application {
 }
 ```
 
-# build project
+# parent dependency
+
+```xml
+<parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.1.0</version>
+    <relativePath/>
+</parent>
+```
+
+# inner tomcat
 
 ```xml
 <build>
@@ -117,24 +101,67 @@ public class SpringBootDemo1Application {
 </build>
 ```
 
-# dependency version management
+# version management
+
+check [version info](https://sca.aliyun.com/zh-cn/docs/2022.0.0.0/overview/version-explain)
+
+Used for SpringBoot 3
 
 ```xml
-<parent>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.1.0</version>
-    <relativePath/>
-</parent>
-
 <dependencyManagement>
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-dependencies</artifactId>
-        <version>3.1.0</version>
-        <type>pom</type>
-        <scope>import</scope>
-    </dependency>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-dependencies</artifactId>
+            <version>3.1.5</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-dependencies</artifactId>
+            <version>2022.0.4</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+            <version>2022.0.0.0</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+Used for SpringBoot 2
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-dependencies</artifactId>
+            <version>2.6.13</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-dependencies</artifactId>
+            <version>2021.0.5</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+            <version>2021.0.5.0</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
 </dependencyManagement>
 ```
 
