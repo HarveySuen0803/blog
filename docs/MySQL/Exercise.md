@@ -586,6 +586,141 @@ from
     activity
 ```
 
-```sql
+# Number of Unique Subjects Taught by Each Teacher
 
+[Problem Description](https://leetcode.cn/problems/number-of-unique-subjects-taught-by-each-teacher/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select 
+    t.teacher_id as teacher_id, 
+    count(distinct t.subject_id) as cnt
+from
+    teacher as t
+group by 
+    t.teacher_id
+```
+
+# User Activity for the Past 30 Days I
+
+[Problem Description](https://leetcode.cn/problems/user-activity-for-the-past-30-days-i/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    a.activity_date as day,
+    count(distinct a.user_id) as active_users
+from
+    activity as a
+where
+    a.activity_date between date_sub('2019-07-27', interval 29 day) and '2019-07-27'
+group by
+    a.activity_date
+```
+
+# Sales Analysis III
+
+[Problem Description](https://leetcode.cn/problems/sales-analysis-iii/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    p.product_id as product_id,
+    p.product_name as product_name
+from
+    (
+        select
+            product_id
+        from
+            sales
+        group by
+            product_id
+        having
+            count(sale_date between '2019-01-01' and '2019-03-31' or null) = count(1)
+    ) as s
+inner join
+    product as p
+on
+    s.product_id = p.product_id
+```
+
+```sql
+select
+    p.product_id as product_id,
+    p.product_name as product_name
+from
+    (
+        select
+            product_id
+        from
+            sales
+        group by
+            product_id
+        having
+            min(sale_date) >= '2019-01-01' and max(sale_date) <= '2019-03-31'
+    ) as s
+inner join
+    product as p
+on
+    s.product_id = p.product_id
+```
+
+```sql
+select
+    p.product_id as product_id,
+    p.product_name as product_name
+from
+    sales as s
+inner join
+    product as p
+on
+    s.product_id = p.product_id
+group by
+    product_id
+having
+    min(sale_date) >= '2019-01-01' and max(sale_date) <= '2019-03-31'
+```
+
+# The Number of Employees Which Report to Each Employee
+
+[Problem Description](https://leetcode.cn/problems/the-number-of-employees-which-report-to-each-employee/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    e2.employee_id as employee_id,
+    e2.name as name,
+    e1.reports_count as reports_count,
+    e1.average_age as average_age
+from
+    (
+        select
+            reports_to,
+            count(1) as reports_count,
+            round(avg(age)) as average_age
+        from
+            employees
+        where
+            reports_to is not null
+        group by
+            reports_to
+        having
+            count(reports_to) > 0
+    ) as e1
+inner join
+    employees as e2
+on
+    e1.reports_to = e2.employee_id
+order by
+    e2.employee_id
+```
+
+# Triangle Judgement
+
+[Problem Description](https://leetcode.cn/problems/triangle-judgement/description/?envType=study-plan-v2&envId=sql-free-50)
+
+```sql
+select
+    x,
+    y,
+    z,
+    if (x + y > z and x + z > y and y + z > x, 'Yes', 'No') as triangle
+from
+    triangle
 ```

@@ -2,7 +2,7 @@
 
 ```sql
 -- backup tables
-mysqldump -h127.0.0.1 -uroot -p111 -B db tbl1 tbl2 tbl3 > /home/harvey/bak.sql
+mysqldump -h127.0.0.1 -uroot -p111 db tbl1 tbl2 tbl3 > /home/harvey/bak.sql
 
 -- backup databases
 mysqldump -h127.0.0.1 -uroot -p111 -B db1 db2 db3 > /home/harvey/bak.sql
