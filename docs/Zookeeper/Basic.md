@@ -355,9 +355,149 @@ try {
 }
 ```
 
-# Cluster
+# Service Discovery
 
+导入 Dependency
 
+```xml
+<dependency>
+    <groupId>org.apache.curator</groupId>
+    <artifactId>curator-framework</artifactId>
+    <version>5.6.0</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.curator</groupId>
+    <artifactId>curator-x-discovery</artifactId>
+    <version>5.6.0</version>
+</dependency>
+```
+
+初始化 ServiceDiscovery
+
+```java
+ServiceDiscovery<Void> serviceDiscovery = ServiceDiscoveryBuilder.builder(Void.class)
+    .client(curatorClient)
+    .basePath("/rpc")
+    .build();
+
+try {
+    serviceDiscovery.start();
+} catch (Exception e) {
+    throw new RuntimeException(e);
+}
+```
+
+关闭 ServiceDiscovery
+
+```java
+serviceDiscovery.close();
+```
+
+注册 Service
+
+```java
+// 注册 my-service 的 instance1
+ServiceInstance<Void> serviceInstance1 = ServiceInstance.<Void>builder()
+    .id("instance1")
+    .name("my-service")
+    .address("192.168.1.101")
+    .port(8080)
+    .build();
+    
+serviceDiscovery.registerService(serviceInstance1);
+
+// 注册 my-service 的 instance2
+ServiceInstance<Void> serviceInstance2 = ServiceInstance.<Void>builder()
+    .id("instance2")
+    .name("my-service")
+    .address("192.168.1.102")
+    .port(8080)
+    .build();
+
+serviceDiscovery.registerService(serviceInstance2);
+
+// 注册 my-service 的 instance3
+ServiceInstance<Void> serviceInstance3 = ServiceInstance.<Void>builder()
+    .id("instance3")
+    .name("my-service")
+    .address("192.168.1.103")
+    .port(8080)
+    .build();
+    
+serviceDiscovery.registerService(serviceInstance3);
+```
+
+注册 Service, 并携带 Payload
+
+```java
+ServiceDiscovery<ServiceMeta> serviceDiscovery = ServiceDiscoveryBuilder
+    .builder(ServiceMeta.class)
+    .client(curatorClient)
+    .basePath("/rpc")
+    .serializer(new JsonInstanceSerializer<>(ServiceMeta.class))
+    .build();
+```
+
+```java
+String serviceName = "my-service";
+String serviceHost = "192.168.1.101";
+String servicePort = 8080;
+String serviceId = serviceHost + ":" + servicePort;
+String details = "...";
+
+ServiceMeta serviceMeta = new ServiceMeta(
+    serviceName,
+    serviceHost,
+    servicePort,
+    details
+)
+
+// 携带 ServiceMeta Payload
+ServiceInstance serviceInstance = ServiceInstance.builder()
+    .id(serviceId)
+    .name(serviceName)
+    .address(serviceHost)
+    .port(servicePort)
+    .payload(serviceMeta)
+    .build();
+    
+serviceDiscovery.registerService(serviceInstance);
+```
+
+注销 Service
+
+```java
+ServiceInstance<Void> serviceInstance1 = ServiceInstance.<Void>builder()
+    .id("instance1")
+    .name("my-service")
+    .address("192.168.1.101")
+    .port(8080)
+    .build();
+
+serviceDiscovery.unregisterService(serviceInstance1);
+```
+
+根据 Service 的 id 获取 Service Instance
+
+```java
+ServiceInstance<Void> serviceInstance = serviceDiscovery.queryForInstance("my-service", "instance1");
+
+System.out.println(serviceInstance);
+System.out.println(serviceInstance.getAddress());
+System.out.println(serviceInstance.getPort());
+```
+
+获取所有的 Service Instance
+
+```java
+Collection<ServiceInstance<Void>> serviceInstances = serviceDiscovery.queryForInstances("my-service");
+
+for (ServiceInstance<Void> serviceInstance : serviceInstances) {
+    System.out.println(serviceInstance);
+    System.out.println(serviceInstance.getAddress());
+    System.out.println(serviceInstance.getPort());
+}
+```
 
 # Exercise Sell Tickets
 
