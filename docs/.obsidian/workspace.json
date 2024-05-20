@@ -4,63 +4,23 @@
     "type": "split",
     "children": [
       {
-        "id": "5f743526d2e1c5a1",
+        "id": "66ff2f67d88470a1",
         "type": "tabs",
         "children": [
           {
-            "id": "2cf5c802ab3a38be",
+            "id": "90c90e137b2710e4",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Zookeeper/Basic.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "a08c97625aeea27f",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "JUC/Future.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "d6fb66d346220ebc",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Zookeeper/Basic.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "a9dd6afad5b1ae10",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "DesignPattern/Decorator Pattern.md",
+                "file": "React/Basic.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
               }
             }
           }
-        ],
-        "currentTab": 3
+        ]
       }
     ],
     "direction": "vertical"
@@ -98,11 +58,13 @@
               }
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "09a176cbda932313",
@@ -118,7 +80,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "DesignPattern/Decorator Pattern.md"
+                "file": "React/Basic.md"
               }
             }
           }
@@ -137,54 +99,54 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "6e1c1ced07a7bd34",
+  "active": "90c90e137b2710e4",
   "lastOpenFiles": [
-    "DesignPattern/Responsibility Pattern.md",
-    "Java/NIO.md",
-    "Zookeeper/Basic.md",
-    "Etcd/Basic.md",
-    "ElasticSearch/DSL.md",
-    "Meituan/optimization/getSceneJson.md",
-    "Meituan/optimization/Untitled.md",
-    "Meituan/keyword-rank/ones.md",
-    "Meituan/optimization",
-    "Meituan/Untitled.md",
-    "ElasticSearch/Mapping.md",
-    "ElasticSearch/Basic.md",
-    "SpringBoot/ElasticSearch.md",
-    "JUC/Future.md",
-    "Meituan/kepler/basic.md",
-    "Linux/Personal Config.md",
-    "Meituan/kepler",
-    "MySQL/Exercise.md",
-    "MySQL/Window Function.md",
-    "MySQL/API.md",
-    "MySQL/Basic.md",
-    "SpringBoot/FreeMarker.md",
-    "MySQL/Backup.md",
-    "JUC/ThreadPool.md",
+    "Vue/Basic.md",
+    "Draft/XBQ-2.md",
+    "Java/Exception.md",
+    "Draft/XBQ-3.md",
+    "Draft/image/Pasted image 20240518214605.png",
+    "Draft/image/Pasted image 20240518214506.png",
+    "Draft/image/Pasted image 20240518214126.png",
+    "Draft/image/Pasted image 20240518214100.png",
+    "React/Basic.md",
+    "Meituan/star/basic.md",
+    "React",
+    "Meituan/star/image/Pasted image 20240517090724.png",
+    "Meituan/star/image/Pasted image 20240517090711.png",
+    "Meituan/star/image/Pasted image 20240517090238.png",
+    "Meituan/code/publish.md",
+    "Meituan/code/image/Pasted image 20240516202124.png",
+    "Meituan/code/image/Pasted image 20240516202105.png",
+    "Meituan/code/image/Pasted image 20240516201816.png",
+    "Meituan/code/image",
+    "Java/Serializer.md",
+    "Meituan/code",
+    "Draft/Basic.md",
+    "Java/Stream.md",
+    "Vue/Pinia.md",
+    "Webpack/Webpack.md",
+    "DDD/Basic.md",
+    "SpringBoot/Lombok.md",
+    "SpringBoot/WebSocket.md",
+    "Project/Chatic.md",
     "SpringBoot/Basic.md",
-    "JUC/Lock.md",
-    "JUC/Basic.md",
-    "Distributed/SpringCloud.md",
-    "Zookeeper",
-    "Draft/image/Pasted image 20240502224103.png",
-    "Meituan/keyword-rank/image/Pasted image 20240429195005.png",
-    "Meituan/keyword-rank/image/Pasted image 20240429172335.png",
-    "Meituan/keyword-rank/image/Pasted image 20240429172257.png",
-    "Meituan/keyword-rank/image/Pasted image 20240428211427.png",
-    "Meituan/keyword-rank/image/Pasted image 20240428211412.png",
-    "Meituan/keyword-rank/image/Pasted image 20240428211345.png",
-    "Meituan/keyword-rank/image/Pasted image 20240428114538.png",
-    "Meituan/keyword-rank/image/Pasted image 20240428114511.png",
-    "Meituan/keyword-rank/image/Pasted image 20240428112654.png",
-    "Meituan/keyword-rank/image",
-    "Meituan/keyword-rank",
-    "Etcd 1",
-    "Etcd",
-    "Meituan/origin",
-    "Meituan/KeywordRank",
-    "Meituan/core-page/image",
+    "DDD",
+    "SpringBoot/Serializer.md",
+    "Network/Websocket.md",
+    "Java/WebSocket.md",
+    "MySQL/Basic.md",
+    "Project/OJ Server.md",
+    "Project/Rpc.md",
+    "Meituan/star/image",
+    "MySQL/Index.md",
+    "Meituan/star",
+    "Java/Log.md",
+    "Java/Junit.md",
+    "Meituan/dc/image",
+    "Meituan/optimization/image",
+    "Meituan/optimization",
+    "Meituan/kepler",
     "test.canvas"
   ]
 }

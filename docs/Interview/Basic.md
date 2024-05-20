@@ -1616,9 +1616,13 @@ Client 发送写请求后, 如果 Master 停机, Slave 还来不及进行 Replic
 
 CRC16 Algo 的 source code 在 cluster.c 的 keyHashSlot()
 
-Hashing Algo, hash 按照结点的数量取余, 根据结果存储到对应的结点中, 如果结点数量发生变化, 影响数据的存储
+Simple Hashing: hash 按照结点的数量取余, 根据结果存储到对应的结点中, 如果结点数量发生变化, 影响数据的存储
 
-Consistent Hashing Alog, 通过 hash() 控制 Hash 范围, 头尾相连, 构成 Hash Circle, 通过 hash() 计算结点和数据的 Hash, 分布在 Hash Circle 上, 数据沿着顺时针向前寻找到最近的结点, 存储在该结点上. 结点数量发生变化, 只影响一段数据的存储, 但是如果分布不均匀, 数据倾斜, 部分结点的压力会很大
+Consistent Hashing: 通过 hash() 控制 Hash 范围, 头尾相连, 构成 Hash Circle, 通过 hash() 计算结点和数据的 Hash, 分布在 Hash Circle 上, 数据沿着顺时针向前寻找到最近的结点, 存储在该结点上. 结点数量发生变化, 只影响一段数据的存储, 但是如果分布不均匀, 数据倾斜, 部分结点的压力会很大
+
+Weighted Consistent Hashing: 在 Consistent Hashing 的基础上添加 Weight 的作用, 根据权重在哈希环上为每台服务器分配不同数量的虚拟节点, 解决了一致性哈希因服务器性能不同而导致的负载不均问题, 但是实现更为复杂, 维护虚拟节点也更复杂
+
+- A, B 和 C 配置权重为 5, 3 和 2, 那么就会给 A 创建 5 个虚拟节点, 给 B 创建 3 个虚拟节点, 给 C 创建 2 个虚拟节点, 然后分部虚拟节点到 Hash Circle 上
 
 ## TTL
 

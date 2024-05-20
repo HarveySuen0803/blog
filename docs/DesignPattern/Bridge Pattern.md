@@ -7,7 +7,7 @@ Product 内部维护了一个 Payment, 创建 Product 时, 就需要传入一个
 ```java
 public class Main {
     public static void main(String[] args) throws IOException {
-        new Product(new CreditCardPayment()).pay();
+        new Product(new AlipayPayment()).pay();
         new Product(new WechatPayment()).pay();
     }
 }
@@ -16,16 +16,17 @@ interface Payment {
     void pay();
 }
 
-class CreditCardPayment implements Payment {
+class AlipayPayment implements Payment {
+    @Override
     public void pay() {
-        System.out.println("pay with credit card");
+        System.out.println("Pay with credit alipay");
     }
 }
 
 class WechatPayment implements Payment {
     @Override
     public void pay() {
-        System.out.println("pay with wechat");
+        System.out.println("Pay with wechat");
     }
 }
 
@@ -41,4 +42,3 @@ class Product {
     }
 }
 ```
-
