@@ -4,20 +4,15 @@
     "type": "split",
     "children": [
       {
-        "id": "66ff2f67d88470a1",
+        "id": "55ab29557d34f66f",
         "type": "tabs",
         "children": [
           {
-            "id": "90c90e137b2710e4",
+            "id": "4c882c7b36259ccc",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "React/Basic.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
+              "type": "empty",
+              "state": {}
             }
           }
         ]
@@ -49,7 +44,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "分库",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -58,8 +53,7 @@
               }
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -79,17 +73,14 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "React/Basic.md"
-              }
+              "state": {}
             }
           }
         ]
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -99,54 +90,54 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "90c90e137b2710e4",
+  "active": "4c882c7b36259ccc",
   "lastOpenFiles": [
-    "Vue/Basic.md",
-    "Draft/XBQ-2.md",
-    "Java/Exception.md",
-    "Draft/XBQ-3.md",
-    "Draft/image/Pasted image 20240518214605.png",
-    "Draft/image/Pasted image 20240518214506.png",
-    "Draft/image/Pasted image 20240518214126.png",
-    "Draft/image/Pasted image 20240518214100.png",
-    "React/Basic.md",
-    "Meituan/star/basic.md",
-    "React",
-    "Meituan/star/image/Pasted image 20240517090724.png",
-    "Meituan/star/image/Pasted image 20240517090711.png",
-    "Meituan/star/image/Pasted image 20240517090238.png",
-    "Meituan/code/publish.md",
-    "Meituan/code/image/Pasted image 20240516202124.png",
-    "Meituan/code/image/Pasted image 20240516202105.png",
-    "Meituan/code/image/Pasted image 20240516201816.png",
-    "Meituan/code/image",
-    "Java/Serializer.md",
-    "Meituan/code",
-    "Draft/Basic.md",
-    "Java/Stream.md",
-    "Vue/Pinia.md",
-    "Webpack/Webpack.md",
-    "DDD/Basic.md",
-    "SpringBoot/Lombok.md",
-    "SpringBoot/WebSocket.md",
-    "Project/Chatic.md",
-    "SpringBoot/Basic.md",
-    "DDD",
-    "SpringBoot/Serializer.md",
-    "Network/Websocket.md",
-    "Java/WebSocket.md",
-    "MySQL/Basic.md",
-    "Project/OJ Server.md",
-    "Project/Rpc.md",
-    "Meituan/star/image",
-    "MySQL/Index.md",
-    "Meituan/star",
-    "Java/Log.md",
-    "Java/Junit.md",
-    "Meituan/dc/image",
-    "Meituan/optimization/image",
-    "Meituan/optimization",
-    "Meituan/kepler",
+    "effective-java/Chapter-9/Chapter-9-Introduction.md",
+    "Chapter-9/Chapter-9-Item-57-Minimize-the-scope-of-local-variables.md",
+    "effective-java/Chapter-9/Chapter-9-Item-58-Prefer-for-each-loops-to-traditional-for-loops.md",
+    "effective-java/Chapter-9/Chapter-9-Item-61-Prefer-primitive-types-to-boxed-primitives.md",
+    "Chapter-9",
+    "Chapter-6/Chapter-6-Item-34-Use-enums-instead-of-int-constants.md",
+    "effective-java/Chapter-6/Chapter-6-Introduction.md",
+    "Chapter-6",
+    "java/Annotation.md",
+    "ddd/Basic.md",
+    "ddd",
+    "data-structure/String.md",
+    "data-structure/Stack.md",
+    "data-structure/SkipList.md",
+    "data-structure/RedBlackTree.md",
+    "data-structure/Queue.md",
+    "data-structure/Other.md",
+    "data-structure/LinkedList.md",
+    "data-structure/HuffmanTree.md",
+    "data-structure/Heap.md",
+    "data-structure/HashTable.md",
+    "data-structure/Graph.md",
+    "data-structure/BinaryTree.md",
+    "data-structure/BinarySearchTree.md",
+    "data-structure/BTree.md",
+    "data-structure/Array.md",
+    "data-structure/AVLTree.md",
+    "data-structure",
+    "canal/Basic.md",
+    "canal",
+    "calcite/Calcite.md",
+    "calcite",
+    "architecture",
+    "algorithm",
+    "ajax",
+    "echarts",
+    "draft/image/Pasted image 20240521005644.png",
+    "draft/image/Pasted image 20240518214605.png",
+    "draft/image/Pasted image 20240518214506.png",
+    "draft/image/Pasted image 20240518214126.png",
+    "draft/image/Pasted image 20240509000024.png",
+    "draft/image/Pasted image 20240518214100.png",
+    "draft/image/Pasted image 20240508235840.png",
+    "draft/image/Pasted image 20240508235702.png",
+    "draft/image/Pasted image 20240508235339.png",
+    "draft/image/Pasted image 20240508235212.png",
     "test.canvas"
   ]
 }

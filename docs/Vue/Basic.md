@@ -1,4 +1,4 @@
-# Install Vue
+s# Install Vue
 
 Build project with Vite
 
@@ -65,7 +65,7 @@ const user:User = {
 console.log('hello world')
 
 onBeforeMount(() => {
-  console.log(' before mount')
+  console.log('before mount')
 })
 
 onMounted(() => {

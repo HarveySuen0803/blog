@@ -3,24 +3,24 @@
 pull Redis
 
 ```shell
-sudo docker image pull redis:7.2
+docker image pull redis:7.2
 ```
 
 create volume
 
 ```shell
-sudo docker volume create redis-conf
-sudo docker volume create redis-data
-sudo docker volume create redis-logs
+docker volume create redis-conf
+docker volume create redis-data
+docker volume create redis-logs
 
 sudo mkdir -p /opt/redis
 
-sudo ln -s /var/lib/docker/volumes/redis-conf/_data /opt/redis/conf
-sudo ln -s /var/lib/docker/volumes/redis-data/_data /opt/redis/data
-sudo ln -s /var/lib/docker/volumes/redis-logs/_data /opt/redis/logs
+ln -s /var/lib/docker/volumes/redis-conf/_data /opt/redis/conf
+ln -s /var/lib/docker/volumes/redis-data/_data /opt/redis/data
+ln -s /var/lib/docker/volumes/redis-logs/_data /opt/redis/logs
 
-sudo curl -LJO http://download.redis.io/redis-stable/redis.conf
-sudo mv ./redis.conf /opt/redis/conf
+curl -LJO http://download.redis.io/redis-stable/redis.conf
+mv ./redis.conf /opt/redis/conf
 ```
 
 configure Redis (file: config/redis.conf)
@@ -45,7 +45,7 @@ appendonly yes
 startup Redis
 
 ```shell
-sudo docker container run \
+docker container run \
     --name redis \
     --privileged \
     -p 6379:6379 \

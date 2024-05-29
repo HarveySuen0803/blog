@@ -3,15 +3,15 @@
 pull MySQL image
 
 ```shell
-sudo docker image pull mysql:8.1.0
+docker image pull mysql:8.1.0
 ```
 
 set volume
 
 ```shell
-sudo docker volume create mysql-conf
-sudo docker volume create mysql-data
-sudo docker volume create mysql-logs
+docker volume create mysql-conf
+docker volume create mysql-data
+docker volume create mysql-logs
 
 sudo mkdir -p /opt/mysql
 
@@ -23,7 +23,7 @@ sudo ln -s /var/lib/docker/volumes/mysql-logs/_data /opt/mysql/logs
 startup MySQL
 
 ```shell
-sudo docker container run \
+docker container run \
     --name mysql \
     --privileged \
     -p 3306:3306 \
@@ -37,7 +37,7 @@ sudo docker container run \
 set remote connection
 
 ```shell
-sudo docker container exec -it mysql /bin/bash
+docker container exec -it mysql /bin/bash
 mysql -h127.0.0.1 -P3306 -uroot -p111
 ```
 

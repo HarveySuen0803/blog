@@ -1,6 +1,6 @@
 # @JsonFormat
 
-添加 Jackson 依赖
+添加 Jackson 依赖：
 
 ```xml
 <dependency>
@@ -23,4 +23,28 @@ private LocalDateTime createTime;
 {
     "createTime": "2023-08-13 12:35:24"
 }
+```
+
+# Custom Serializer
+
+可以给字段添加 `@JsonSerializer` 指定序列化器，做一些特殊的序列化。这里给 `phone` 指定了 `PhoneJsonSerializer` 来做特定的序列化，对 `phone` 做脱敏操作。
+
+```java
+public class PhoneJsonSerializer extends JsonSerializer<String> {
+    @Override
+    public void serialize(String srcValue, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+        String tarValue = srcValue;
+        
+        if (srcValue.length() == 11) {
+            tarValue = srcValue.substring(0, 3) + "****" + srcValue.substring(7, 11);
+        }
+        
+        jsonGenerator.writeString(tarValue);
+    }
+}
+```
+
+```java
+@JsonSerialize(using = PhoneJsonSerializer.class)
+private String phone;
 ```

@@ -49,8 +49,8 @@ public CacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) 
     
     RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration
         .defaultCacheConfig()
-        .serializeKeysWith(SerializationPair.fromSerializer(RedisSerializer.string()))
-        .serializeValuesWith(SerializationPair.fromSerializer(RedisSerializer.json()));
+        .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.string()))
+        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(RedisSerializer.json()));
     
     return RedisCacheManager.builder(redisCacheWriter)
         .cacheWriter(redisCacheWriter)
