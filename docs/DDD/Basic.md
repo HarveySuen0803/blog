@@ -18,3 +18,63 @@
 
 - 例如：定义 "用户" 为中文通用语言，"User" 为英文通用语言，如果使用 "账户", "Person", "Account" 来表达，则是违反了通用语言的规定，在代码开发中也要使用 "User" 来表示
 
+分享一下我在学习 DDD 的 DP (Domain Primitive) 时的一些感受，以及在实战中的轻度使用，因为 DP 最理想的状态非常复杂，难以在团队中落地，所以我这里给出了一个简单的使用场景。
+
+我们在接受参数时，一定会对参数进行大量的异常值处理，这些代码就是胶水代码，他们高度重复且与业务割裂。
+
+```java
+@PostMapping("/register")
+public Result<Void> register(UserRegisterDto userRegisterDto) {
+    if (StrUtil.isBlank(username)) {
+        throw new ClientException(UserResult.USERNAME_INVALID);
+    }
+    if (StrUtil.isBlank(password)) {
+        throw new ClientException(UserResult.PASSWORD_INVALID);
+    }
+    if (StrUtil.isBlank(email)) {
+        throw new ClientException(UserResult.EMAIL_INVALID);
+    }
+    
+    UserDo userDo = new UserDo();
+    BeanUtils.copyProperties(userDo, userRegisterDto);
+    // ...
+}
+```
+
+这些胶水代码其实就可以放在参数对象的构造器里，在创建参数对象时，就做好了异常值处理。这里接受的 UserRegisterDto 作为参数对象，那我们就可以在 UserRegisterDto 的构造器里进行异常值处理。
+
+```java
+@Data
+public class UserRegisterDto {
+    private String username;
+    
+    private String password;
+    
+    private String email;
+    
+    public UserRegisterDto(String username, String password, String email) {
+        if (StrUtil.isBlank(username)) {
+            throw new ClientException(UserResult.USERNAME_INVALID);
+        }
+        if (StrUtil.isBlank(password)) {
+            throw new ClientException(UserResult.PASSWORD_INVALID);
+        }
+        if (StrUtil.isBlank(email)) {
+            throw new ClientException(UserResult.EMAIL_INVALID);
+        }
+        
+        this.username = username;
+        this.password = password;
+        this.email = email;
+    }
+}
+```
+
+```java
+@PostMapping("/register")
+public Result<Void> register(UserRegisterDto userRegisterDto) {
+    UserDo userDo = new UserDo();
+    BeanUtils.copyProperties(userDo, userRegisterDto);
+    // ...
+}
+```

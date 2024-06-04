@@ -1,42 +1,45 @@
 # Adapter Pattern
 
-通过 Adapter 转换一个 class 的 interface 为另一个 class 所希望的 interface, 使两个 class 兼容
+适配器模式（Adapter Pattern）是一种结构型设计模式，它的主要目的是将一个类的接口转换成客户端期望的另一个接口。该模式使得原本接口不兼容的类可以一起工作。
 
-Card 和 SDCard 没有关系, Computer 只能识别 Card, 无法识别 SDCard, 而 SDCard 可以实现 Card 的 read() 功能, 可以由 Adapter 作中间件, 让 Adapter 实现 Card, 内部维护一个 SDCard, 调用 SDCard 的 read()
+假设我们有一个老的支付系统（Old Payment System），但现在需要将其适配到一个新的支付系统（Payment System）中。
 
 ```java
 public class Main {
-    public static void main(String[] args) throws IOException {
-        new Computer().read(new Adapter(new SDCard()));
+    public static void main(String[] args) {
+        PaymentSystem paymentSystem = new OldPaymentSystemAdapter(new OldPaymentSystem());
+        
+        paymentSystem.pay("1", 1000);
     }
 }
 
-interface Card {
-    void read();
-}
-
-class SDCard {
-    public void read() {
-        System.out.println("read SD card");
+class OldPaymentSystem {
+    public void makePayment(String customerName, double amount) {
+        System.out.println("Making payment of " + amount + " for " + customerName + " using old payment system.");
     }
 }
 
-class Adapter implements Card {
-    private SDCard sdCard;
+interface PaymentSystem {
+    void pay(String customerId, double amount);
+}
+
+class OldPaymentSystemAdapter implements PaymentSystem {
+    private OldPaymentSystem oldPaymentSystem;
     
-    public Adapter(SDCard sdCard) {
-        this.sdCard = sdCard;
+    public OldPaymentSystemAdapter(OldPaymentSystem oldPaymentSystem) {
+        this.oldPaymentSystem = oldPaymentSystem;
     }
     
     @Override
-    public void read() {
-        sdCard.read();
+    public void pay(String customerId, double amount) {
+        // Adapt here by converting customerId to customerName.
+        String customerName = getCustomerName(customerId);
+        
+        oldPaymentSystem.makePayment(customerName, amount);
     }
-}
-
-class Computer {
-    public void read(Card card) {
-        card.read();
+    
+    private String getCustomerName(String customerId) {
+        return "Customer" + customerId;
     }
 }
 ```

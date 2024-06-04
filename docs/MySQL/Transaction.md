@@ -140,4 +140,7 @@ MVCC 在 RC 和 RR 中生效, 不在 RU 中生效, 因为 RU 可以读到未提�
 
 InnoDB 的 RC, 每次执行 `select`, 就会创建一个 Page View, 可以解决 Dirty Read.
 
+- 只有执行了 `select` 才会去创建 Page View，开启 TRX 后不执行 `select` 就会一直不创建 Page View
+
 InnoDB 的 RR, 只有第一次执行 `select`, 才会创建 Page View, 后续执行插入后, 不影响第一次查询的 Page View, 所以不仅可以解决 Dirty Rad, 还可以解决 Non-Repatable 和 Phantom Read.
+

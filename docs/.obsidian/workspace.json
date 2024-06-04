@@ -4,18 +4,63 @@
     "type": "split",
     "children": [
       {
-        "id": "24f46bebb4788be2",
+        "id": "cc3958e2ba416a7e",
         "type": "tabs",
         "children": [
           {
-            "id": "fb5ffe6014128feb",
+            "id": "da663d49a372c19d",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "Design Pattern/Factory Pattern.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "cafa0d699076ad2a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Design Pattern/Strategy Pattern.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "5aa303d6c27e3a42",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Mapping/MapStruct.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "f56bf72cc3ec3ffe",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Mapping/ModelMapper.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -57,7 +102,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "09a176cbda932313",
@@ -72,7 +118,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "Mapping/MapStruct.md"
+              }
             }
           }
         ]
@@ -89,43 +137,45 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "6e1c1ced07a7bd34",
+  "active": "5aa303d6c27e3a42",
   "lastOpenFiles": [
-    "PHP/PHP.md",
+    "Mapping/ModelMapper.md",
+    "Mapping/MapStruct.md",
+    "Mapping",
+    "DDD/Domain Object.md",
+    "DDD/ACL.md",
+    "Design Pattern/Strategy Pattern.md",
+    "Design Pattern/Factory Pattern.md",
+    "Maven/Maven.md",
+    "Deveek/Log/Basic.md",
+    "Mysql/Backup.md",
+    "SpringBoot/AOP.md",
+    "Mysql/Transaction.md",
+    "SpringBoot/Basic.md",
+    "DDD/Basic.md",
+    "Design Pattern/Adapter Pattern.md",
+    "Distributed/Dubbo.md",
+    "Mysql/Basic.md",
+    "SpringBoot/Redis.md",
+    "SpringBoot/Junit.md",
+    "SpringBoot/IOC.md",
+    "SpringBoot/Auto Configuration.md",
+    "Untitled.md",
+    "Deveek/Log",
+    "Deveek",
+    "SpringBoot/JWT.md",
+    "SpringBoot/SpringSecurity.md",
+    "SpringBoot/SpringMVC.md",
+    "SpringBoot/MyBatisPlus.md",
+    "Mybatis/MyBatis.md",
+    "Meituan/Star/image/Pasted image 20240530131241.png",
     "PHP",
-    "POI/POI.md",
     "POI",
-    "Poi/POI.md",
     "Poi",
-    "Redis/Transaction.md",
-    "Redis/Sentinel.md",
-    "Redis/Replication.md",
-    "Redis/RESP.md",
-    "Redis/Pipeline.md",
-    "Redis/Persistence.md",
-    "Redis/Optimization.md",
-    "Redis/Network.md",
-    "Redis/MQ.md",
-    "Redis/Expiration.md",
-    "Redis/Exercise.md",
-    "Redis/DataStructure.md",
-    "Redis/Cluster.md",
-    "Redis/Basic.md",
-    "Redis/Availability.md",
     "Redis",
-    "React/Basic.md",
     "React",
-    "Resutful/Basic.md",
-    "Resutful/basic.md",
-    "Schedule/2024.md",
-    "Schedule/2023.md",
     "Schedule",
-    "Resutful/Restful.md",
     "Resutful",
-    "Php/PHP.md",
-    "Php",
-    "Other",
-    "OpenResty",
     "Meituan/Star/image/Pasted image 20240523165216.png",
     "Meituan/Star/image/Pasted image 20240523165333.png",
     "Meituan/Star/image/Pasted image 20240523165135.png",
@@ -135,7 +185,6 @@
     "Meituan/Star/image/Pasted image 20240517090724.png",
     "Meituan/Star/image/Pasted image 20240517090238.png",
     "Meituan/Star/image/Pasted image 20240515164645.png",
-    "Meituan/Star/image/Pasted image 20240515142830.png",
     "test.canvas"
   ]
 }

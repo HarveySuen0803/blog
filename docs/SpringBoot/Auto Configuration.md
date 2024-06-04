@@ -142,7 +142,7 @@ public class AliOSSAutoConfiguration {
 }
 ```
 
-META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports, 导出 AliOSSAutoConfiguration
+resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports, 导出 AliOSSAutoConfiguration
 
 ```
 com.aliyun.oss.AliOSSAutoConfiguration
