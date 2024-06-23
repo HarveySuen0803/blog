@@ -43,8 +43,12 @@ mysql -h127.0.0.1 -P3306 -uroot -p111
 
 ```sql
 use mysql;
+
 create user 'harvey'@'%' identified by '111';
+grant select, insert, update, delete, create, drop, alter on db.* to 'harvey'@'%';
+
 alter user 'root'@'%' identified with mysql_native_password by '111';
+
 flush privileges;
 ```
 

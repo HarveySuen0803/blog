@@ -4,63 +4,23 @@
     "type": "split",
     "children": [
       {
-        "id": "cc3958e2ba416a7e",
+        "id": "16f6061d67c40cc5",
         "type": "tabs",
         "children": [
           {
-            "id": "da663d49a372c19d",
+            "id": "992293e50fef52e2",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Design Pattern/Factory Pattern.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "cafa0d699076ad2a",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Design Pattern/Strategy Pattern.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "5aa303d6c27e3a42",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Mapping/MapStruct.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "f56bf72cc3ec3ffe",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Mapping/ModelMapper.md",
+                "file": "Other/ComputerBasic.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
               }
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -119,7 +79,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Mapping/MapStruct.md"
+                "file": "Other/ComputerBasic.md"
               }
             }
           }
@@ -137,54 +97,53 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "5aa303d6c27e3a42",
+  "active": "992293e50fef52e2",
   "lastOpenFiles": [
-    "Mapping/ModelMapper.md",
-    "Mapping/MapStruct.md",
-    "Mapping",
-    "DDD/Domain Object.md",
-    "DDD/ACL.md",
-    "Design Pattern/Strategy Pattern.md",
-    "Design Pattern/Factory Pattern.md",
-    "Maven/Maven.md",
-    "Deveek/Log/Basic.md",
-    "Mysql/Backup.md",
+    "Project/CiliCili.md",
+    "Other/ComputerBasic.md",
+    "Network/IP.md",
+    "Draft/Internet.md",
+    "Network/TCP.md",
+    "Network/image/Pasted image 20240622114747.png",
+    "Network/HTTP.md",
+    "Network/OSI.md",
+    "JUC/Lock.md",
+    "Data Structure/Queue.md",
+    "Mybatis/MyBatis.md",
+    "Java/JDBC.md",
+    "Network/image",
+    "Network/image/Pasted image 20240622113940.png",
+    "Design Pattern/Builder Pattern.md",
+    "Distributed/SkyWalking.md",
+    "Distributed/Sentinel.md",
+    "Draft/image/Pasted image 20240622103320.png",
+    "Draft/image/Pasted image 20240622101806.png",
+    "Draft/image/Pasted image 20240622101752.png",
+    "Draft/image/Pasted image 20240622101448.png",
+    "Draft/image/Pasted image 20240622101446.png",
+    "Draft/image/Pasted image 20240622101359.png",
+    "Draft/image/Pasted image 20240622101157.png",
+    "Draft/image/Pasted image 20240622100654.png",
+    "SpringBoot/MyBatisPlus.md",
+    "Draft/Interview.md",
     "SpringBoot/AOP.md",
-    "Mysql/Transaction.md",
-    "SpringBoot/Basic.md",
-    "DDD/Basic.md",
-    "Design Pattern/Adapter Pattern.md",
-    "Distributed/Dubbo.md",
-    "Mysql/Basic.md",
-    "SpringBoot/Redis.md",
-    "SpringBoot/Junit.md",
+    "Design Pattern/Factory Pattern.md",
+    "Design Pattern/Strategy Pattern.md",
+    "Design Pattern/FlyWeight Pattern.md",
     "SpringBoot/IOC.md",
-    "SpringBoot/Auto Configuration.md",
-    "Untitled.md",
+    "Design Pattern/Singleton Pattern.md",
+    "Deveek/Log/Basic.md",
+    "SpringBoot/JDBC.md",
+    "Linux/Personal Config.md",
+    "ShardingSphere",
+    "Mapping",
     "Deveek/Log",
     "Deveek",
-    "SpringBoot/JWT.md",
-    "SpringBoot/SpringSecurity.md",
-    "SpringBoot/SpringMVC.md",
-    "SpringBoot/MyBatisPlus.md",
-    "Mybatis/MyBatis.md",
-    "Meituan/Star/image/Pasted image 20240530131241.png",
     "PHP",
     "POI",
     "Poi",
     "Redis",
     "React",
-    "Schedule",
-    "Resutful",
-    "Meituan/Star/image/Pasted image 20240523165216.png",
-    "Meituan/Star/image/Pasted image 20240523165333.png",
-    "Meituan/Star/image/Pasted image 20240523165135.png",
-    "Meituan/Star/image/Pasted image 20240523165109.png",
-    "Meituan/Star/image/Pasted image 20240520131628.png",
-    "Meituan/Star/image/Pasted image 20240517090711.png",
-    "Meituan/Star/image/Pasted image 20240517090724.png",
-    "Meituan/Star/image/Pasted image 20240517090238.png",
-    "Meituan/Star/image/Pasted image 20240515164645.png",
     "test.canvas"
   ]
 }

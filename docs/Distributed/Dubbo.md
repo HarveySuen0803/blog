@@ -22,7 +22,12 @@ Dubbo 的架构主要由四个核心部分组成
 <dependency>
     <groupId>org.apache.dubbo</groupId>
     <artifactId>dubbo-spring-boot-starter</artifactId>
-    <version>3.2.11</version>
+    <version>3.2.13</version>
+</dependency>
+<dependency>
+    <groupId>org.apache.dubbo</groupId>
+    <artifactId>dubbo-serialization-fastjson2</artifactId>
+    <version>3.2.13</version>
 </dependency>
 ```
 
@@ -34,6 +39,9 @@ Dubbo 的架构主要由四个核心部分组成
 --add-opens java.base/jdk.internal.misc=ALL-UNNAMED
 --add-opens java.base/java.nio=ALL-UNNAMED
 --add-opens java.base/java.lang=ALL-UNNAMED
+--add-opens java.base/java.util=ALL-UNNAMED 
+--add-opens java.base/java.lang.invoke=ALL-UNNAMED
+--add-opens java.base/java.text=ALL-UNNAMED
 ```
 
 配置 Commons Api, 将公用的 Service 和 Model 存储在这方便 RPC 调用 (module: commons-api)
@@ -85,13 +93,20 @@ dubbo.protocol.port=20880
 dubbo.application.qos-enable=false
 # base package
 dubbo.scan.base-packages=com.harvey.service
+
+dubbo.protocol.serialization=fastjson2
+dubbo.provider.serialization=fastjson2
+dubbo.provider.prefer-serialization=fastjson2
+dubbo.protocol.prefer-serialization=fastjson2
+
+dubbo.application.serialize-check-status=DISABLE
 ```
 
 3. 注册 UserServiceImpl 为 RPC 服务到 Dubbo 中
 
 ```java
 @Service
-@DubboService
+@DubboService(parameters = {"serialization", "fastjson2"})
 public class UserServiceImpl implements UserService {
     @Override
     public String test() {
@@ -117,7 +132,7 @@ public class UserServiceImpl implements UserService {
 - Consumer 访问的其实是 UserServiceImpl 的 Proxy Obj, 该 Proxy Obj 在内部帮我们实现了复杂的网络通信 (eg: 通信方式, 通信协议, 序列化)
 
 ```java
-@DubboReference(url = "dubbo://198.19.249.3:20880/com.harvey.service.UserService")
+@DubboReference(url = "dubbo://198.19.249.3:20880", parameters = {"serialization", "fastjson2"})
 public UserService userService;
 
 @Test
@@ -153,50 +168,4 @@ Dubbo 既支持私有协议 (eg: dubbo), 也支持公有协议 (eg: Http, Http2)
 
 ```properties
 dubbo.protocol.name=dubbo
-```
-
-# Serialization
-
-Dubbo 支持多种序列化方案 (eg: Hessian, FastJson2, Kryo), 相同的数据采用不同的序列化方案, 传输的格式就不相同, 好的序列化占用空间小, 占用带宽少, 传输速度快
-
-Dubbo 3.2.0 默认采用 Fastjson2, 一般都是搭配 Http 使用, 如果想要追求更高的性能推荐使用 dubbo + kryo
-
-```properties
-dubbo.protocol.serialization=fastjson2
-```
-
-# Serialization Kryo
-
-导入 Kryo Serialization 的 Dependency
-
-```xml
-<dependency>
-    <groupId>org.apache.dubbo.extensions</groupId>
-    <artifactId>dubbo-serialization-kryo</artifactId>
-    <version>1.0.1</version>
-</dependency>
-```
-
-Provider 配置序列化方式为 Kryo
-
-```properties
-dubbo.protocol.serialization=kryo
-```
-
-Consumer 指定序列化方式为 Kryo
-
-```java
-@DubboReference(url = "dubbo://198.19.249.3:20881/com.harvey.service.UserService?serialization=kyro")
-public UserService userService;
-
-@Test
-public void test() {
-    String test = userService.test();
-}
-```
-
-可以在这段日志中查看到配置的 Serialization 是否生效
-
-```properties
-[DUBBO] ... url dubbo://192.19.249.3:20881/com.harvey.service.UserService?...serialization=kryo...
 ```

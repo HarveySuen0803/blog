@@ -1,4 +1,5 @@
 * {
+    /* font-family: var(--font-monospace); */
     font-family: "FiraCode NF";
     font-variant-ligatures:  none;
     -webkit-font-smoothing: antialiased;
@@ -119,4 +120,9 @@ thead {
 .mermaid > * {
     height: 100%;
     width: 100%;
+}
+
+/* code inline */
+.cm-s-obsidian span.cm-inline-code {
+    font-family: "FiraCode NF";
 }

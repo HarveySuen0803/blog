@@ -30,7 +30,7 @@ check debian version
 cat /etc/debian_version
 ```
 
-change debian mirror (/etc/apt/sources.list)
+replace the `http://deb.debian.org` with `http://mirrors.aliyun.com` debian mirror (/etc/apt/sources.list)
 
 ```shell
 sed -i "s@http://deb.debian.org@http://mirrors.aliyun.com@g" /etc/apt/sources.list
@@ -204,7 +204,7 @@ git clone https://github.com/HarveySuen0803/nvim-config.git ~/.config/nvim
 check SSH 
 
 ```shell
-sudsudo service ssh restart
+sudo service ssh restart
 ```
 
 install SSH
@@ -222,7 +222,7 @@ PermitRootLogin yes
 restart SSH server
 
 ```shell
-sudo systemctl enable ssh && sudo systemctl start ssh
+sudo systemctl enable ssh && sudo systemctl restart ssh
 ```
 
 # jdk

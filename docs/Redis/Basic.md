@@ -42,6 +42,14 @@ requirepass 111
 appendonly yes
 ```
 
+create user
+
+```
+ACL SETUSER root +@all  on >111 ~*
+ACL SETUSER harvey +@all -@admin on >111 ~*
+ACL SETUSER bruce +@read +@write +@keyspace +ping on >111 ~*
+```
+
 startup Redis
 
 ```shell

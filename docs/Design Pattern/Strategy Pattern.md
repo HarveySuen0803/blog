@@ -96,6 +96,7 @@ class NumberSorter {
 
 ```java
 String type = "A";
+
 if ("A".equals(type)) {
     System.out.println("StrategyA is executed");
 } else if ("B".equals(type)) {
