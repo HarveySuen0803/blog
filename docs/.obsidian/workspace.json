@@ -4,23 +4,37 @@
     "type": "split",
     "children": [
       {
-        "id": "16f6061d67c40cc5",
+        "id": "54dd0e03c3542e6f",
         "type": "tabs",
         "children": [
           {
-            "id": "992293e50fef52e2",
+            "id": "4fdb1347f3862638",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Other/ComputerBasic.md",
+                "file": "Project/Mybatic.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "a71070f780fee030",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Java/JDBC.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
               }
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -79,7 +93,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Other/ComputerBasic.md"
+                "file": "Java/JDBC.md"
               }
             }
           }
@@ -97,17 +111,29 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "992293e50fef52e2",
+  "active": "a71070f780fee030",
   "lastOpenFiles": [
-    "Project/CiliCili.md",
+    "Project/Mybatic.md",
+    "Mysql/Basic.md",
+    "JUC/Semaphore.md",
+    "JUC/Lock.md",
+    "Docker/Basic.md",
+    "Redis/Network.md",
     "Other/ComputerBasic.md",
+    "Mapping/ModelMapper.md",
+    "Redis/RESP.md",
+    "Redis/Basic.md",
+    "Draft/Network.md",
+    "Draft/image/Pasted image 20240623182006.png",
+    "Draft/image/Pasted image 20240623181828.png",
+    "Draft/image/Pasted image 20240623180733.png",
+    "Draft/image/Pasted image 20240623180552.png",
     "Network/IP.md",
-    "Draft/Internet.md",
+    "Project/CiliCili.md",
     "Network/TCP.md",
     "Network/image/Pasted image 20240622114747.png",
     "Network/HTTP.md",
     "Network/OSI.md",
-    "JUC/Lock.md",
     "Data Structure/Queue.md",
     "Mybatis/MyBatis.md",
     "Java/JDBC.md",
@@ -120,21 +146,10 @@
     "Draft/image/Pasted image 20240622101806.png",
     "Draft/image/Pasted image 20240622101752.png",
     "Draft/image/Pasted image 20240622101448.png",
-    "Draft/image/Pasted image 20240622101446.png",
-    "Draft/image/Pasted image 20240622101359.png",
-    "Draft/image/Pasted image 20240622101157.png",
-    "Draft/image/Pasted image 20240622100654.png",
     "SpringBoot/MyBatisPlus.md",
     "Draft/Interview.md",
     "SpringBoot/AOP.md",
     "Design Pattern/Factory Pattern.md",
-    "Design Pattern/Strategy Pattern.md",
-    "Design Pattern/FlyWeight Pattern.md",
-    "SpringBoot/IOC.md",
-    "Design Pattern/Singleton Pattern.md",
-    "Deveek/Log/Basic.md",
-    "SpringBoot/JDBC.md",
-    "Linux/Personal Config.md",
     "ShardingSphere",
     "Mapping",
     "Deveek/Log",

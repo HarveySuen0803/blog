@@ -89,8 +89,8 @@ set container proxy (file: ~/.docker/config.json)
 {
     "proxies": {
         "default": {
-            "httpProxy": "http://172.20.10.2:7890",
-            "httpsProxy": "http://172.20.10.2:7890",
+            "httpProxy": "http://127.0.0.1:7890",
+            "httpsProxy": "http://127.0.0.1:7890",
             "noProxy": "localhost,127.0.0.1"
         }
     }

@@ -49,6 +49,8 @@ grant select, insert, update, delete, create, drop, alter on db.* to 'harvey'@'%
 
 alter user 'root'@'%' identified with mysql_native_password by '111';
 
+alter user 'root'@'' identified with mysql_native_password by '111';
+
 flush privileges;
 ```
 
