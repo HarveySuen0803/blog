@@ -4,37 +4,18 @@
     "type": "split",
     "children": [
       {
-        "id": "54dd0e03c3542e6f",
+        "id": "e0a9c93291038a54",
         "type": "tabs",
         "children": [
           {
-            "id": "4fdb1347f3862638",
+            "id": "2b0727e541f9c41f",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Project/Mybatic.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "a71070f780fee030",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Java/JDBC.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
+              "type": "empty",
+              "state": {}
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -92,9 +73,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Java/JDBC.md"
-              }
+              "state": {}
             }
           }
         ]
@@ -111,45 +90,45 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "a71070f780fee030",
+  "active": "2b0727e541f9c41f",
   "lastOpenFiles": [
+    "Meituan/Core Page/Refactor.md",
+    "Meituan/DC/Info.md",
+    "Meituan/DC/Calcite.md",
+    "Meituan/Core Page/image/Pasted image 20240403173932.png",
+    "Meituan/Code/publish.md",
+    "Java/Reflection.md",
+    "Spring/Junit.md",
+    "SpringBoot/Junit.md",
+    "Design Pattern/Singleton Pattern.md",
+    "Java/JDBC.md",
+    "Mysql/Backup.md",
+    "Mybatis/MyBatis.md",
+    "Java/Stream.md",
+    "Design Pattern/Template Pattern.md",
+    "Draft/Mall.md",
+    "JavaWeb/JavaWeb.md",
+    "Mysql/Transaction.md",
     "Project/Mybatic.md",
+    "JUC/Lock.md",
     "Mysql/Basic.md",
     "JUC/Semaphore.md",
-    "JUC/Lock.md",
     "Docker/Basic.md",
     "Redis/Network.md",
     "Other/ComputerBasic.md",
     "Mapping/ModelMapper.md",
     "Redis/RESP.md",
     "Redis/Basic.md",
-    "Draft/Network.md",
     "Draft/image/Pasted image 20240623182006.png",
     "Draft/image/Pasted image 20240623181828.png",
     "Draft/image/Pasted image 20240623180733.png",
     "Draft/image/Pasted image 20240623180552.png",
-    "Network/IP.md",
-    "Project/CiliCili.md",
-    "Network/TCP.md",
     "Network/image/Pasted image 20240622114747.png",
-    "Network/HTTP.md",
-    "Network/OSI.md",
-    "Data Structure/Queue.md",
-    "Mybatis/MyBatis.md",
-    "Java/JDBC.md",
     "Network/image",
     "Network/image/Pasted image 20240622113940.png",
-    "Design Pattern/Builder Pattern.md",
-    "Distributed/SkyWalking.md",
-    "Distributed/Sentinel.md",
     "Draft/image/Pasted image 20240622103320.png",
     "Draft/image/Pasted image 20240622101806.png",
     "Draft/image/Pasted image 20240622101752.png",
-    "Draft/image/Pasted image 20240622101448.png",
-    "SpringBoot/MyBatisPlus.md",
-    "Draft/Interview.md",
-    "SpringBoot/AOP.md",
-    "Design Pattern/Factory Pattern.md",
     "ShardingSphere",
     "Mapping",
     "Deveek/Log",

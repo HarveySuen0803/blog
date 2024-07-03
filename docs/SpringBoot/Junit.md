@@ -13,6 +13,9 @@ pom.xml
 AppTest.java, 添加 @SpringBootTest 开启测试
 
 ```java
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
 @SpringBootTest
 class AppTest {
     @Autowired
