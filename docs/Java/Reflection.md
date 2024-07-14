@@ -612,6 +612,60 @@ class A {
 }
 ```
 
+## Bridge Method
+
+Java 泛型在编译期间会进行类型擦除（type erasure），将泛型类型替换为其原始类型（通常是 Object）。为了解决类型擦除后在运行时仍然能够调用正确的方法，Java 编译器会生成一些桥接方法。这些桥接方法的作用是桥接泛型方法和其实际实现之间的差异。
+
+假设有如下泛型类和子类：
+
+```java
+class Parent<T> {
+    public T doSomething(T arg) {
+        return arg;
+    }
+}
+
+class Child extends Parent<String> {
+    @Override
+    public String doSomething(String arg) {
+        return arg;
+    }
+}
+```
+
+在编译期间，Child 类的 doSomething 方法实际上会被编译成两个方法：
+
+- public String doSomething(String arg) - 子类实际实现的方法
+- public Object doSomething(Object arg) - 桥接方法，用于调用子类的实际方法
+
+桥接方法的作用是保证在类型擦除后仍然能够调用正确的泛型方法。
+
+可以通过 Method 的 isBridge() 来判断是否为桥接方法。
+
+```java
+private void addUniqueMethods(Map<String, Method> uniqueMethods, Method[] methods) {
+    for (Method currentMethod : methods) {
+        // 过滤掉桥接方法
+        if (!currentMethod.isBridge()) {
+            // 取得签名
+            String signature = getSignature(currentMethod);
+            // 检查方法是否已经存在
+            if (!uniqueMethods.containsKey(signature)) {
+                if (canAccessPrivateMethods()) {
+                    try {
+                        currentMethod.setAccessible(true);
+                    } catch (Exception e) {
+                        // 忽略异常
+                    }
+                }
+                // 将方法添加到 uniqueMethods 映射中
+                uniqueMethods.put(signature, currentMethod);
+            }
+        }
+    }
+}
+```
+
 # Exercise
 
 ## create file
