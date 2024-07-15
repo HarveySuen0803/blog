@@ -4,20 +4,15 @@
     "type": "split",
     "children": [
       {
-        "id": "94f649f653f26d3f",
+        "id": "4d4f912cbcd38929",
         "type": "tabs",
         "children": [
           {
-            "id": "b9c590f938323e25",
+            "id": "0767cd19ad943bc4",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "SpringBoot/BeanPostProcessor.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
+              "type": "empty",
+              "state": {}
             }
           }
         ]
@@ -78,9 +73,7 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "SpringBoot/BeanPostProcessor.md"
-              }
+              "state": {}
             }
           }
         ]
@@ -97,9 +90,12 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "b9c590f938323e25",
+  "active": "0767cd19ad943bc4",
   "lastOpenFiles": [
+    "Draft/Suggestion.md",
     "SpringBoot/BeanPostProcessor.md",
+    "JUC/ForkJoin.md",
+    "Tomcat/Tomcat.md",
     "Spring/Validation.md",
     "SpringBoot/AOP.md",
     "SpringBoot/IOC.md",
@@ -127,10 +123,7 @@
     "Meituan/Optimization/image/Pasted image 20240709101952.png",
     "Distributed/Seata.md",
     "Design/Basic.md",
-    "SpringBoot/SpringCache.md",
     "Design",
-    "Meituan/Code/publish.md",
-    "Java/Reflection.md",
     "Meituan/Code/image/Pasted image 20240704145828.png",
     "Meituan/Code/image/Pasted image 20240704142258.png",
     "Meituan/Code/image",
