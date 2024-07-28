@@ -23,22 +23,22 @@ h5, .markdown-rendered h5, .HyperMD-header-5, .HyperMD-list-line .cm-header-5
 h6, .markdown-rendered h6, .HyperMD-header-6, .HyperMD-list-line .cm-header-6 {
 }
 h1, .markdown-rendered h1, .HyperMD-header-1, .HyperMD-list-line .cm-header-1 {
-    font-size: 1.5rem !important;
-}
-h2, .markdown-rendered h2, .HyperMD-header-2, .HyperMD-list-line .cm-header-2 {
-    font-size: 1.4rem !important;
-}
-h3, .markdown-rendered h3, .HyperMD-header-3, .HyperMD-list-line .cm-header-3 {
     font-size: 1.3rem !important;
 }
-h4, .markdown-rendered h4, .HyperMD-header-4, .HyperMD-list-line .cm-header-4 {
+h2, .markdown-rendered h2, .HyperMD-header-2, .HyperMD-list-line .cm-header-2 {
+    font-size: 1.25rem !important;
+}
+h3, .markdown-rendered h3, .HyperMD-header-3, .HyperMD-list-line .cm-header-3 {
     font-size: 1.2rem !important;
+}
+h4, .markdown-rendered h4, .HyperMD-header-4, .HyperMD-list-line .cm-header-4 {
+    font-size: 1.15rem !important;
 }
 h5, .markdown-rendered h5, .HyperMD-header-5, .HyperMD-list-line .cm-header-5 {
     font-size: 1.1rem !important;
 }
 h6, .markdown-rendered h6, .HyperMD-header-6, .HyperMD-list-line .cm-header-6 {
-    font-size: 1rem !important;
+    font-size: 1.05rem !important;
 }
 .cm-s-obsidian .cm-line.HyperMD-header {
     padding-top: 0 !important;

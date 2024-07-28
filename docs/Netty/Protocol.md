@@ -344,7 +344,7 @@ public static void main(String[] args) throws Exception {
     
     // slice() 拆分后的 ByteBuf() 实际是 Zero Copy 的体现, 底层还是公用的原来的物理内存,
     // channel.writeInBound(tarMsgSlice1) 执行后, 会去进行 release(), 减少一次 tarMsgSlice1 的引用计数,
-    // 实际上间的就是 tarMsg 的引用计数, 导致 tarMsgSlice1 和 tarMsgSlice2 都失效了,
+    // 实际上就是 tarMsg 的引用计数, 导致 tarMsgSlice1 和 tarMsgSlice2 都失效了,
     // 所以这里需要执行 tarMsgSlice().retain() 防止被错误释放
     tarMsgSlice1.retain();
     

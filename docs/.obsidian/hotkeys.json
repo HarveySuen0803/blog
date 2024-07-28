@@ -106,22 +106,6 @@
     }
   ],
   "workspace:edit-file-title": [],
-  "app:toggle-right-sidebar": [
-    {
-      "modifiers": [
-        "Alt"
-      ],
-      "key": "]"
-    }
-  ],
-  "app:toggle-left-sidebar": [
-    {
-      "modifiers": [
-        "Alt"
-      ],
-      "key": "["
-    }
-  ],
   "markdown:add-metadata-property": [],
   "graph:open": [],
   "workspace:goto-tab-1": [],
@@ -162,22 +146,6 @@
       "key": "U"
     }
   ],
-  "obsidian-editor-shortcuts:goToNextHeading": [
-    {
-      "modifiers": [
-        "Ctrl"
-      ],
-      "key": "0"
-    }
-  ],
-  "obsidian-editor-shortcuts:goToPrevHeading": [
-    {
-      "modifiers": [
-        "Ctrl"
-      ],
-      "key": "9"
-    }
-  ],
   "obsidian-editor-shortcuts:transformToTitlecase": [
     {
       "modifiers": [
@@ -195,5 +163,21 @@
       "key": "U"
     }
   ],
-  "app:open-help": []
+  "app:open-help": [],
+  "app:toggle-left-sidebar": [
+    {
+      "modifiers": [
+        "Ctrl"
+      ],
+      "key": "9"
+    }
+  ],
+  "app:toggle-right-sidebar": [
+    {
+      "modifiers": [
+        "Ctrl"
+      ],
+      "key": "0"
+    }
+  ]
 }

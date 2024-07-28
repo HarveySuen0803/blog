@@ -93,7 +93,7 @@ System.out.println(group.next()); // io.netty.channel.nio.NioEventLoop@56cbfb61
 
 ```java
 new ServerBootstrap()
-    // 指定 EVentLoopGroup 内部有两个 EventLoop, 当连接的 SocketChannel 数量超出 2 后, 就会由一个 EventLoop 绑定多个 SocketChannel
+    // 指定 EventLoopGroup 内部有两个 EventLoop, 当连接的 SocketChannel 数量超出 2 后, 就会由一个 EventLoop 绑定多个 SocketChannel
     .group(new NioEventLoopGroup(2))
     .channel(NioServerSocketChannel.class)
     .childHandler(new ChannelInitializer<NioSocketChannel>() {
@@ -441,8 +441,8 @@ EmbeddedChannel channel = new EmbeddedChannel(
 
 ```java
 EmbeddedChannel channel = new EmbeddedChannel(
-    new LoggingHandler(LogLevel.DEBUG),
-    new MessageCodec()
+    new MessageCodec(),
+    new LoggingHandler(LogLevel.DEBUG)
 );
 ```
 
@@ -499,10 +499,20 @@ log.info("Result is {}", promise.get());
 
 # Pipeline
 
-ChannelHandler 用来处理 Channel 上的各种事件, 分为入站, 出站两种, 所有 ChannelHandler 被连成一串, 就是 Pipeline
+ChannelHandler 用来处理 Channel 上的各种事件，分为 Inboudhandler，OutboundHandler 两种，所有的 Handler 构成一个 Double Linked List。有些 Handler 可以既是 InboudHandler，也是 OutBoundHandler，这种 Handler 就可以同时出入 Inboud Event 和 Outbound Event。
 
-- 入站处理器通常是 ChannelInboundHandlerAdapter 的子类, 主要用来读取客户端数据, 写回结果
-- 出站处理器通常是 ChannelOutboundHandlerAdapter 的子类, 主要对写回结果进行加工
+- InboundHandler 一般都是 ChannelInboundHandlerAdapter 的子类，主要用来读取客户端数据，写回结果
+- OutboundHandler 一般都是 ChannelOutboundHandlerAdapter 的子类，主要对写回结果进行加工
+- HeadContext 位于 ChannelPipeline 的头部，负责处理底层 I/O 操作，如读写操作的实际执行
+- TailContext 位于 ChannelPipeline 的尾部，捕获未被其他处理器处理的事件，如未捕获的异常
+
+如果 InboundHandler 没有调用 ctx.fireChannelRead()，那么事件就会在他这里停止传播，如果是最后一个 InboudHandler 没有执行 ctx.fireChannelRead()，那么也不会传播事件到 TailContext 那里。
+
+- 入站数据流动：head -> in_1 -> in_2 -> in_3 -> tail
+
+如果 OutboundHandler 没有调用 ctx.write()，那么事件就会在他那里停止传播，就没法响应结果了，所以一般所有的 OutboundHandler 都要去写一个 ctx.write()
+
+- 出站数据流动：tail -> out_1 -> out_2 -> out_3 -> head
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202404061715527.png)
 
@@ -532,10 +542,10 @@ serverBootstrap.childHandler(new ChannelInitializer<NioSocketChannel>() {
             public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
                 log.info("in_3");
         
-                // 执行 ch.write() 会依次执行 tail -> out_1 -> out_2 -> out_3
+                // 执行 ch.write() 会依次执行 tail -> out_1 -> out_2 -> out_3 -> head
                 // ch.writeAndFlush(ctx.alloc().buffer().writeBytes("hello world".getBytes()));
                 
-                // 执行 ctx.channel().write() 会依次执行 tail -> out_1 -> out_2 -> out_3
+                // 执行 ctx.channel().write() 会依次执行 tail -> out_1 -> out_2 -> out_3 -> head
                 // ctx.channel().writeAndFlush(ctx.alloc().buffer().writeBytes("hello world".getBytes()));
 
                 ctx.channel().writeAndFlush(ctx.alloc().buffer().writeBytes("hello world".getBytes()));
@@ -744,7 +754,7 @@ System.out.println((char) buf.readByte()); // l
 System.out.println((char) buf.readByte()); // o
 ```
 
-# ByteBuf Memory Recovery
+# ByteBuf Memory Management
 
 基于 Direct Memory 的 ByteBuf Obj 最好是手动来释放, 而不是等 GC 垃圾回收, 可以更加及时的释放内存, 避免内存泄漏
 
@@ -758,12 +768,115 @@ Netty 这里采用了引用计数法来控制回收内存, 每个 ByteBuf 都实
 - 调用 release() 计数减 1, 当计数为 0 时, 底层内存会被回收
 - 调用 retain() 计数加 1, 表示调用者没用完之前, 其它 handler 即使调用了 release() 也不会造成回收
 
-一般是谁最后使用了该 ByteBuf Obj, 就由谁执行 release() 释放内存
+这里 h1 和 h2 都没有使用 ByteBuf Obj，直接传递给 h3，那么就由 h3 来执行 release() 释放 ByteBuf Obj
 
-- head <-> h1 <-> h2 <-> h3 <-> tail 中, h1 使用了 ByteBuf Obj 传递给了 h2, h2 使用了 ByteBuf Obj, 并将 ByteBuf Obj 转成了 String Obj 传递给了 h3, 则这里的 h2 就是最后一个使用者, 应该在 h2 中执行 release() 释放内存
+```java
+ChannelInboundHandlerAdapter h1 = new ChannelInboundHandlerAdapter() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ctx.fireChannelRead(msg);
+    }
+};
+ChannelInboundHandlerAdapter h2 = new ChannelInboundHandlerAdapter() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ctx.fireChannelRead(msg);
+    }
+};
+ChannelInboundHandlerAdapter h3 = new ChannelInboundHandlerAdapter() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ByteBuf buf = (ByteBuf) msg;
+        // 确保在写操作完成后释放引用计数
+        ctx.channel().writeAndFlush(buf).addListener(future -> buf.release());
+    }
+};
 
-HeadContext 和 TailContext 作为整个 HandlerChain 的头和尾, 他们内部都包含了对 ByteBuf Obj 的释放操作, 防止中间的 Handler 没有使用到该 ByteBuf Obj
+EmbeddedChannel embeddedChannel = new EmbeddedChannel(h1, h2, h3);
+embeddedChannel.writeInbound(ByteBufAllocator.DEFAULT.buffer().writeBytes("hello world".getBytes()));
+```
 
+这里 h1 和 h3 都使用了 ByteBuf Obj，那么为了防止 h3 执行 release() 后直接释放了 ByteBuf Obj，就需要由 h1 执行一次 retain() 来让计数 + 1，最终由 h3 来释放
+
+```java
+ChannelInboundHandlerAdapter h1 = new ChannelInboundHandlerAdapter() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ByteBuf buf = (ByteBuf) msg;
+        // 计数 + 1，防止 h3 给释放了
+        buf.retain()
+        // 执行下一个 Handler
+        ctx.fireChannelRead(buf);
+        // h3 来操作 buf，操作完之后，释放 buf
+        ctx.channel().writeAndFlush(buf).addListener(future -> buf.release());
+    }
+};
+ChannelInboundHandlerAdapter h2 = new ChannelInboundHandlerAdapter() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ctx.fireChannelRead(msg);
+    }
+};
+ChannelInboundHandlerAdapter h3 = new ChannelInboundHandlerAdapter() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ByteBuf buf = (ByteBuf) msg;
+        // 确保在写操作完成后释放引用计数
+        ctx.channel().writeAndFlush(buf).addListener(future -> buf.release());
+    }
+};
+
+EmbeddedChannel embeddedChannel = new EmbeddedChannel(h1, h2, h3);
+embeddedChannel.writeInbound(ByteBufAllocator.DEFAULT.buffer().writeBytes("hello world".getBytes()));
+```
+
+如何是 SimpleChannelInboundHandler 的实现类，那么 SimpleChannelInboundHandler 会自动去执行 release() 释放掉资源，所以我们使用多个 SimpleChannelInboundHandler 连接时，就只需要注意执行 retain() 即可，让 SimpleChannelInboundHandler 自动释放资源。
+
+```java
+SimpleChannelInboundHandler<ByteBuf> h1 = new SimpleChannelInboundHandler<>() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
+        buf.retain();
+        ctx.fireChannelRead();
+        ctx.channel().writeAndFlush(buf);
+    }
+};
+SimpleChannelInboundHandler<ByteBuf> h2 = new SimpleChannelInboundHandler<>() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
+        // 只需要在传递给下一个 SimpleChannelInboundHandler 之前执行一下 retain() 即可，不需要再去执行 release() 了
+        buf.retain();
+        ctx.fireChannelRead();
+    }
+};
+SimpleChannelInboundHandler<ByteBuf> h3 = new SimpleChannelInboundHandler<>() {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, ByteBuf buf) throws Exception {
+        ctx.channel().writeAndFlush(buf);
+    }
+};
+
+EmbeddedChannel embeddedChannel = new EmbeddedChannel(h1, h2, h3);
+embeddedChannel.writeInbound(ByteBufAllocator.DEFAULT.buffer().writeBytes("hello world".getBytes()));
+```
+
+ctx.channel().writeAndFlush(buf) 是一个异步操作，这意味着它会立即返回并继续执行后续代码，即通过 finally 来包裹是无法保证释放 ByteBuf Obj 的，会过早释放 ByteBuf Obj，导致 IllegalReferenceCountException
+
+```java
+try {
+    ctx.channel().writeAndFlush(buf);
+} finally {
+    buf.release();
+}
+```
+
+```java
+ctx.channel().writeAndFlush(buf).addListener(future -> buf.release());
+```
+
+HeadContext 和 TailContext 作为整个 HandlerChain 的头和尾，如果事件传递到了他们那，并且也传递了 ByteBuf Obj 给他们，那么他们内部在处理完之后会去安全的释放掉 ByteBuf Obj，不需要我们担心。
+
+- HeadContext 和 TailContext 只能对传递到他们那的 ByteBuf Obj 进行 release()，如果是 Handler 内部创建的 ByteBuf Obj 是无法干预的，依旧存在内存泄漏
 - 如果中间的 Handler 拿到 ByteBuf Obj 后, 转成了 String Obj 传递给了下一个 Handler, 并且忘记执行 release(), 则最终的 HeadContext 和 TailContext 就都不会拿到 ByteBuf Obj 完成释放内存的操作了, 这就导致了内存泄漏
 
 # ByteBuf Log Util
@@ -935,4 +1048,66 @@ ch.pipeline().addLast(new ChannelDuplexHandler() {
         }
     }
 })
+```
+
+# Exception Handler
+
+每个 ChannelInboundHandler 都有一个 exceptionCaught 方法，用于处理在 ChannelPipeline 中抛出的异常。当处理过程中出现异常时，Netty 会调用 exceptionCaught 方法。这个方法的主要作用是捕获和处理异常，防止异常传播并导致连接关闭或其他未定义的行为。
+
+当 ChannelPipeline 中的某个 handler 抛出异常时，Netty 会调用该 handler 的 exceptionCaught 方法。
+
+```java
+public class MyInboundHandler extends ChannelInboundHandlerAdapter {
+    @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        // 处理消息
+        // ...
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        // 记录异常
+        cause.printStackTrace();
+
+        // 关闭连接
+        ctx.close();
+    }
+}
+```
+
+如果异常未被捕获和处理，它将沿着 ChannelPipeline 传播，直到被某个 handler 捕获或到达 ChannelPipeline 的末端。未处理的异常可能导致连接关闭。
+
+当异常在 ChannelPipeline 中传播时，如果没有任何 handler 处理该异常，Netty 会最终调用 AbstractChannelHandlerContext 的 invokeExceptionCaught 方法。这个方法的默认实现是记录异常日志并关闭连接。
+
+在 Netty 中定义全局异常处理器可以确保所有未处理的异常都能被捕获和处理。通常，这可以通过在 ChannelPipeline 的末端添加一个专门的异常处理 ChannelInboundHandler 来实现。这个全局异常处理器将捕获并处理所有在 ChannelPipeline 中未被其他 handler 捕获的异常。
+
+```java
+public class GlobalExceptionHandler extends ChannelInboundHandlerAdapter {
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        // 记录异常
+        cause.printStackTrace();
+
+        // 发送错误响应，具体实现可以根据需要进行调整
+        ByteBuf errorMessage = Unpooled.copiedBuffer("Internal Server Error".getBytes());
+        ctx.writeAndFlush(errorMessage).addListener(ChannelFutureListener.CLOSE);
+    }
+}
+```
+
+```java
+public class MyChannelInitializer extends ChannelInitializer<SocketChannel> {
+    @Override
+    protected void initChannel(SocketChannel ch) throws Exception {
+        ChannelPipeline pipeline = ch.pipeline();
+
+        // 添加其他 handler
+        pipeline.addLast(new Handler1());
+        pipeline.addLast(new Handler2());
+        pipeline.addLast(new Handler3());
+
+        // 添加全局异常处理器
+        pipeline.addLast(new GlobalExceptionHandler());
+    }
+}
 ```

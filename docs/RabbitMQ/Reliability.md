@@ -361,3 +361,81 @@ Message Accumulation 解决方案
 - 只能有一个 Publisher 发送消息, 并且只能是串行发送, 保证消息到达 Queue 的顺序是一致的
 - Publisher 发送的消息只能发送到同一个 Queue 中
 - 保证 Consumer 消费消息的顺序, 要么只设置一个 Consumer 消费, 要么设置多个 Consumer, 但是通过 `x-single-active-consumer` 设置单活模式, 每次只有一个消费者可以消费消息
+
+# Peak Shaving and Valley Filling
+
+削峰填谷（Peak Shaving and Valley Filling）是一种负载均衡策略，旨在通过平衡系统的负载来提高系统的稳定性和效率。在高峰期，将部分请求或任务延迟处理，以避免系统过载；在低谷期，处理积压的任务或请求，以充分利用系统资源。
+
+MQ通过异步消息传递机制，可以在高峰期将大量请求存入队列，等到系统负载较低时再逐步处理这些请求，从而实现负载均衡。
+
+MQ 削峰填谷的工作原理：
+
+- 生产者（Producer）: 在高峰期，生产者将消息发送到消息队列，而不是直接处理这些消息。
+- 消息队列（Queue）: 消息队列暂存这些消息，充当缓冲区。
+- 消费者（Consumer）: 在系统负载较低时，消费者从消息队列中取出消息并处理。
+
+这种机制确保了系统在高峰期不会因为瞬时负载过高而崩溃，同时在低谷期可以充分利用资源处理积压的任务。
+
+假设我们有一个在线购物平台，在促销活动期间，用户请求量暴增。为了避免服务器过载，可以使用MQ来实现削峰填谷。
+
+```java
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+
+public class Producer {
+    private final static String QUEUE_NAME = "orderQueue";
+
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+            channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+            String message = "Order details";
+
+            for (int i = 0; i < 1000; i++) {
+                channel.basicPublish("", QUEUE_NAME, null, (message + i).getBytes("UTF-8"));
+                System.out.println(" [x] Sent '" + message + i + "'");
+            }
+        }
+    }
+}
+```
+
+```java
+import com.rabbitmq.client.*;
+
+public class Consumer {
+    private final static String QUEUE_NAME = "orderQueue";
+
+    public static void main(String[] argv) throws Exception {
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        try (Connection connection = factory.newConnection();
+             Channel channel = connection.createChannel()) {
+            channel.queueDeclare(QUEUE_NAME, true, false, false, null);
+            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+
+            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+                String message = new String(delivery.getBody(), "UTF-8");
+                System.out.println(" [x] Received '" + message + "'");
+                
+                // 模拟处理时间
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException _ignored) {
+                    Thread.currentThread().interrupt();
+                }
+                System.out.println(" [x] Done");
+            };
+            channel.basicConsume(QUEUE_NAME, true, deliverCallback, consumerTag -> { });
+        }
+    }
+}
+```
+
+- 生产者（Producer）: 在高峰期，当用户下单时，订单信息被发送到RabbitMQ的orderQueue队列，而不是直接处理订单。
+- 消息队列（Queue）: orderQueue队列暂存这些订单信息，充当缓冲区。
+- 消费者（Consumer）: 在系统负载较低时，消费者从orderQueue队列中取出订单信息并处理。消费者处理订单的速度可以根据系统当前的负载情况进行调整。
+

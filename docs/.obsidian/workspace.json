@@ -4,18 +4,63 @@
     "type": "split",
     "children": [
       {
-        "id": "4d4f912cbcd38929",
+        "id": "adb815312cb255e9",
         "type": "tabs",
         "children": [
           {
-            "id": "0767cd19ad943bc4",
+            "id": "0e23095889cb56b0",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {}
+              "type": "markdown",
+              "state": {
+                "file": "ShardingSphere/Basic.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "0b2d1a0379c00c87",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Distributed/Basic.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "9d5100385b121719",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Mysql/Sharding.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "8b878b03db977d44",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Network/HTTP.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
             }
           }
-        ]
+        ],
+        "currentTab": 2
       }
     ],
     "direction": "vertical"
@@ -44,7 +89,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "CAP",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -73,7 +118,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {}
+              "state": {
+                "file": "Mysql/Sharding.md"
+              }
             }
           }
         ]
@@ -90,54 +137,53 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "0767cd19ad943bc4",
+  "active": "9d5100385b121719",
   "lastOpenFiles": [
-    "Draft/Suggestion.md",
-    "SpringBoot/BeanPostProcessor.md",
-    "JUC/ForkJoin.md",
-    "Tomcat/Tomcat.md",
-    "Spring/Validation.md",
-    "SpringBoot/AOP.md",
-    "SpringBoot/IOC.md",
+    "Distributed/Basic.md",
+    "Distributed/image/Pasted image 20240728141139.png",
+    "Distributed/image",
+    "Distributed/CAP.md",
+    "Distributed/Consistent.md",
     "Interview/Basic.md",
-    "SpringBoot/Aware.md",
-    "SpringBoot/Resource.md",
-    "Spring/Resource.md",
-    "Meituan/Optimization/TPM.md",
-    "Java/Wrapper.md",
-    "Docker/Portainer.md",
-    "Design Pattern/Facade Pattern.md",
-    "Distributed/Gateway.md",
-    "Java/OOP.md",
-    "JUC/Future.md",
-    "JUC/ThreadPool.md",
-    "Promise/Promise.md",
-    "SpringBoot/SpringSecurity.md",
+    "Netty/Basic.md",
+    "Vue/Basic.md",
+    "Data Structure/Array.md",
+    "Distributed/Seata.md",
+    "Distributed/Nacos.md",
+    "ShardingSphere/Basic.md",
+    "Network/Encryption.md",
+    "Network/HTTP.md",
+    "Meituan/Other/Report.md",
+    "Meituan/Other/Review.md",
+    "Mysql/Sharding.md",
+    "Design/Weibo.md",
+    "Design/Real-Time Message Push.md",
+    "Design/image/Pasted image 20240726084947.png",
+    "Design/Basic.md",
+    "Design/image/Pasted image 20240726084148.png",
+    "Design/image",
     "Rabbitmq/Reliability.md",
-    "Java/Collection.md",
+    "Network/Connection.md",
+    "Network/Websocket.md",
+    "Meituan/Other",
+    "JUC/ThreadLocal.md",
+    "Java/NIO.md",
+    "Meituan/Origin/Basic.md",
     "Java/Exception.md",
+    "Meituan/Search",
     "Meituan/Optimization/image/Pasted image 20240709102204.png",
     "Meituan/Optimization/image/Pasted image 20240709102032.png",
     "Meituan/Optimization/image/Pasted image 20240709102022.png",
     "Meituan/Optimization/image/Pasted image 20240709102007.png",
     "Meituan/Optimization/image/Pasted image 20240709101952.png",
-    "Distributed/Seata.md",
-    "Design/Basic.md",
     "Design",
     "Meituan/Code/image/Pasted image 20240704145828.png",
     "Meituan/Code/image/Pasted image 20240704142258.png",
     "Meituan/Code/image",
-    "Meituan/Core Page/image/Pasted image 20240403173932.png",
-    "Draft/image/Pasted image 20240623182006.png",
-    "Draft/image/Pasted image 20240623181828.png",
     "Network/image",
     "ShardingSphere",
     "Mapping",
     "Deveek/Log",
-    "Deveek",
-    "PHP",
-    "POI",
-    "Poi",
     "test.canvas"
   ]
 }
