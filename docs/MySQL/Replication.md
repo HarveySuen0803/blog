@@ -128,7 +128,23 @@ start slave
 check mysql-slave status (ip: 192.168.10.12)
 
 ```sql
-show slave status;
+show slave status\G
+```
+
+```
+*************************** 1. row ***************************
+               Slave_IO_State: Waiting for source to send event
+                  Master_Host: sharding-demo-mysql-01
+                  Master_User: slave
+                  Master_Port: 3306
+                Connect_Retry: 30
+              Master_Log_File: binlog.000007
+          Read_Master_Log_Pos: 157
+               Relay_Log_File: 1b22d435fa56-relay-bin.000002
+                Relay_Log_Pos: 323
+        Relay_Master_Log_File: binlog.000007
+             Slave_IO_Running: Yes -- must be yes
+            Slave_SQL_Running: Yes -- must be yes
 ```
 
 # Consistency

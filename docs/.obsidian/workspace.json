@@ -4,16 +4,16 @@
     "type": "split",
     "children": [
       {
-        "id": "adb815312cb255e9",
+        "id": "16f30dfea99625d1",
         "type": "tabs",
         "children": [
           {
-            "id": "0e23095889cb56b0",
+            "id": "b9a6002ccf2b6710",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "ShardingSphere/Basic.md",
+                "file": "Mysql/Basic.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
@@ -21,12 +21,12 @@
             }
           },
           {
-            "id": "0b2d1a0379c00c87",
+            "id": "ec743c614f0dd029",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Distributed/Basic.md",
+                "file": "Mysql/Optimization.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
@@ -34,25 +34,12 @@
             }
           },
           {
-            "id": "9d5100385b121719",
+            "id": "389906d3543c1194",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Mysql/Sharding.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              }
-            }
-          },
-          {
-            "id": "8b878b03db977d44",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Network/HTTP.md",
+                "file": "Mysql/Primary Key.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
@@ -89,7 +76,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "CAP",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -98,7 +85,8 @@
               }
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -119,7 +107,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Mysql/Sharding.md"
+                "file": "Mysql/Primary Key.md"
               }
             }
           }
@@ -137,39 +125,40 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "9d5100385b121719",
+  "active": "389906d3543c1194",
   "lastOpenFiles": [
+    "Mysql/Optimization.md",
+    "Mysql/Primary Key.md",
+    "SpringBoot/IOC.md",
+    "Distributed/Nacos.md",
+    "Design/Batch Insert.md",
+    "JUC/ThreadPool.md",
+    "Mysql/Basic.md",
+    "Meituan/Other/Report.md",
+    "ShardingSphere/Basic.md",
+    "Mysql/Replication.md",
+    "JUC/Lock.md",
+    "SpringBoot/MyBatis.md",
+    "JUC/Future.md",
+    "LeetCode/Basic.md",
+    "Data Structure/LinkedList.md",
+    "Mybatis/MyBatis.md",
+    "Interview/Basic.md",
+    "Data Structure/Other.md",
+    "Mysql/Window Function.md",
+    "Redis/Replication.md",
+    "Docker/Network.md",
+    "Docker/Basic.md",
+    "Mysql/Sharding.md",
+    "Network/HTTP.md",
     "Distributed/Basic.md",
+    "ShardingSphere/ShardingSphere JDBC.md",
     "Distributed/image/Pasted image 20240728141139.png",
     "Distributed/image",
-    "Distributed/CAP.md",
-    "Distributed/Consistent.md",
-    "Interview/Basic.md",
-    "Netty/Basic.md",
-    "Vue/Basic.md",
-    "Data Structure/Array.md",
-    "Distributed/Seata.md",
-    "Distributed/Nacos.md",
-    "ShardingSphere/Basic.md",
-    "Network/Encryption.md",
-    "Network/HTTP.md",
-    "Meituan/Other/Report.md",
-    "Meituan/Other/Review.md",
-    "Mysql/Sharding.md",
-    "Design/Weibo.md",
-    "Design/Real-Time Message Push.md",
     "Design/image/Pasted image 20240726084947.png",
-    "Design/Basic.md",
     "Design/image/Pasted image 20240726084148.png",
     "Design/image",
-    "Rabbitmq/Reliability.md",
-    "Network/Connection.md",
-    "Network/Websocket.md",
     "Meituan/Other",
-    "JUC/ThreadLocal.md",
-    "Java/NIO.md",
-    "Meituan/Origin/Basic.md",
-    "Java/Exception.md",
     "Meituan/Search",
     "Meituan/Optimization/image/Pasted image 20240709102204.png",
     "Meituan/Optimization/image/Pasted image 20240709102032.png",

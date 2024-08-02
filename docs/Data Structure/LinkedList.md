@@ -1581,6 +1581,39 @@ public static ListNode addTwoNumbers(ListNode l1, ListNode l2) {
 }
 ```
 
+# Add Two Numbers
+
+```java
+// 先计算第一位，如果满 10 了，就进一位，通过一个 c 来表示有进位，计算第二位的时候，就需要加上刚才的那个 c
+public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
+    ListNode s = new ListNode(-1, null);
+    ListNode p = s;
+    int c = 0;
+    while (l1 != null || l2 != null || c != 0) {
+        int n1 = 0;
+        if (l1 != null) {
+            n1 = l1.val;
+            l1 = l1.next;
+        }
+
+        int n2 = 0;
+        if (l2 != null) {
+            n2 = l2.val;
+            l2 = l2.next;
+        }
+
+        int n3 = (n1 + n2 + c) % 10;
+        c = (n1 + n2 + c) / 10;
+        
+        p.next = new ListNode(n3, null);
+
+        p = p.next;
+    }
+
+    return s.next;
+}
+```
+
 # Sort List
 
 [Problem Description](https://leetcode.cn/problems/sort-list/?envType=study-plan-v2&envId=top-100-liked)

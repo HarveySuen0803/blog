@@ -52,7 +52,7 @@ MySQL 数据库的分库分表主要是为了应对大数据量或者高并发�
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202407281828538.png)
 
-常见的数据访问层封装框架：Sharding Sphere
+常见的数据访问层封装框架：ShardingSphere JDBC
 
 ### 中间件封装
 
@@ -62,4 +62,4 @@ MySQL 数据库的分库分表主要是为了应对大数据量或者高并发�
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202407281834490.png)
 
-常见的中间件封装框架：Sharding Sphere, MyCat
+常见的中间件封装框架：ShardingSphere Proxy, MyCat

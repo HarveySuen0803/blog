@@ -51,6 +51,28 @@ public static void rec(int n) {
 
 # Climbing Stairs
 
+```java
+public int climbStairs(int n) {
+    return rec(new memo[n + 1], n);
+}
+
+public int rec(int[] memo, int n) {
+    if (n < 3) {
+        return n;
+    }
+
+    if (memo[n] != 0) {
+        return memo[n];
+    }
+
+    memo[n] = rec(memo, n - 1) + rec(memo, n - 2);
+    
+    return memo[n];
+}
+```
+
+# Climbing Stairs
+
 [Explain](https://www.bilibili.com/video/BV1eg411w7gn?p=5&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java

@@ -4,12 +4,12 @@
 -- 不分组, 全部计算 sum(sal)
 select id, dept_id, name, sum(sal) over ()
 from emp;
--- id = 1, dept_id = 1, sal = 100, sum(sal) = 100 + 200 + 300 + 400
--- id = 2, dept_id = 1, sal = 200, sum(sal) = 100 + 200 + 300 + 400
--- id = 3, dept_id = 1, sal = 300, sum(sal) = 100 + 200 + 300 + 400
--- id = 4, dept_id = 2, sal = 400, sum(sal) = 100 + 200 + 300 + 400
--- id = 5, dept_id = 2, sal = 400, sum(sal) = 100 + 200 + 300 + 400
--- id = 6, dept_id = 1, sal = 400, sum(sal) = 100 + 200 + 300 + 400
+-- id = 1, dept_id = 1, sal = 100, sum(sal) = 100 + 200 + 300 + 100 + 200 + 100
+-- id = 2, dept_id = 1, sal = 200, sum(sal) = 100 + 200 + 300 + 100 + 200 + 100
+-- id = 3, dept_id = 1, sal = 300, sum(sal) = 100 + 200 + 300 + 100 + 200 + 100
+-- id = 4, dept_id = 2, sal = 100, sum(sal) = 100 + 200 + 300 + 100 + 200 + 100
+-- id = 5, dept_id = 2, sal = 200, sum(sal) = 100 + 200 + 300 + 100 + 200 + 100
+-- id = 6, dept_id = 3, sal = 100, sum(sal) = 100 + 200 + 300 + 100 + 200 + 100
 
 -- 按照 dept_id 分组, 全部计算 sum()
 select id, dept_id, name, sum(sal) over (partition by dept_id)
@@ -57,6 +57,9 @@ from emp;
 -- id = 2, sal = 200, sum(sal) = 100 + 200 + 300 + 400
 -- id = 3, sal = 300, sum(sal) = 100 + 200 + 300 + 400
 -- id = 4, sal = 400, sum(sal) = 100 + 200 + 300 + 400
+
+-- 设置作用范围，前 5 天
+select id, sal, sum(sal) over (partition by dept_id order by sal range interval '5' day preceding
 ```
 
 # Window Function

@@ -45,8 +45,6 @@ public class LRUCache {
     }
     
     public static class Node {
-        Node prev;
-        Node next;
         int key;
         int val;
         

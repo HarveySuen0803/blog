@@ -316,58 +316,6 @@ select * from A where exists (select 1 from B where A.id = B.id);
 
 `select *` 占用的空间还很大, 容易导致 Out of Buffer, 导致无法使用 Single-Way Sorting.
 
-# Primary Key
-
-Auto Increment ID 除了简单, 有一大堆问题. 只站在数据库的角度设计主键, 时非常愚蠢的, 一定要结合业务.
-
-Non Core Service 可以使用 Auto Increment ID 作 Primary Key. Core Service 可以使用 UUID 作 Primary Key.
-
-MySQL 的 UUID 是 36个字符, 但是每个字符都是通过 UTF8 存储的, 所以占用 36B, 而不是 16B, 在 MySQL8 中针对 UUID 进行了优化, 将占用从 36B 降低到了 16B, 同时可以让 UUID 的时间序列的高位放在前面, 保证单调递增.
-
-Get a UUID
-
-```sql
-select uuid();
-```
-
-```console
-+--------------------------------------+
-| @uuid                                |
-+--------------------------------------+
-| 4dc73102-8e66-11ee-bd06-a92fed1ab953 |
-+--------------------------------------+
-```
-
-Obtain the binary form of the UUID
-
-```sql
-select uuid_to_bin(uuid());
-```
-
-```console
-+----------------------------------------+
-| uuid_to_bin(@uuid)                     |
-+----------------------------------------+
-| 0x4DC731028E6611EEBD06A92FED1AB953     |
-+----------------------------------------+
-```
-
-Get the binary form of the UUID and put the high bit in front
-
-```sql
-select uuid_to_bin(uuid(), true);
-```
-
-```console
-+----------------------------------------------------+
-| uuid_to_bin(@uuid, true)                           |
-+----------------------------------------------------+
-| 0x11EE8E664DC73102BD06A92FED1AB953                 |
-+----------------------------------------------------+
-```
-
-Snowflake ID 是通过 Twitter 的 Snowflake 算法计算出来的, 可以保证不连续递增, 而且只占用 8B, 碉堡了 !!! 比 Mysql8 的 uuid() 还要牛 !!!
-
 # Incremental Query
 
 数据量过多时, 通过增量查询代替全量查询, 进行数据同步.
