@@ -546,6 +546,34 @@ public static int minDepth(TreeNode root) {
 }
 ```
 
+# Balanced Binary Tree
+
+[Problem Description](https://leetcode.cn/problems/balanced-binary-tree/)
+
+[Explain](https://www.bilibili.com/video/BV1eg411w7gn?p=30&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+```java
+public boolean isBalanced(TreeNode root) {
+    return getDepth(root) != -1;
+}
+
+public int getDepth(TreeNode node) {
+    if (node == null) {
+        return 0;
+    }
+    
+    int leftDepth = getDepth(node.left);
+    
+    int rightDepth = getDepth(node.right);
+    
+    if (leftDepth == -1 || rightDepth == -1 || Math.abs(leftDepth - rightDepth) > 1) {
+        return -1;
+    }
+    
+    return Math.max(leftDepth, rightDepth) + 1;
+}
+```
+
 # Diameter of Binary Tree
 
 [Problem Description](https://leetcode.cn/problems/diameter-of-binary-tree/?envType=study-plan-v2&envId=top-100-liked)

@@ -15,16 +15,16 @@ OLAP (Online Analytical Processing) used for analyze aggregated data, such as El
 pull ElasticSearch
 
 ```shell
-sudo docker image pull elasticsearch:8.9.0
+docker image pull elasticsearch:8.9.0
 ```
 
 set volume
 
 ```shell
-sudo docker volume create elasticsearch-config
-sudo docker volume create elasticsearch-data
-sudo docker volume create elasticsearch-plugin
-sudo docker volume create elasticsearch-log
+docker volume create elasticsearch-config
+docker volume create elasticsearch-data
+docker volume create elasticsearch-plugin
+docker volume create elasticsearch-log
 
 sudo mkdir -p /opt/elasticsearch
 
@@ -37,18 +37,16 @@ sudo ln -s /var/lib/docker/volumes/elasticsearch-log/_data /opt/elasticsearch/lo
 set ElasticSearch network
 
 ```shell
-sudo docker network create elasticsearch
+docker network create localhost
 ```
 
 startup ElasticSearch
 
 ```shell
-sudo docker container run \
+docker container run \
     --name elasticsearch \
-    --user $(id -u):$(id -g) \
-    --restart always \
     --privileged \
-    --network elasticsearch \
+    --network localhost \
     -p 9200:9200 \
     -p 9300:9300 \
     -e ES_JAVA_OPTS="-Xms512m -Xmx512m" \
@@ -70,21 +68,18 @@ access http:127.0.0.1:9200
 pull Kibana
 
 ```shell
-sudo docker image pull kibana:8.9.0
+docker image pull kibana:8.9.0
 ```
 
 startup Kibana
 
 ```shell
-sudo docker container run \
+docker container run \
     --name kibana \
-    --user $(id -u):$(id -g) \
-    --restart always \
-    --privileged \
-    --network=elasticsearch \
+    --network global \
     --privileged \
     -p 5601:5601 \
-    -e ELASTICSEARCH_HOSTS=http://192.168.10.31:9200 \
+    -e ELASTICSEARCH_HOSTS=http://elasticsearch:9200 \
     -d kibana:8.9.0
 ```
 

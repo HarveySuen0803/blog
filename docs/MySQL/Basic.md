@@ -25,8 +25,9 @@ startup MySQL
 ```shell
 docker container run \
     --name mysql \
+    --network global \
     --privileged \
-    -p 3306:3306 \
+    -p 20100:3306 \
     -v mysql-conf:/etc/mysql/conf.d \
     -v mysql-data:/var/lib/mysql \
     -v mysql-logs:/var/log/mysql \
@@ -47,9 +48,9 @@ use mysql;
 create user 'harvey'@'%' identified by '111';
 grant select, insert, update, delete, create, drop, alter on db.* to 'harvey'@'%';
 
-alter user 'root'@'%' identified with mysql_native_password by '111';
+alter user 'root'@'%' identified with caching_sha2_password by '111';
 
-alter user 'root'@'' identified with mysql_native_password by '111';
+alter user 'root'@'' identified with caching_sha2_password by '111';
 
 flush privileges;
 ```

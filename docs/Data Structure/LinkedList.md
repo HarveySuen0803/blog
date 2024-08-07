@@ -809,6 +809,8 @@ public static ListNode removeElements(ListNode node, int val) {
 
 # Remove Nth Element from End
 
+[Problem Description](https://leetcode.cn/problems/remove-nth-node-from-end-of-list/description/)
+
 ```java
 /*
     Remove the second node (nth = 2) form the end,
