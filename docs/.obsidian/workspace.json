@@ -4,16 +4,29 @@
     "type": "split",
     "children": [
       {
-        "id": "72957e9d7bdc7432",
+        "id": "4756650cb7cb319b",
         "type": "tabs",
         "children": [
           {
-            "id": "439dfb99a62cc2bd",
+            "id": "60fa9424a0a0b0c0",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Meituan/Other/Report.md",
+                "file": "JUC/ThreadLocal.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "9f7845d97003900b",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "JVM/Reference.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
@@ -58,8 +71,7 @@
               }
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -80,7 +92,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Meituan/Other/Report.md"
+                "file": "JUC/ThreadLocal.md"
               }
             }
           }
@@ -98,12 +110,26 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "439dfb99a62cc2bd",
+  "active": "60fa9424a0a0b0c0",
   "lastOpenFiles": [
+    "Rabbitmq/Basic.md",
+    "JUC/ThreadLocal.md",
+    "JVM/Reference.md",
+    "Mysql/Basic.md",
+    "JUC/JMM.md",
+    "Mapping/ModelMapper.md",
+    "Meituan/Code/publish.md",
+    "Meituan/Code/image/Pasted image 20240704142258.png",
+    "Hive/Basic.md",
+    "Hadoop/Yarn.md",
+    "Hadoop/MapReduce.md",
+    "Hadoop/Basic.md",
+    "Hive",
+    "Hadoop/HDFS.md",
+    "Meituan/Other/Report.md",
     "Elasticsearch/Basic.md",
     "Registry/Service.md",
     "XxlJob/Basic.md",
-    "Mysql/Basic.md",
     "Mysql/Backup.md",
     "Registry",
     "Redis/Basic.md",
@@ -111,22 +137,10 @@
     "Docker/Network.md",
     "SpringBoot/ElasticSearch.md",
     "Data Structure/LinkedList.md",
-    "Meituan/Other/Report.md",
     "Data Structure/BinaryTree.md",
     "Data Structure/AVLTree.md",
     "LeetCode/Basic.md",
     "Algorithm/Sort.md",
-    "Data Structure/Array.md",
-    "Mysql/Primary Key.md",
-    "Mysql/Optimization.md",
-    "SpringBoot/IOC.md",
-    "Distributed/Nacos.md",
-    "Design/Batch Insert.md",
-    "JUC/ThreadPool.md",
-    "ShardingSphere/Basic.md",
-    "Mysql/Replication.md",
-    "JUC/Lock.md",
-    "SpringBoot/MyBatis.md",
     "Distributed/image/Pasted image 20240728141139.png",
     "Distributed/image",
     "Design/image/Pasted image 20240726084947.png",
@@ -141,11 +155,9 @@
     "Meituan/Optimization/image/Pasted image 20240709101952.png",
     "Design",
     "Meituan/Code/image/Pasted image 20240704145828.png",
-    "Meituan/Code/image/Pasted image 20240704142258.png",
     "Meituan/Code/image",
     "Network/image",
     "ShardingSphere",
-    "Mapping",
     "test.canvas"
   ]
 }

@@ -167,7 +167,7 @@
   "app:toggle-left-sidebar": [
     {
       "modifiers": [
-        "Ctrl"
+        "Mod"
       ],
       "key": "9"
     }
@@ -175,7 +175,7 @@
   "app:toggle-right-sidebar": [
     {
       "modifiers": [
-        "Ctrl"
+        "Mod"
       ],
       "key": "0"
     }
