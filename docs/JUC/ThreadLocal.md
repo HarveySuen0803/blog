@@ -404,7 +404,7 @@ public class InheritableThreadLocal<T> extends ThreadLocal<T> {
 }
 ```
 
-# TransmittableThreadLocal 的介绍
+## TransmittableThreadLocal 的介绍
 
 `TransmittableThreadLocal` 是阿里巴巴开源的一个工具类，简称 TTL，它增强了 Java 自带的 `InheritableThreadLocal`，旨在解决 `ThreadLocal` 在使用线程池和异步编程时上下文传递的问题，并且在一定程度上解决了线程池中线程复用时的脏读问题和内存泄漏问题。
 
