@@ -4,16 +4,16 @@
     "type": "split",
     "children": [
       {
-        "id": "4756650cb7cb319b",
+        "id": "07396dd5e37cf6ef",
         "type": "tabs",
         "children": [
           {
-            "id": "6d8bf6561bedc88d",
+            "id": "00a6f341d194585a",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Meituan/SOP/Basic.md",
+                "file": "Hive/Basic.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
@@ -21,12 +21,12 @@
             }
           },
           {
-            "id": "b5c1347daa9f974c",
+            "id": "202c72a6f79c4577",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Mysql/Basic.md",
+                "file": "Hadoop/Basic.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
@@ -34,12 +34,38 @@
             }
           },
           {
-            "id": "9140b5248539f9aa",
+            "id": "b75e9861776400bd",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "JUC/ThreadLocal.md",
+                "file": "Hadoop/MapReduce.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "1bf54d86998c2949",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Hadoop/HDFS.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              }
+            }
+          },
+          {
+            "id": "c389e85acc06a6c8",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Hadoop/Yarn.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
@@ -47,7 +73,7 @@
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 3
       }
     ],
     "direction": "vertical"
@@ -76,7 +102,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "m",
+                "query": "OLAP",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -107,7 +133,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "JUC/ThreadLocal.md"
+                "file": "Hadoop/HDFS.md"
               }
             }
           }
@@ -125,52 +151,52 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "9140b5248539f9aa",
+  "active": "1bf54d86998c2949",
   "lastOpenFiles": [
-    "SpringBoot/MyBatisPlus.md",
-    "Mybatis/MyBatis.md",
-    "Mysql/Basic.md",
-    "Meituan/SOP/Basic.md",
-    "Meituan/Search/Basic.md",
-    "JUC/ThreadLocal.md",
-    "SpringBoot/ElasticSearch.md",
-    "Meituan/SOP",
-    "SpringBoot/AOP.md",
-    "Distributed/Nacos.md",
-    "SpringBoot/MyBatis.md",
-    "Mysql/Index.md",
-    "JVM/Reference.md",
-    "Spring/MyBatis.md",
-    "Rabbitmq/Basic.md",
-    "JUC/JMM.md",
-    "Mapping/ModelMapper.md",
-    "Meituan/Code/publish.md",
-    "Meituan/Code/image/Pasted image 20240704142258.png",
-    "Hive/Basic.md",
     "Hadoop/Yarn.md",
+    "Hadoop/HDFS.md",
     "Hadoop/MapReduce.md",
     "Hadoop/Basic.md",
-    "Hive",
-    "Hadoop/HDFS.md",
-    "Meituan/Other/Report.md",
+    "Hive/Basic.md",
+    "Draft/Network.md",
+    "Draft/image/Pasted image 20240830180443.png",
+    "Draft/image/Pasted image 20240830180327.png",
+    "Draft/image/Pasted image 20240830180319.png",
+    "Draft/image/Pasted image 20240830180000.png",
+    "Draft/image/Pasted image 20240830175644.png",
+    "Draft/image/Pasted image 20240830175541.png",
+    "Draft/image/Pasted image 20240830175532.png",
+    "Draft/image/Pasted image 20240830175243.png",
+    "Draft/image/Pasted image 20240830175159.png",
+    "Draft/image/Pasted image 20240830175041.png",
+    "SpringBoot/MyBatisPlus.md",
+    "Mysql/Index.md",
+    "SpringBoot/PageHelper.md",
+    "Mysql/Basic.md",
+    "SpringBoot/ElasticSearch.md",
+    "SpringBoot/AOP.md",
+    "Python/Basic.md",
+    "Spring/MyBatis.md",
+    "Resutful/Basic.md",
+    "Standard/Basic.md",
+    "JUC/ThreadLocal.md",
+    "Mybatis/MyBatis.md",
+    "JUC/JMM.md",
     "Elasticsearch/Basic.md",
-    "Registry/Service.md",
-    "XxlJob/Basic.md",
+    "Meituan/SOP/Basic.md",
+    "Registry/Service Port.md",
+    "Registry/Http Status Code.md",
+    "Docker/Network.md",
+    "Architecture/Availability.md",
+    "Schedule/2024.md",
+    "Meituan/SOP",
+    "Hive",
     "Registry",
-    "Distributed/image/Pasted image 20240728141139.png",
     "Distributed/image",
-    "Design/image/Pasted image 20240726084947.png",
-    "Design/image/Pasted image 20240726084148.png",
     "Design/image",
     "Meituan/Other",
     "Meituan/Search",
-    "Meituan/Optimization/image/Pasted image 20240709102204.png",
-    "Meituan/Optimization/image/Pasted image 20240709102032.png",
-    "Meituan/Optimization/image/Pasted image 20240709102022.png",
-    "Meituan/Optimization/image/Pasted image 20240709102007.png",
-    "Meituan/Optimization/image/Pasted image 20240709101952.png",
     "Design",
-    "Meituan/Code/image/Pasted image 20240704145828.png",
     "Meituan/Code/image",
     "Network/image",
     "test.canvas"
