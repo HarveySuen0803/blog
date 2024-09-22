@@ -307,6 +307,47 @@ public void m2() throws Exception {
 }
 ```
 
+## Multi Database
+
+在大型复杂项目中，经常会出现一个项目访问多个数据库的场景，不再是只局限于 application.properties 里配置的单一固定的数据库。
+
+我们内部有类似于下面这个 @Database 的注解，只要打在 Mapper 上面，后续使用该 Mapper，就会自动去访问指定的数据库。
+
+```java
+@Mapper
+@Database("db01")
+public class UserMapper {
+    public void inser(UserPo userPo);
+
+    public UserPo selectById(Long id);
+}
+
+@Mapper
+@Database("db02")
+public class OrderMapper {
+    public OrderPo selectById(Long id);
+}
+```
+
+下面这段代码通过 @Transaction 来保证事务就会存在重大漏洞，因为 @Transaction 本质上是通过 AOP 去代理连接数据库，创建事务，下面这里涉及了两个数据库，就会出现事务失效的问题。
+
+```java
+@Resource
+private UserMapper userMapper;
+
+@Resource
+private OrderMapper orderMapper;
+
+@Transaction
+public void updateOrderStatus(Long userId) {
+    userMapper.selectById();
+    // ...
+    orderMapper.selectById();
+    // ...
+    userMapper.insert();
+}
+```
+
 # Exercise
 
 ## Operation Log
