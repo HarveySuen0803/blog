@@ -10,13 +10,12 @@ CAP: Consistency, Availability, Partition 同时只能满足两个, 结点之间
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202407281411686.png)
 
-# Basic
+# BASE
 
 BASE: 对 CAP 的一种解决方案, 结点之间形成分区后, 允许 Partial Availability, 要求 Core Availability, 允许 Temporary Incosistency, 要求 Eventual Consistency
 
 - AP Mode: Sub Transaction 分别执行 Operation 和 Commit, 允许 Temporary Incosistency, 后续采用 Remedy, 保证 Eventual Consistency (eg: Redis)
 - CP mode: Sub Transaction 分别执行 Operation, 相互等待, 放弃 Partial Availability, 保证 Core Availability, 共同执行 Commit (eg: ElasticSearch)
-
 
 # Two Phase Commit
 

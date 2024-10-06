@@ -1036,6 +1036,8 @@ public void consume() throws InterruptedException {
 
 # Lock and Transaction
 
+直接给出结论，我们在开发中，应该让锁包含事务，避免事务包含锁。
+
 应该避免在 Transaction 内部使用 Lock, 这里 T1 获取锁, 修改数据, 释放锁之后, 如果发生了等待 (CPU 时间片导致), 此时事务还没有提交, 即还是 old data, T2 获取锁进来, 发现还是 old data, 就又会去执行修改
 
 ```java

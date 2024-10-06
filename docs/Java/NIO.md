@@ -83,6 +83,74 @@ NIO（New I/O），通常也被理解为 Non-blocking I/O，但它不仅仅包�
 
 NIO 通过非阻塞模式的 IO 操作增强性能和可伸缩性，特别是在构建需要高速 IO 的网络应用时。
 
+下面是一个使用 NIO 实现的最简单的服务器和客户端示例。这个示例展示了如何使用 Selector 进行非阻塞的 I/O 操作。简单看一下即可，下面的 NIO 应用示例中会重点介绍每一步的作用，最主要的就是 Selector 事件处理。
+
+```java
+public class Server {
+    public static void main(String[] args) throws IOException {
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.bind(new InetSocketAddress(8080));
+        serverSocketChannel.configureBlocking(false);
+        
+        // 将服务器通道注册到选择器，监听连接事件
+        Selector selector = Selector.open();
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+        
+        while (true) {
+            // 阻塞等待事件
+            selector.select();
+            
+            // 获取所有事件的集合
+            Set<SelectionKey> selectionKeys = selector.selectedKeys();
+            Iterator<SelectionKey> iterator = selectionKeys.iterator();
+            
+            while (iterator.hasNext()) {
+                SelectionKey key = iterator.next();
+                
+                if (key.isAcceptable()) {
+                    // 处理连接事件
+                    ServerSocketChannel ssc = (ServerSocketChannel) key.channel();
+                    SocketChannel socketChannel = ssc.accept();
+                    socketChannel.configureBlocking(false);
+                    socketChannel.register(selector, SelectionKey.OP_READ);
+                    System.out.println("Connected to " + socketChannel);
+                } else if (key.isReadable()) {
+                    // 处理读事件
+                    SocketChannel socketChannel = (SocketChannel) key.channel();
+                    ByteBuffer buffer = ByteBuffer.allocate(256);
+                    int bytesRead = socketChannel.read(buffer);
+                    if (bytesRead == -1) {
+                        socketChannel.close();
+                    } else {
+                        buffer.flip();
+                        System.out.println("Received: " + new String(buffer.array(), 0, buffer.limit()));
+                    }
+                }
+                
+                // 移除处理过的键
+                iterator.remove();
+            }
+        }
+    }
+}
+```
+
+```java
+public class Client {
+    public static void main(String[] args) throws IOException {
+        SocketChannel socketChannel = SocketChannel.open();
+        socketChannel.configureBlocking(false);
+        socketChannel.connect(new InetSocketAddress("127.0.0.1", 8080));
+        // 等待连接完成
+        while (!socketChannel.finishConnect()) {}
+        // 发送数据
+        ByteBuffer buffer = ByteBuffer.wrap("hello world".getBytes(StandardCharsets.UTF_8));
+        socketChannel.write(buffer);
+        socketChannel.close();
+    }
+}
+```
+
 ### AIO 介绍
 
 AIO (Asynchronous IO)，也称为 NIO.2，是在 JDK7 中引入的一种新的 IO 模型。它是对 NIO 的扩展，引入了异步通道的概念，使得 IO 操作可以完全异步执行，从而提高了大规模 IO 处理的性能和可伸缩性。
@@ -1066,6 +1134,39 @@ if (key.isAcceptable()) {
 1045248
 1045248
 1022776
+```
+
+### SelectorProvider 介绍
+
+SelectorProvider 是 Java NIO 的一个抽象类，用于创建与底层平台相关的 Selector、ServerSocketChannel、SocketChannel、DatagramChannel 等通道及选择器的工厂。它提供了一种机制，使得 Java NIO 可以在不同的平台上拥有不同的实例，以便更好地利用平台特性。
+
+```java
+// 获取默认的 SelectorProvider
+SelectorProvider provider = SelectorProvider.provider();
+
+// 使用 SelectorProvider 创建 Selector
+Selector selector = provider.openSelector();
+
+// 使用 SelectorProvider 创建 ServerSocketChannel
+ServerSocketChannel serverSocketChannel = provider.openServerSocketChannel();
+```
+
+`ServerSocketChannel.open()` 和 `Selector.open()` 的底层实现都是通过调用 SelectorProvider 的方法来完成的。
+
+```java
+public abstract class ServerSocketChannel extends AbstractSelectableChannel implements NetworkChannel {
+    public static ServerSocketChannel open() throws IOException {
+        return SelectorProvider.provider().openServerSocketChannel();
+    }
+}
+```
+
+```java
+public abstract class Selector implements Closeable {
+    public static Selector open() throws IOException {
+        return SelectorProvider.provider().openSelector();
+    }
+}
 ```
 
 ### 多线程优化

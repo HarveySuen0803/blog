@@ -309,13 +309,11 @@ public void m2() throws Exception {
 
 ## Multi Database
 
-在大型复杂项目中，经常会出现一个项目访问多个数据库的场景，不再是只局限于 application.properties 里配置的单一固定的数据库。
-
-我们内部有类似于下面这个 @Database 的注解，只要打在 Mapper 上面，后续使用该 Mapper，就会自动去访问指定的数据库。
+在我们的项目中，会需要去访问多个数据库，不只局限于 `application.properties` 里配置的单一固定的数据库。我们内部有类似于下面这个 `@Database` 的注解，只要打在 Mapper 上面，后续使用该 Mapper，就会自动去访问指定的数据库。(我后续可以出文章来解释一下这个 `@Database` 是如何实现的)
 
 ```java
 @Mapper
-@Database("db01")
+@Database("db01") // UserMapper 访问 db01
 public class UserMapper {
     public void inser(UserPo userPo);
 
@@ -323,13 +321,13 @@ public class UserMapper {
 }
 
 @Mapper
-@Database("db02")
+@Database("db02") // OrderMapper 访问 db01
 public class OrderMapper {
     public OrderPo selectById(Long id);
 }
 ```
 
-下面这段代码通过 @Transaction 来保证事务就会存在重大漏洞，因为 @Transaction 本质上是通过 AOP 去代理连接数据库，创建事务，下面这里涉及了两个数据库，就会出现事务失效的问题。
+下面这段代码通过 `@Transaction` 来保证事务就会存在问题，因为 `@Transaction` 本质上是通过 AOP 去代理连接数据库，默认会选择第一个数据源建立事务。下面这里涉及了两个数据库，就会出现事务失效的问题。
 
 ```java
 @Resource
@@ -338,12 +336,23 @@ private UserMapper userMapper;
 @Resource
 private OrderMapper orderMapper;
 
-@Transaction
+@Transactional
 public void updateOrderStatus(Long userId) {
     userMapper.selectById();
     // ...
     orderMapper.selectById();
     // ...
+    userMapper.insert();
+}
+```
+
+这里本质上就是分布式事务的场景，可以考虑使用用一下分布式事务的组件来解决。
+
+```java
+@GlobalTransactional
+public void updateOrderStatus(Long userId) {
+    userMapper.selectById();
+    orderMapper.selectById();
     userMapper.insert();
 }
 ```
