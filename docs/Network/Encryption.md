@@ -1,8 +1,8 @@
-# Encryption
+### Encryption
 
 在网络传输中，加密算法主要用于保护数据的机密性、完整性和真实性。常见的加密算法分为对称加密和非对称加密。
 
-# Symmetric Key Cryptography
+### Symmetric Key Cryptography
 
 对称加密的关键动作：
 
@@ -23,7 +23,7 @@
 
 对称加密的算法都要内置在客户端和服务端，而常见的服务端程序都是开源的，比如 Nignx 就是开源的，所以算法也是公开的，无法保障安全，秘钥需要通过网络传输，非常的不安全。
 
-# Asymmetric Key Cryptography
+### Asymmetric Key Cryptography
 
 非对称加密的关键动作：
 
@@ -38,9 +38,15 @@
 
 非对称加密的流程：
 
-- A 和 B 互为发送方和接收方，A 和 B 都需要生成一对公钥和私钥，分别是 public_a, private_a, public_b, private_b，其中 private_a 安全存储在 A 的那里，private_b 安全存储在 B 的那里。
-- A 想要发送消息给 B，就需要通过 public_b 进行加密，得到秘文，通过 private_a 进行签名，然后传输秘文和签名给 B。
-- B 接收到数据后，通过 private_b 进行解密，得到明文，通过 public_a 验证签名，防止篡改。
+- A 和 B 互为发送方和接收方，A 和 B 都需要生成一对公钥和私钥，分别是 PubA, PrvA, PubB, PrvB。
+- A 准备一条消息 M（例如 "Hello, B!"）。
+- A 对 M 进行哈希计算，得到一个固定长度的哈希值 H(M) = 0x1234abcd...
+- A 使用自己的私钥 PrvA 对 H(M) 进行加密，生成数字签名 SigA = Encrypt(PrivA, H(M)) = 0x5678efgh...。
+- A 将明文消息 M 和数字签名 SigA 打包成一个消息包 {M, SigA}
+- A 使用 PubB 对消息包加密，生成密文 Encrypted_Message = Encrypt(PubB, {"Hello, B!", 0x5678efgh...})，并发送给 B。
+- B 使用 PrvB 对秘文解密，得到消息包 {M, SigA} = Decrypt(PrvB, Encrypted_Message)
+- B 使用 PubA 对 SigA 进行解密，得到 H(M) = Decrypt(PubA, SigA) = 0x1234abcd...
+- B 对 M 进行哈希计算，得到 H'(M)，再对比 H'(M) 和 H(M)，验证是否发生篡改。
 
 非对称加密的优点：
 
@@ -56,7 +62,7 @@
 
 - 攻击端依旧可以伪造服务方，发送假公钥给客户端，让客户端和服务端进行交互，攻击端再去跟服务端进行交互，所以只靠非对称加密无法保证安全，还是需要借助 TLS 来保障安全。
 
-# TLS
+### TLS
 
 HTTPS（HyperText Transfer Protocol Secure）使用 TLS（Transport Layer Security）或其前身 SSL（Secure Sockets Layer）协议来加密HTTP通信。HTTPS的凭证主要是数字证书，通常由受信任的证书颁发机构（CA）签发。
 

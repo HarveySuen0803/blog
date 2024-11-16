@@ -483,3 +483,40 @@ public static int quickSqrt(int x) {
     return res;
 }
 ```
+
+# Local Minimum
+
+[Explain 01:42:07](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=3)
+
+```java
+public int rec(int[] arr) {
+    // 判断第一个元素是否为局部最小
+    if (arr[0] < arr[1]) {
+        return arr[0];
+    }
+    // 判断最后一个元素是否为局部最小
+    if (arr[arr.length - 1] < arr[arr.length - 2]) {
+        return arr[arr.length - 1];
+    }
+    // 二分递归寻找局部最小
+    return rec(arr, 0, arr.length - 1);
+}
+
+public int rec(int[] arr, int l, int r) {
+    // 判断中间的元素是否为局部最小
+    int m = (l + r) >>> 1;
+    if (arr[m - 1] <= arr[m] <= arr[m + 1]) {
+        return arr[m];
+    }
+
+    // 如果左边的比中间的小，说明左边肯定有局部最小
+    if (arr[m - 1] <= arr[m]) {
+        return rec(arr, l, m - 1);
+    }
+    // 如果右边的比中间的小，说明右边肯定有局部最小
+    if (arr[m + 1] <= arr[m]) {
+        return rec(arr, l, m + 1);
+    }
+}
+```
+

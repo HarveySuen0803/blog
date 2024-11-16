@@ -121,7 +121,7 @@ Hash 在插入和删除上非常简单, B+ Tree 需要去考虑树的平衡问�
 
 # Clustered Index
 
-Clustered Index 是以 Primary Key 作为 Index. Leaf Node 存储的是数据.
+Clustered Index 是以 Primary Key 作为 Index. 默认情况下, 所有的数据就存储在这个 Clustered Index 的 Leaf Node 中.
 
 Non Clustered Index 是以 Non Primary Key 作为 Index. Leaf Node 存储的是 Primary Key, 需要再通过 Clustered Index 找到数据.
 
@@ -157,7 +157,7 @@ MyISAM 的所有 Index 都是 Non Clustered Index, 但是 MyISAM 直接拿到的
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241727312.png)
 
-# Page Structure
+# Page
 
 Page 包含 File Header, Page header, Infimum, Supremum, User Records, FreeSpace, Page Directory, File Tailer. 其中 Infimum, Supremum, User Records, FreeSpace 又称为 File Space, 占据了主要部分.
 
@@ -173,15 +173,17 @@ FIL_PAGE_TYPE 是 Page 的 类型, 如 0x0002 表示 FIL_PAGE_UNDO_LOG 是 Undo 
 
 FIL_PAGE_PREV 存储了前一个 Page 的 Offset, FIL_PAGE_NEXT 存储了后一个 Page 的 Offset.
 
-FIL_PAGE_SPACE_OR_CHECKSUM 存储 Current Page 的 CheckSum, 类似于 Hash Code, 可以将一个 Long String 转成一个 Short String, 这个 Short String 就是 CheckSum. 比较两个 Long Sring 是否相同时, 就可以先获取两个 Long String 的 CheckSum, 然后比较两个 CheckSum 是否相同即可.
+FIL_PAGE_SPACE_OR_CHECKSUM 存储 Current Page 的 CheckSum，根据 Page 的数据内容计算出的 Hash Code，可用于校验 Page 数据完整性。从硬盘读取整个 Page 后，对数据内容进行 Hash 计算得到一个 CheckSum，再对比 File Header 里的 CheckSum，即可确认数据是否完整。
 
-CheckSum 还可用于校验 Data Integrity, 类似于 md5. 传输数据时, 会先传输 File Header, 即现修改 File Hedader 的 CheckSum, 最后传输 File Trailer, 即最后修改 File Trailer 的 CheckSum, 比较两个 CheckSum 是否相同, 即可判断传输是否完整. 如果中途发生意外, 则 File Header 的 CheckSum 是最新的, 而 File Trailer 的 CheckSum 是旧的, 两个 CheckSum 不相同, 即可判断为传输错误, 后续还可以借助 Undo Log 恢复.
+- CheckSum 还可用于比较两个长字符串，如果字符串太长，逐个字符比较耗时太久，可先对两个长字符串进行 Hash 计算，得到两个短的 Hash 字符串，再比较这两个短的 Hash 字符串即可。
 
 FIL_PAGE_LSN 存储修改的日志, 也会用于跟 FileTrailer 的 FIL_PAGE_LSN 进行比较, 以校验 Data Integrity.
 
 ## File Trailer
 
-File Trailer 存储了 FIL_PAGE_SPACE_OR_CHECKSUM, FIL_PAGE_LSN 用于校验 Data Integrity.
+File Trailer 存储了 FIL_PAGE_SPACE_OR_CHECKSUM 用于备份 CheckSum，同时存储了 FIL_PAGE_LSN 事务日志序列号 用于恢复或修复数据。
+
+如果 File Header 的 checkSum 校验失败，InnoDB 会进一步检查 File Trailer 中的 checkSum 或 LSN。通过对比 Trailer 中的校验值或与事务日志匹配，确认是否可以恢复或修复数据。
 
 ## Infimum, Supremum
 
@@ -219,63 +221,49 @@ PAGE_N_DIRECTION 记录了重复同一个方向的次数, 如果下一次方向�
 
 PAGE_LEVEL 记录了 Current Page 在 B+ Tree 中的 Level.
 
-# Record Structure
+# Record
+
+## Row Format
+
+Row Format（行格式）指的是表中数据在物理存储层的布局方式。不同的 Row Format 影响了数据存储的效率、空间占用和支持的功能。主要的 Row Format 包括 Compact (def), Redundant, Dynamic, Compressed 四种。
 
 Compact Row Format Structure
 
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241727316.png)
+```
+[Record Header] --> 元信息：事务 ID、回滚指针等
+[NULL Bitmap]   --> 每列占 1 位，记录 NULL 状态（若所有列为 NOT NULL，则无此部分）
+[Field Offsets] --> 变长列的结束位置
+[Column Data]   --> 按列顺序紧凑存储
+```
 
 Redudant Row Format Structure
 
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241727317.png)
+```
+[Record Header] --> 包括元信息，如事务 ID、回滚指针等
+[NULL List]     --> 存储哪些列值为 NULL
+[Column Offset] --> 每列的开始和结束位置（每列存储两次偏移量 [Start, End]）
+[Column Data]   --> 按顺序存储列数据
+```
 
-一个 Page 只能存储 16384 B, 而一个 varchar Field 就能干到 65535 B, 直接把 Page 干溢出了, 这就是 Row Overflow.
+Dynamic Row Format Structure
 
-Dynamic Row Format 和 Compressed Row Format 在处理 Row OverFlow 时, 会将全部的数据存储到 Other Page 中, Current Page 再存储 Other Page 的 Offset 和 Info.
+```
+[Record Header] --> 元信息：事务 ID、回滚指针等
+[NULL Bitmap]   --> 每列占 1 位，记录 NULL 状态
+[Field Offsets] --> 变长列的结束位置
+[Column Data]   --> 大字段可能存储为指针，指向溢出页
+```
 
-Compact Row Format 和 Redudant Row Format 在处理 Row OverFlow 时, 会将部分数据存储到 Current Page 中, 再将剩余数据存储到 Other Page 中, Current Page 再用 20 B 存储 Other Page 到 Offset 和 Info.
+Compressed Row Format Structure
 
-Compact Row Format 和 Redudant Row Format 到区别, 主要就在于 Field Length List 和 Field Offset List
-
-## Field Length List
-
-Field Length List 会记录 Varchar Field 真实需要使用的大小, 实现动态调整存储大小.
-
-## Null List
-
-如果不标识 NULL, 就会导致查询混乱, 如果通过一个符号标识 Null, 还得分配对应的存储空间来占位, 太浪费空间了, 也不划算, 所以干脆单独维护一个 Null List, 专门记录哪些 Field 为 Null.
-
-如果 Field 指定了 NOT NULL 后, 就不会记录到 Null List 中. 如果 Table 中的所有 Field 都指定了 NOT NULL, 那么该 Record 就不会存储 Null List.
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241727318.png)
-
-1 个 Varchar Field 按道理讲可以设置为 65535 B, 但实际上只能设置为 65532 B, 其中 Field Length List 占用 2 B, Null List 占用 1 B. 如果该 Table 只有一个 Varchar Field, 并且该 Field 指定了 NOT NULL, 那么就不会生成 Null List, 还可以再剩下 1 B, 即最大设置为 65533 B.
-
-## Field Offset List
-
-Field Offset List 存储了所有 Field 的 Offset, 非常冗余, 但是处理 NULL 时, 就不需要维护 Null List 了, 稍微简单一点. 所以 Field Length List + Null List 就能完全代替 Field Offset List.
-
-Field Offset List 存储的是 Field 的 Offset, 获得 Offset 后, 需要计算得到 Field Length.
-
-## Record Header Info
-
-Record Header Info 由 Reserved 1, Reserved 2, delete_mask, min_rec_mas, n_owned, heap_no, record_type, next_record 组成.
-
-delete_mask 标识该 Record 是否被删除了, 0 表示未删除, 1 表示已删除. MySQL 删除数据就是通过这种标识的方式, 防止删除后引起 Reorder 或 Page Divided 非常影响性能. 后续添加新纪录时, 可以直接覆盖.
-
-record_type 标识 Record 的 Type. 0 表示 Data Record, 1 表示 Directory Record, 2 表示 Infimum Record, 3 表示 Supremum Record.
-
-min_rec_mask 标识 Non Leaf Node 的最小 Record.
-
-next_record 存储了 Next Record 的 Offset.
-
-n_owned 存储 Current Record 所在的分组中 Record 的数量, 只有该组中最大 Record 才会记录该属性, 其他的 Record 都默认是 0.
-
-heap_no 存储了 Current Record 在 Page 中的位置. Infimum 的 heap_no 为 0, supremum 的 heap_no 为 1.
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241727319.png)
-
-# Row Format
+```
+[Compressed Page Header] --> 包含压缩元信息
+[Compressed Data]         --> 压缩后的数据
+[Record Header]           --> 元信息：事务 ID、回滚指针
+[NULL Bitmap]             --> 每列占 1 位，记录 NULL 状态
+[Field Offsets]           --> 变长列的结束位置
+[Column Data]             --> 数据解压后存储在主记录或溢出页
+```
 
 查看 MySQL 的 Default Row Format
 
@@ -300,6 +288,72 @@ create table emp (id int) row_format = compact;
 ```sql
 alter table emp row_format = compact;
 ```
+
+## Row OverFlow
+
+一个 Page 只能存储 16384 B, 而一个 varchar Field 就能干到 65535 B, 直接把 Page 干溢出了, 这就是 Row Overflow.
+
+Dynamic 和 Compressed 在处理 Row OverFlow 时, 会将全部的数据存储到 Other Page 中, Current Page 再存储 Other Page 的 Offset 和 Info.
+
+Compact 和 Redudant 在处理 Row OverFlow 时, 会将部分数据存储到 Current Page 中, 再将剩余数据存储到 Other Page 中, Current Page 再用 20 B 存储 Other Page 到 Offset 和 Info.
+
+## Null List
+
+如果不标识 NULL, 就会导致查询混乱, 如果通过一个符号标识 Null, 还得分配对应的存储空间来占位, 太浪费空间了, 也不划算, 所以干脆单独维护一个 Null List, 专门记录哪些 Field 为 Null.
+
+如果 Field 指定了 NOT NULL 后, 就不会记录到 Null List 中. 如果 Table 中的所有 Field 都指定了 NOT NULL, 那么该 Record 就不会存储 Null List.
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241727318.png)
+
+1 个 Varchar Field 按道理讲可以设置为 65535 B, 但实际上只能设置为 65532 B, 其中 Field Length List 占用 2 B, Null List 占用 1 B. 如果该 Table 只有一个 Varchar Field, 并且该 Field 指定了 NOT NULL, 那么就不会生成 Null List, 还可以再剩下 1 B, 即最大设置为 65533 B.
+
+## Null Bitmap
+
+Null List 采用链表结构，存储开销还是蛮大的，查询效率也较低，需要遍历整个 NULL List 才能判断列是否为 NULL。
+
+NULL Bitmap 采用位图表示每一列的 NULL 状态，每列占用 1 位：0 表示非 NULL，1 表示 NULL。节省空间，每列只占用 1 位。查询效率高，通过简单的位运算即可快速判断列的 NULL 状态。同时因为紧凑存储的原因，就更容易实现顺序 IO。
+
+查询优势，假设一个表有 100 列，其中 50 列可为空，经常需要判断某些列是否为 NULL。
+
+- Null List：每次查询需要遍历 NULL List，复杂度为 O(n)，在列数较多时性能明显下降。
+- Null Bitmap：判断某列是否为 NULL 只需简单的位运算，操作复杂度为 O(1)。
+
+存储优势，假设一个表有 1 亿条记录，每条记录有 20 列，其中 10 列允许为 NULL。
+
+- Null List：如果每条记录有 3 列为 NULL，每列占用 1 字节表示字段索引，总开销为 1亿 * 3字节 = 300MB。
+- Null Bitmap：每条记录的 Null Bitmap 占用 10 位（约 2 字节），总开销位 1亿 * 3字节 = 200MB
+
+## Field Offset List
+
+Field Offset List 存储的是 Field 的 Offset，可以用于快速定位到每个字段。
+
+目前 Compact、Dynamic 和 Compressed 采用的是 Field Offset List，而 Redundant 采用的是 Column Offset List。
+
+## Column Offset List
+
+Column Offset List 是一张列偏移量表，用于记录每个列的 开始位置 和 结束位置，这意味着每个变长列的起始位置和结束位置都被存储在行记录的元数据中。
+
+## Field Length List
+
+Field Length List 会记录 Varchar Field 真实需要使用的大小，实现动态调整存储大小，Field Length List + Null List 可以完全代替 Field Offset List。
+
+## Record Header
+
+Record Header 由 Reserved 1, Reserved 2, delete_mask, min_rec_mas, n_owned, heap_no, record_type, next_record 组成.
+
+delete_mask 标识该 Record 是否被删除了, 0 表示未删除, 1 表示已删除. MySQL 删除数据就是通过这种标识的方式, 防止删除后引起 Reorder 或 Page Divided 非常影响性能. 后续添加新纪录时, 可以直接覆盖.
+
+record_type 标识 Record 的 Type. 0 表示 Data Record, 1 表示 Directory Record, 2 表示 Infimum Record, 3 表示 Supremum Record.
+
+min_rec_mask 标识 Non Leaf Node 的最小 Record.
+
+next_record 存储了 Next Record 的 Offset.
+
+n_owned 存储 Current Record 所在的分组中 Record 的数量, 只有该组中最大 Record 才会记录该属性, 其他的 Record 都默认是 0.
+
+heap_no 存储了 Current Record 在 Page 中的位置. Infimum 的 heap_no 为 0, supremum 的 heap_no 为 1.
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241727319.png)
 
 # Extent
 

@@ -1,11 +1,3 @@
-# IOC
-
-IOC (Inversion of Control) 一种设计原则, 用于减小计算机程序中各模块之间的依赖关系. 我们只需要定义一个 Bean 的创建过程, 而真正的创建, 初始化, 装配, 生命周期都由 Container (eg: ApplicationContext, BeanFactory) 管理. 通过 DI 注入对象, 只需要关注自己的核心逻辑, 而不需要关注如何获取其他对象.
-
-IOC 最佳实践了 Singleton 和 Fast Fail, 不仅可以节省大量不必要的对象创建, 防止 GC, 还在项目启动时, 就实例化所有的 Bean, 可以将 Bean 的创建由运行期提前至启动期, 在启动时期就可以检测出问题, 而不是在运行时遇到问题停机. Singleton 是不可变状态, 可以保证线程安全.
-
-IOC 最佳实践了 DIP (Dependence Inversion Principle), 高层模块不直接依赖低层模块, 而是依赖低层模块的抽象, 低层模块去实现抽象 (eg: Controller 通过 Service 访问 ServcieImpl), 实现 Decoupling, 同时接口的引入便于后续扩展, 便于引入 Design Pattern (JDK's Dynamic Proxy).
-
 # @SpringBootApplication
 
 SpringBootApplication.java
@@ -460,105 +452,6 @@ public class UserDaoImpl implements UserDao {}
 public interface EmpMapper {}
 ```
 
-# Bean Lifecycle
-
-Spring 创建 Bean 的过程
-
-- 调用 loadBeanDefinitions() 扫描 XML 或 Annotation 声明的 Bean, 封装成 BeanDefinition Obj 放入 beanDefinitionMap 中, 再遍历 beanDefinitionMap, 通过 createBean() 创建 Bean
-- 调用 createBeanInstance() 构建 Bean Instance, 去获取 Constructor, 先准备 Constructor 需要的 Parameter, 再执行 Constructor
-- 调用 populateBean() 填充 Bean, 通过 Three-Level Cache 去注入当前 Bean 所依赖的 Bean (通过 @Autowired 注入的 Bean)
-
-Spring 初始化 Bean 的过程
-
-- 调用 initializeBean() 初始化 Bean
-- 调用 invokeAwareMethods() 去填充 Bean 实现的 Aware 信息, Bean 有可能实现了 BeanNameAware, BeanFactoryAware 或 ApplicationContextAware 去扩展 Bean (类似于 Neddle, 可以感知到 Bean Lifecycle 中的信息)
-- 调用 applyBeanProcessorsBeforeInitialization() 去处理 Bean 实现的 BeanPostProcessor 的 postProcessBeforeInitialization()
-- 调用 Bean 中添加了 @PostConstruct 的 Init Method
-- 调用 Bean 实现的 InitializingBean 的 afterPropertiesSet()
-- 调用 Bean 中添加了 @Bean(initMethod = "initMethod") 的 Init Method
-- 调用 applyBeanProcessorsAfterInitialization() 去处理 Bean 实现的 BeanPostProcessor 的 postProcessAfterInitialization(), AOP 动态代理就是由该 Processor 实现的
-- 调用 registerDisposableBean() 注册实现了 Disposable 的 Bean, 这样销毁时, 就会自动执行 destroy()
-- 调用 addSingleton() 将 Bean 放入 singletonObjects 中, 后续使用 Bean 都是从 singletonObjects 中获取
-
-jSpring 销毁 Bean 的过程
-
-- 调用 Bean 中添加了 @PreDestroy 的 Destroy Method
-- 调用 destroyBeans() 遍历 singletonObjects, 逐一销毁所有的 Bean, 这个过程会依次执行 Bean 的 destroy()
-- 调用 Bean 中添加了 @Bean(destroyMethod = "destroyMethod") 的 Destroy Method
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401081756800.png)
-
-```java
-@Component
-public class User implements BeanNameAware, BeanFactoryAware, ApplicationContextAware, InitializingBean {
-    public User() {
-        System.out.println("User()");
-    }
-    
-    @PostConstruct
-    public void init() {
-        System.out.println("init()");
-    }
-    
-    @PreDestroy
-    public void destroy() {
-        System.out.println("destroy()");
-    }
-    
-    @Override
-    public void setBeanName(String name) {
-        System.out.println("setBeanName()");
-    }
-    
-    @Override
-    public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
-        System.out.println("setBeanFactory()");
-    }
-    
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        System.out.println("setApplicationContext()");
-    }
-    
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        System.out.println("afterPropertiesSet()");
-    }
-}
-```
-
-```java
-@Component
-public class UserProcessor implements BeanPostProcessor {
-    @Override
-    public Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-        if (beanName.equals("user")) {
-            System.out.println("postProcessBeforeInitialization()");
-        }
-        return bean;
-    }
-    
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        if (beanName.equals("user")) {
-            System.out.println("postProcessAfterInitialization()");
-        }
-        return bean;
-    }
-}
-```
-
-```console
-User()
-setBeanName()
-setBeanFactory()
-setApplicationContext()
-postProcessBeforeInitialization()
-init()
-afterPropertiesSet()
-postProcessAfterInitialization()
-```
-
 # Load Properties
 
 application.properties, 配置 properties
@@ -676,6 +569,69 @@ A Runner is running
 B Runner is running
 ```
 
+# Circular Reference
+
+这里 A Bean 的初始化阶段需要调用 populateBean() 去填充 B Bean, 需要去创建 B Bean, 而 B Bean 的初始化阶段需要调用 populateBean() 去填充 A Bean 产生 Circular Reference
+
+```java
+@Component
+public class A {
+    @Autowired
+    private B b;
+}
+```
+
+```java
+@Component
+public class B {
+    @Autowired
+    private A a;
+}
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401151818697.png)
+
+# Circular Reference (Constructor)
+
+Spring 无法解决 Constructor 引起的 Circular Reference.
+
+Bean Lifecycle 的 populateBean() 中通过 Three-Level Cache 解决了 Circular Reference, 而 createBeanInstance() 是早于 populateBean() 的. A 执行 createBeanInstance() 时, 在 Constructor 中需要去获取 B, 此时 Bean 只存储在 beanDefinitionMap 中, Spring 的 createBeanInstance() 并没有去解决 Circular Reference.
+
+```java
+@Component
+public class A {
+    private B b;
+
+    public A(B b) {
+        this.b = b;
+    }
+}
+```
+
+```java
+@Component
+public class B {
+    private A a;
+
+    public B(A a) {
+        this.a = a;
+    }
+}
+```
+
+通过 @Lazy 延迟加载 A 或 B, 可以解决这个 Circular Reference
+
+```java
+@Component
+public class A {
+    private B b;
+
+    public A(@Lazy B b) {
+        this.b = b;
+    }
+}
+```
+
 # @PostConstructor
 
 @PostConstruct 用于在依赖注入完成后, 进行一些初始化操作, 这个注解的方法在 Bean 初始化 (构造函数执行之后) 立即执行.
@@ -739,267 +695,4 @@ public Emp emp() {
 ```java
 // 如果 application.properties 有 name = "sun", age = "18", Container 就添加 Bean
 @ConditionalOnProperty(name = "sun", age = "18")
-```
-
-# My IOC
-
-annotation/MyComponent.java
-
-```java
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface MyComponent {}
-```
-
-annotation/MyAutoWired.java
-
-```java
-@Target({ElementType.FIELD})
-@Retention(RetentionPolicy.RUNTIME)
-public @interface MyAutoWired {}
-```
-
-MyApplicationContext.java
-
-```java
-public interface MyApplicationContext {
-    Object getBean(Class cls);
-}
-```
-
-MyAnnotationApplicationContext.java
-
-```java
-public class MyAnnotationApplicationContext implements MyApplicationContext {
-    private Map<Class, Object> beanMap = new HashMap<>();
-
-    @Override
-    public Object getBean(Class cls) {
-        return beanMap.get(cls);
-    }
-
-    public MyAnnotationApplicationContext(String pkgUrl) {
-        try {
-            pkgUrl = pkgUrl.replaceAll("\\.", "/");
-            // get absolute urls
-            Enumeration<URL> urls = Thread.currentThread().getContextClassLoader().getResources(pkgUrl);
-            while (urls.hasMoreElements()) {
-                URL url = urls.nextElement();
-                String dirPath = URLDecoder.decode(url.getFile(), StandardCharsets.UTF_8); // eg. project/target/classes/com/harvey
-                String baseDirPath = dirPath.substring(0, dirPath.length() - pkgUrl.length()); // eg. project/target/classes/
-                loadBean(new File(dirPath), baseDirPath);
-            }
-            loadAutoWired();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    // add Class with @MyComponent Annotation to the beanMap
-    public void loadBean(File dir, String baseDirPath) throws Exception {
-        if (!dir.isDirectory()) {
-            return;
-        }
-        File[] files = dir.listFiles();
-        if (files == null) {
-            return;
-        }
-        for (File file : files) {
-            if (file.isDirectory()) {
-                loadBean(file, baseDirPath);
-                continue;
-            }
-            String filePath = file.getAbsolutePath().substring(baseDirPath.length()); // eg. com/harvey/bean/UserServiceImpl.class
-            if (!filePath.contains(".class")) {
-                continue;
-            }
-            String fullClassName = filePath.replaceAll("/", "\\.").replace(".class", ""); // eg. com.harvey.bean.UserServiceImpl.class
-            Class<?> cls = Class.forName(fullClassName);
-            if (cls.isInterface()) {
-                continue;
-            }
-            if (cls.getAnnotation(MyComponent.class) == null) {
-                continue;
-            }
-            Object obj = cls.getConstructor().newInstance();
-            if (cls.getInterfaces().length > 0) {
-                // key is Interface, value is  Object
-                beanMap.put(cls.getInterfaces()[0], obj);
-            } else {
-                // key is Class, value is Object
-                beanMap.put(cls, obj);
-            }
-        }
-    }
-
-    // inject Object to the Field with @MyAutoWired Annotation
-    public void loadAutoWired() throws IllegalAccessException {
-        for (Map.Entry<Class, Object> entry : beanMap.entrySet()) {
-            Class cls = entry.getKey();
-            Object obj = entry.getValue();
-            // set cls to obj's Class to get Field
-            if (cls.isInterface()) {
-                cls = obj.getClass();
-            }
-            Field[] fields = cls.getDeclaredFields();
-            for (Field field : fields) {
-                if (field.getAnnotation(MyAutoWired.class) == null) {
-                    continue;
-                }
-                field.setAccessible(true);
-                field.set(obj, beanMap.get(field.getType()));
-            }
-        }
-    }
-}
-```
-
-UserService.java
-
-```java
-public interface UserService {
-    void show();
-}
-```
-
-UserServiceImpl.java
-
-```java
-@MyComponent
-public class UserServiceImpl implements UserService {
-    @MyAutoWired
-    private UserDao userDao;
-
-    @Override
-    public void show() {
-        System.out.println(userDao);
-    }
-}
-```
-
-App.java
-
-```java
-MyApplicationContext applicationContext = new MyAnnotationApplicationContext("com.harvey");
-UserService userService = (UserService) applicationContext.getBean(UserService.class);
-userService.show();
-```
-
-# Three-Level Cache
-
-Spring 的 DefaultSingletonBeanRegistry Cls 中声明了 singletonObjects (ConcurrentHashMap), earlySingletonObjects (ConcurrentHashMap) 和 singletonFactories (HashMap) 用于实现 Three-Level Cache
-
-- singletonObjects 是 Lv1 Cache, 存放经历了完整 Life Cycle 的 Bean Obj
-  - singletonObjects 的 Key 为 Bean Name, Val 为 Bean Obj
-  - 通过 applicationContext.getBean() 获取 Bean 就是访问 singletonObjects 这个 Map
-- earlySingletonObjects 是 Lv2 Cache, 存放未经历完整 Life Cycle 的 Bean Obj, 解决 Circurlar Reference 的关键
-- singletonFactories 是 Lv3 Cache, 存放各种 Bean 的 ObjectFactory, 可以用来创建 Normal Obj 或 Proxy Obj
-  - singletonFactories 是 HashMap, 而不是 ConcurrentHashMap, 因为 singletonFactories 通常只在 Bean 的创建过程中使用, 一旦 Bean 创建完成, 即使有多线程对创建好的 Bean 进行访问, 访问的是 singletonObjects, 而不是 singletonFactories, 不存在线程安全问题.
-
-```java
-// Lv1 Cache
-private final Map<String, Object> singletonObjects = new ConcurrentHashMap(256);
-// Lv2 Cache
-private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap(16);
-// Lv3 Cache
-private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap(16);
-```
-
-Spring 的 DefaultSingletonBeanRegistry Cls 中声明了 singletonsCurrentlyInCreation (Collections.newSetFromMap(new ConcurrentHashMap<>(16))) 存储正在创建过程中的 Bean, 用来判断是否存在 Circular Reference.
-
-```java
-private final Set<String> singletonsCurrentlyInCreation = 
-    Collections.newSetFromMap(new ConcurrentHashMap<>(16));
-```
-
-Spring 通过 Three-Level Cache 解决了大部分的 Circular Reference, 需要使用 A 时, 会执行下面的步骤
-
-- 调用 getBean() 获取 A, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 未查询到 A Cache, 调用 getSingleton() 创建 A
-
-  - 调用 beforeSingletonCreation() 添加 A 到 singletonsCurrentlyInCreation 中, 表示 A 正在创建过程中
-  - 调用 singleFactory.getObject() 通过 Reflect 创建 A Obj, 此时 A Obj 的成员都是空的, 即 A 引用的 B 也是空的
-  - 生成 A 的 ObjectFactory 存入 singletonFactories, ObjectFactory 本质是一个 Lambda, 可用于动态创建 A 的 Normal Obj 或 Proxy Obj
-  - 通过 BeanPostProcessor 发现 A 依赖 B, 需要去创建 B
-
-- 调用 getBean() 获取 B, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 未查询到 B Cache, 调用 getSingleton() 创建 B
-
-  - 调用 beforeSingletonCreation() 添加 B 到 singletonsCurrentlyInCreation 中
-  - 调用 singleFactory.getObject() 通过 Reflect 创建 B Obj, 此时 B Obj 的成员都是空的, 即 B 引用的 A 也是空的
-  - 生成 B 的 ObjectFactory 存入 singletonFactories
-  - 通过 BeanPostProcessor 发现 B 依赖 A, 并发现 A 也在 singletonsCurrentlyInCreation 中, 说明 A 和 B 存在 Circular Reference, 需要去处理 Circular Reference
-
-- 调用 getBean() 获取 A, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 从 singletonFactories 中获取到 A 的 OpenFactory, 执行 Lambda 创建 A Obj 放入 earlySingletonObjects, 并移除 singletonFactories 中 A 的 OpenFactory
-
-  - 如果 C 引用了 A, 直接从 earlySingletonObjects 获取 A 即可, 不需要再通过 A 的 OpenFactory 获取 A Obj 了
-
-- 调用 populateBean() 填充 B 依赖的 A, 此时 B 创建完成, 向 singleObjects 添加 B, 从 singletonsCurrentlyInCreation 和 singletonFactories 移除 B
-
-  - 如果再使用 B, 就可以直接从 singleObjects 中获取
-
-- 调用 populateBean() 填充 A 依赖的 B, 此时 A 创建完成, 向 singleObjects 添加 A, 从 singletonsCurrentlyInCreation 和 earlySingletonObjects 移除 A
-
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401152302912.png)
-
-# Circular Reference
-
-这里 A Bean 的初始化阶段需要调用 populateBean() 去填充 B Bean, 需要去创建 B Bean, 而 B Bean 的初始化阶段需要调用 populateBean() 去填充 A Bean 产生 Circular Reference
-
-```java
-@Component
-public class A {
-    @Autowired
-    private B b;
-}
-```
-
-```java
-@Component
-public class B {
-    @Autowired
-    private A a;
-}
-```
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401151818697.png)
-
-# Circular Reference (Constructor)
-
-Spring 无法解决 Constructor 引起的 Circular Reference.
-
-Bean Lifecycle 的 populateBean() 中通过 Three-Level Cache 解决了 Circular Reference, 而 createBeanInstance() 是早于 populateBean() 的. A 执行 createBeanInstance() 时, 在 Constructor 中需要去获取 B, 此时 Bean 只存储在 beanDefinitionMap 中, Spring 的 createBeanInstance() 并没有去解决 Circular Reference.
-
-```java
-@Component
-public class A {
-    private B b;
-
-    public A(B b) {
-        this.b = b;
-    }
-}
-```
-
-```java
-@Component
-public class B {
-    private A a;
-
-    public B(A a) {
-        this.a = a;
-    }
-}
-```
-
-通过 @Lazy 延迟加载 A 或 B, 可以解决这个 Circular Reference
-
-```java
-@Component
-public class A {
-    private B b;
-
-    public A(@Lazy B b) {
-        this.b = b;
-    }
-}
 ```

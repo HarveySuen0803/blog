@@ -126,7 +126,7 @@ Initialization
   - Compiler 收集 Static Field 的 Assignment Statement 和 Static Code Block 到 clinit()
   - Compiler 会同步 clinit(), 保证 Memory 中只有一个 Class Object
   - JVM 会对 clinit() 加锁, 保证只被一个 Thread 执行一次
-  - Active Loading 会 Initialization, Passive Loading 不会出发 Initialization
+  - Active Loading 会 Initialization, Passive Loading 不会触发 Initialization
 - 执行 Static Code Block, 优先执行 Par Class 的 Static Code Block
 
 ## Program Counter Register
@@ -365,7 +365,7 @@ Space losses: 3 bytes internal + 0 bytes external = 3 bytes total
 
 ## Execution Engine
 
-Class File 包含 Class Instruction, 只有 JVM 能识别 Class Instruction, 需要通过 Eexecution Engine 将 Class Instruction 编译成对应 CPU 的 Machine Instruction.
+Class File 包含 Class Instruction, 只有 JVM 能识别 Class Instruction, 需要通过 Execution Engine 将 Class Instruction 编译成对应 CPU 的 Machine Instruction.
 
 Execution Engine 既可以从 PC Register 中获取下一条 Instruction 的 Address, 也可以通过 Local Variable Table 的 Reference 找到 Heap 中的 Object.
 
@@ -530,233 +530,6 @@ Monitor 的 Field
 - 当一个线程想要获取 Mointor 时, 就会去尝试获取 Entry Lock
 - 当一个线程进入 WaitSet 时, 就会尝试去获取 WaitSet Lock
 
-## ThreadLocal
-
-ThreadLocal 提供了一系列用于访问和操作线程局部变量的方法, 使得每个线程都可以拥有自己的变量副本, 而不需要考虑线程安全性, 不同的方法之间就不需要通过全局变量实现通信了
-
-```java
-ThreadLocal<Integer> threadLocal = ThreadLocal.withInitial(() -> 0);;
-
-for (int i = 0; i < 10; i++) {
-    new Thread(() -> {
-        try {
-            for (int j = 0; j < 10; j++) {
-                threadLocal.set(threadLocal.get() + 1);
-            }
-            System.out.println(Thread.currentThread().getName() + " " + threadLocal.get());
-        } finally {
-            threadLocal.remove();
-        }
-    }).start();
-}
-```
-
-## ThreadLocalMap
-
-每一个 Thread 都有一个关联的 ThreadLocal.ThreadLocalMap 用于存储线程局部变量, 每次第一次通过 get(), set() 去操作一个 ThreadLocal Obj 时, 都会去创建一个 ThreadLocal Obj 的副本 Entry 存储到当前 Thread 的 ThreadLocalMap Obj 中, 后续通过 get(), set() 或 remove() 去操作 ThreadLocal Obj 都是在操作 Entry 副本, 不影响其他线程, 保证了线程安全
-
-```java
-public class Thread implements Runnable {
-    ThreadLocal.ThreadLocalMap threadLocals = null;
-}
-```
-
-```java
-public class ThreadLocal<T> {
-    static class ThreadLocalMap {
-        static class Entry extends WeakReference<ThreadLocal<?>> {}
-    }
-}
-```
-
-JDK7 中, ThreadLocal 维护 ThreadLocal.ThreadLocalMap Obj, 如果 Thread Obj 销毁后, ThreadLocal Obj 没有销毁, 内部的 ThreadLocalMap Obj 就不会销毁, 导致 Memory Leak
-
-JDK8 中, Thread 维护 ThreadLocal.ThreadLocalMap Obj, 当 Thread Obj 销毁后, 就会断开对 ThreadLocalMap Obj 的引用, 就会自然的回收 ThreadLocalMap Obj, 避免了 Memory Leak
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403141417049.png)
-
-## ThreadLocal Memory Leak
-
-ThreadLocalMap 的 Entry 继承了 WeakReference, 所有的 Key 都是通过 Weak Ref 指向 ThreadLocal Obj, 如果发生 GC, Key 就会断开对 Weak Ref, 此时 Key 为 Null, Val 为 ThreadLocal Obj 的副本
-
-ThreadPool 中的线程不会销毁, 所以就不会断开对 ThreadLocalMap Obj 的 Strong Ref, 就无法销毁 ThreadLoacalMap Obj, 所以存储的 Entry 就不会销毁, 这会导致 Entry 的 Val 一直存储着之前 ThreadLocal Obj 的副本, 导致 Memory Leak
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403141345757.png)
-
-ThreadLocal 的 set(), get(), remove() 底层都会调用 expungeStaleEntry() 销毁 key 为 null 的 Stale Entry
-
-```java
-private int expungeStaleEntry(int staleSlot) {
-    // ...
-    if (k == null) {
-        e.value = null;
-        tab[i] = null;
-        size--;
-    }
-    // ...
-}
-```
-
-为了避免这个 Memory Leak, 使用 ThreadLocal 时, 一定要调用 remove() 销毁 Stale Entry
-
-```java
-try {
-    System.out.println(threadLocal.get());
-} finally {
-    threadLocal.remove();
-}
-```
-
-ThreadLocal 能实现 Data Isolation, 重点在于 ThreadLocalMap, 所以 ThreadLocal 可以通过 statci 修饰, 只分配一块空间即可
-
-```java
-static ThreadLocal<Integer> threadLocal = ThreadLocal.withInitial(() -> 0);;
-```
-
-## ThreadLocal Dirty Read
-
-这里 T1 和 T2 是两个不同的线程, 第一次调用 set(), get() 或 remove() 时, 都会去创建一个 ThreadLocalMap Obj, 然后存储 userId 的副本, 所以相互之间不会有任何影响
-
-```java
-private static final ThreadLocal<Integer> userId = ThreadLocal.withInitial(() -> null);
-
-public static void main(String[] args) {
-    new Thread(() -> {
-        userId.set(1);
-        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // t1 get 1
-    }, "t1").start();
-    try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
-    new Thread(() -> {
-        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // t2 get null
-    }, "t2").start();
-}
-```
-
-因为 ThreadPool 中的线程不会销毁, 所以同一个线程就会一直反复使用同一个 ThreadLocalMap Obj, 导致了第二次执行任务时的脏读
-
-```java
-private static final ThreadLocal<Integer> userId = ThreadLocal.withInitial(() -> null);
-
-public static void main(String[] args) {
-    ExecutorService threadPool = Executors.newFixedThreadPool(1);
-    threadPool.submit(() -> {
-        userId.set(1);
-        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
-    });
-    try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
-    threadPool.submit(() -> {
-        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
-    });
-    threadPool.shutdown();
-}
-```
-
-这里通过 remove() 去清除了 ThreadLocalMap 中该 ThreadLocal Obj 的副本, 第二次执行任务时, 在 ThreadLocalMap 中找不到该 ThreadLocal Obj 的副本, 就会去创建一个 ThreadLocal Obj 的副本, 从而解决了 Dirty Read 问题
-
-```java
-private static final ThreadLocal<Integer> userId = ThreadLocal.withInitial(() -> null);
-
-public static void main(String[] args) {
-    ExecutorService threadPool = Executors.newFixedThreadPool(1);
-    threadPool.submit(() -> {
-        userId.set(1);
-        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
-        userId.remove();
-    });
-    try { TimeUnit.SECONDS.sleep(1); } catch (InterruptedException e) { e.printStackTrace(); }
-    threadPool.submit(() -> {
-        System.out.println(Thread.currentThread().getName() + " get " + userId.get()); // pool-1-thread-1 get 1
-    });
-    threadPool.shutdown();
-}
-```
-
-## InheritableThreadLocal
-
-InheritableThreadLocal 是 ThreadLocal 的一个扩展, 它不仅提供了线程局部变量, 而且还能将父线程的局部变量值传递给子线程, 这意味着当一个线程创建一个新的线程时, InheritableThreadLocal 可以将父线程中的局部变量的值传递给子线程的局部变量
-
-ThreadLocal 仅限于当前线程, 而 InheritableThreadLocal 允许父线程向子线程传递变量
-
-```java
-ThreadLocal<Integer> userId = new ThreadLocal<>();
-userId.set(1);
-new Thread(() -> {
-    System.out.println(userId.get()); // null
-}).start();
-```
-
-```java
-InheritableThreadLocal<Integer> userId = new InheritableThreadLocal<>();
-userId.set(1);
-new Thread(() -> {
-    System.out.println(userId.get()); // 1
-}).start();
-```
-
-使用 InheritableThreadLocal 在父线程和子线程之间共享用户会话信息
-
-```java
-private static final InheritableThreadLocal<String> sessionInfo = new InheritableThreadLocal<>();
-
-public static void main(String[] args) {
-    sessionInfo.set("UserSessionID: 123456");
-
-    System.out.println("Par Thread: " + sessionInfo.get());
-
-    new Thread(() -> {
-        System.out.println("Sub Thread: " + sessionInfo.get());
-    }).start();
-
-    sessionInfo.remove();
-}
-```
-
-Thread 底层维护了一个 `ThreadLocal.ThreadLocalMap inheritableThreadLocals`, Thread 的 init() 中进行线程的初始化时, 会根据 `boolean inheritThreadLocals` 判断是否需要处理 InheritableThreadLocal, 然后根据父线程的 InheritableThreadLocal 进行配置
-
-```java
-public class Thread implements Runnable {
-    ThreadLocal.ThreadLocalMap threadLocals = null;
-    ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;
-}
-```
-
-```java
-private void init(ThreadGroup g, Runnable target, String name,
-                  long stackSize, AccessControlContext acc,
-                  boolean inheritThreadLocals) {
-    // 这里的 currentThread() 是父线程 (当前执行 init() 的线程), this 是子线程 (正在被创建的线程)
-    Thread parent = currentThread();
-    
-    if (inheritThreadLocals && parent.inheritableThreadLocals != null)
-        this.inheritableThreadLocals =
-            ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
-
-    // ...
-}
-```
-
-通过 get(), set(), remove() 操作的 ThreadLocal 时都会去调用 getMap() 获取 ThreadLocalMap, 从而来操作 Entry 副本
-
-InheritableThreadLocal 继承 ThreadLocal, 也重写了 ThreadLocal 的 getMap(), 所以调用的其实是 InheritableThreadLocal 的 getMap(), 返回的是 inheritableThreadLocals 而不是 threadLocals 了
-
-```java
-public class ThreadLocal<T> {
-    public T get() {
-        Thread t = Thread.currentThread();
-        ThreadLocalMap map = getMap(t);
-        // Do something with the map
-    }
-}
-```
-
-```java
-public class InheritableThreadLocal<T> extends ThreadLocal<T> {
-    ThreadLocalMap getMap(Thread t) {
-       return t.inheritableThreadLocals;
-    }
-}
-```
-
 ## ThreadPool
 
 当一个新任务提交给线程池时, 线程池会判断其中的工作线程数量, 如果当前的工作线程数量小于核心线程数, 线程池会创建一个新的工作线程来执行这个任务, 如果大于或等于核心线程数, 线程池则不会立即创建新的线程
@@ -766,6 +539,54 @@ public class InheritableThreadLocal<T> extends ThreadLocal<T> {
 当任务队列已满, 并且当前线程数达到了最大线程数, 那么线程池会根据其 RejectedExecutionHandler 策略来处理这个任务
 
 工作线程从任务队列中取出任务执行, 执行完毕后, 继续从队列中取出下一个任务执行, 直到队列为空, 如果设置了 allowCoreThreadTimeOut, 那么核心线程在等待时间超过 keepAliveTime 之后也会被回收
+
+## Lock MarkWord
+
+在 HotSpot JVM 中, MarkWord 是用于存储对象元数据的关键部分 (eg: HashCode, GC Age, Lock State, GC Info)
+
+Non Lock's MarkWord
+
+```
+| unused:25b | identity_hashcode:31b | unused:1b | age:4b | biase_lock:1b | lock:2b |
+```
+
+通过 jol-core 查看 Non Lock 的 Object 的 MarkWord 是如何存储 HashCode 的
+
+```xml
+<dependency>
+    <groupId>org.openjdk.jol</groupId>
+    <artifactId>jol-core</artifactId>
+    <version>0.8</version>
+</dependency>
+```
+
+```java
+Object o = new Object();
+System.out.println(o.hashCode()); // HashCode will not be stored in MarkWord until the HashCode is accessed
+System.out.println(Integer.toHexString(o.hashCode()));
+System.out.println(Integer.toBinaryString(o.hashCode()));
+System.out.println(ClassLayout.parseInstance(o).toPrintable());
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241746692.png)
+
+Biased Lock's MarkWord
+
+```
+| thread:54b | epoch:2b | unused:1b | age:4b | biased_lock:1b | lock:2b |
+```
+
+Light Lock's MarkWord
+
+```
+| ptr_to_lock_record:62b | lock:2b |
+```
+
+Weight Lock's MarkWord
+
+```
+| ptr_to_heavyweight_monitor:62b | lock:2b |
+```
 
 ## Lock Escalation
 
@@ -814,11 +635,11 @@ Light Lock 本质就是 CAS. 多个 Thread 交替抢 Lock, 执行 Sync. 不需�
 
 JVM 为每一个 Thread 的 Stack Frame, 都开辟了 LockRecord 的空间, 称为 Displaced MarkWord, 存储 LockRecord Object
 
-T1 通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 00, 修改 Lock 的 Markword 的 ptr_to_lock_record 指向 T1 的 LocalRecord Object, 复制 Lock 的 MarkWord 到 LockRecord Object 中, 并且 T1 的 LockRecord Object 也会存储了一个 Pointer 指向 Lock
+T1 通过 CAS 修改 Lock 的 MarkWord 的 Lock Identify 为 00, 修改 Lock 的 Markword 的 ptr_to_lock_record 指向 T1 的 LockRecord Object, 复制 Lock 的 MarkWord 到 LockRecord Object 中, 并且 T1 的 LockRecord Object 也会存储了一个 Pointer 指向 Lock
 
 T2 通过 CAS 尝试修改 ptr_to_lock_record 指向 T2 的 LockRecord Object. 如果修改成功, 则表示 T2 抢到了 Lock. 如果 T2 尝试了多次 Spining 后, 还是没修改成功, 则会升级 Light Lock 为 Heavy Lock
 
-T1 释放 Lock 时, 会将 Displaced MarkWord 复制到 MarkWord 中. 如果复制成功, 则本次 Sync 结束. 如果复制失败, 则说明 Light Lock 升级为 Heavy Lock 了, 此时 T1 会释放 Lock, 唤醒其他 Blocing Thread, 一起竞争 Heavy Lock
+T1 释放 Lock 时, 会将 Displaced MarkWord 复制到 MarkWord 中. 如果复制成功, 则本次 Sync 结束. 如果复制失败, 则说明 Light Lock 升级为 Heavy Lock 了, 此时 T1 会释放 Lock, 唤醒其他 Blocking Thread, 一起竞争 Heavy Lock
 
 如果是 Reentrant Lock 在进行重入时, 每次重入一个锁, 就需要通过 CAS 创建一个 LockRecord Object, 后续创建的 LockRecord Object 不需要再去修改 ptr_to_lock_record 了
 
@@ -1200,8 +1021,11 @@ DCL 是一种在单例模式中使用的延迟加载策略, 它尝试通过检�
 
 Object Creation 包含 Memory Allocation, Object Initialization, Reference Points to Memory 三个步骤, 在多线程环境下, 由于指令重排序的存在导致了 NullPointException
 
-- T1 进行 Object Creation 时, JVM 将 Reference Points to Memory 重排序到了 Object Initialization 之前
-- T2 又来访问, 发现 Reference 不为 null, 就会直接拿走, 但是此时 T1 还没有执行 Object Initialization, T2 直接访问就会导致 NullPointException
+- 在 Java 中，对象的实例化过程并非原子操作，它可以被分解为以下三个步骤：
+  - 为对象分配内存。
+  - 调用对象的构造函数，初始化对象。
+  - 将对象的引用赋值给变量。
+- 由于编译器和 CPU 可能会对指令进行重排序，步骤2和步骤3的执行顺序可能被颠倒。也就是说，可能先执行步骤3，再执行步骤2。这在单线程环境下没有问题，但在多线程环境下可能会导致另一个线程获取到一个未完全初始化的对象。
 
 通过 volatile 修饰 singleton, 禁止重排序, 避免 NullPointException
 
@@ -1281,12 +1105,12 @@ start transaction;
 select col; -- ''
 
 -- Record col = '' to Undo Log
-update col = 'a';
 -- Record col = 'a' to Redo Log
+update col = 'a';
 
 -- Record col = 'a' to Undo Log
-update col = 'b';
 -- Record col = 'b' to Redo Log
+update col = 'b';
 
 -- Flush Disk
 commit;
@@ -1311,7 +1135,7 @@ MySQL Server 启动后, 会立即申请一块 Redo Log Buffer, 用来存储 Redo
 通过 `innodb_flush_log_at_trx_commit` 设置不同的刷新策略 (def: 1).
 
 - `0`: 提交后, 不会进行任何操作, 等待 Server 自动进行一秒一次自动同步. 将数据存储在 Buffer 中, 依靠自动同步, 风险最高, 但是性能最强.
-- `1`: 提交后, 将数据写入到 Page Cache, 再从 Page Cache 写入到硬盘. 直接写会到了硬盘中, 非常安全, 但是性能最差, 默认就是如此.
+- `1`: 提交后, 将数据写入到 Page Cache, 再从 Page Cache 写入到硬盘. 直接写入到硬盘中, 非常安全, 但是性能最差, 默认就是如此.
 - `2`: 提交后, 将数据写入到 Page Cache. 将数据写入到 OS 到 Page Cache 中, 一般 OS 宕机的几率是非常低的, 还是蛮安全的, 性能也比较好.
 
 ## Undo Log
@@ -1347,7 +1171,7 @@ Undo Log 的存储是离散的, 要回收非常麻烦, 所以 TRX 提交后, 不
 
 ## Bin Log
 
-在 TRX 提交之前, 会记录 DDL 和 DML 到 Bin Log 中, 以达到重放 SQL 语句的目的, 主要用于数据库回滚、复制、数据恢复.
+在 TRX 提交之前, 会记录 DDL 和 DML 到 Bin Log 中, 以达到重播 SQL 语句的目的, 主要用于数据库回滚、复制、数据恢复.
 
 Bin Log 可以用于数据恢复, 如果 MySQL Server 挂掉了, 可以通过 Bin Log 查询到用户执行了哪些修改操作, 可以根据 Bin Log 来恢复数据.
 
@@ -1567,6 +1391,8 @@ Offset 会去记录上一次同步的位置, 再次请求时, Master 一看 Repl
 
 Replication BackLog 本质是一个数组, 也是有空间上限的, 超出上限后, 会去直接覆盖先前的内容. 如果 Slave 断开太久, 导致未备份的数据被覆盖了, 就无法基于 BackLog 进行增量同步, 只能被迫进行低效的全量同步
 
+- 假设，BackLog 数组长度大小为 1000，master 的 offset 为 4000，如果 slave 的 offset 为 3500，那么就是差 500 的偏移量，直接增量同步即可。如果 slave 的 offset 为 2500，那么就差 1500 了，直接超出了 1000 的数组大小，那么就只能全量同步了。
+
 优化全量同步, 减少一个 Master 连接的 Slave 数量, 可以让 Slave 再去连接多个 Slave, 分摊 Master 压力, 减少单节点的内存占用, 减少 RDB 的 IO 次数
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312261457996.png)
@@ -1600,7 +1426,7 @@ min-replicas-to-write 1
 min-replicas-max-lag 5
 ```
 
-## Redis Shard
+## Redis Cluster
 
 Shard Cluster, 多个 Master, 每个 Master 可以挂载多个 Slave, 每个 Master 负责管理部分 Slot 的数据, Master 之间会不断的通过 PING 去检测彼此健康状态, Client 连接任意一个结点, 请求就会被转发到正确的位置
 
@@ -1623,6 +1449,37 @@ Consistent Hashing: 通过 hash() 控制 Hash 范围, 头尾相连, 构成 Hash 
 Weighted Consistent Hashing: 在 Consistent Hashing 的基础上添加 Weight 的作用, 根据权重在哈希环上为每台服务器分配不同数量的虚拟节点, 解决了一致性哈希因服务器性能不同而导致的负载不均问题, 但是实现更为复杂, 维护虚拟节点也更复杂
 
 - A, B 和 C 配置权重为 5, 3 和 2, 那么就会给 A 创建 5 个虚拟节点, 给 B 创建 3 个虚拟节点, 给 C 创建 2 个虚拟节点, 然后分部虚拟节点到 Hash Circle 上
+
+## Request Router
+
+在 Redis Cluster 中，数据分布在多个主节点上，客户端通过计算数据的哈希槽来确定数据的存储位置。Redis Cluster 提供了一种智能的请求路由机制，确保客户端能够快速定位到正确的主节点读取数据。
+
+Redis Cluster 的客户端（如 redis-py-cluster、Jedis Cluster、Lettuce 等）会在初次连接时，从集群中获取每个节点负责的哈希槽范围信息，并在客户端缓存这些信息。
+
+- 集群拓扑信息：客户端连接到集群后，会发送 CLUSTER SLOTS 命令，获取每个节点及其对应的哈希槽范围，构建一个哈希槽到节点的映射表。
+- 哈希槽查找表：客户端使用这个映射表来直接查找哈希槽对应的节点，从而将请求路由到正确的主节点。
+  - 这张表就是采用 Dict 数据结构实现的。
+
+## Moved Redirect
+
+Redis Cluster 的客户端缓存的哈希槽信息可能会过期或不准确（例如，集群发生主从切换或哈希槽重新分配）。为了解决这种问题，Redis Cluster 使用了 MOVED 重定向机制。
+
+- 当客户端发送请求到错误的节点时，该节点会返回一个 MOVED 错误响应，指示客户端正确的节点地址。
+- 客户端收到 MOVED 响应后，会更新本地的哈希槽映射表，将请求重定向到正确的主节点。
+- 这样，客户端的哈希槽映射表会逐渐趋于最新，以减少路由错误的发生。
+
+## Ack Redirect
+
+在 Redis Cluster 的哈希槽迁移过程中，可能出现临时的数据不一致状态。在这种情况下，Redis Cluster 使用 ASK 重定向机制：
+
+- 当某个哈希槽正在从一个节点迁移到另一个节点时，目标节点会暂时接管该哈希槽的数据请求。
+- 如果客户端访问了尚未完成迁移的数据，源节点会返回 ASK 重定向，指示客户端临时访问目标节点。
+  - 源节点还认为自己拥有该哈希槽的数据（但正在逐步迁移到目标节点）。
+  - 目标节点开始接收这个哈希槽的数据，但还没有完全完成迁移。
+- 客户端接收到 ASK 响应后，会向目标节点发送 ASKING 命令，然后再次请求数据。这个过程只在迁移过程中短暂发生，迁移完成后将恢复正常。
+- 目标节点接收到 ASKING 命令后，将其标记为临时的、合法的访问请求，并返回数据。客户端成功地访问到数据，避免了因为哈希槽迁移造成的请求失败。
+- 如果目标节点发现请求的数据尚未完全迁移到自己，它会充当“代理”的角色，临时向源节点请求该数据，并将数据返回给客户端。
+- 由于 ASK 重定向只是临时处理机制，客户端的哈希槽映射表不会因为 ASK 响应而永久更新。完成迁移后，Redis Cluster 会自动触发 MOVED 重定向，让客户端永久更新哈希槽的映射关系。
 
 ## TTL
 
@@ -1658,9 +1515,16 @@ RDB 会在 Redis Server 服务结束前自动执行, 会在达到了保存条件
 
 - `SAVE` 是由主线程执行, `BGSAVE` 是由子线程进行, `SAVE` 一定会造成线程堵塞, 生产环境中不要用
 
-Redis 进行 RDB Persistence 时, 会调用 fork() 创建一个子进程, 这个子进程不需要执行 exec(), 而是会直接复制一份父进程的 Page Directory 和 Page Table, 主线程执行完 fork() 就可以继续去处理请求了, 两者相不干扰. 如果主线程想要修改数据, 就会采用 Copy-On-Write 的方式, 给内存中的原始数据加上 ReadOnly Lock, 然后复制一份出来进行修改, 修改完再去修改 Page Table 的指向
+Redis 进行 RDB Persistence 时, 会调用 fork() 创建一个子进程, 这个子进程不需要执行 exec(), 而是会直接复制一份父进程的 Page Directory 和 Page Table, 主线程执行完 fork() 就可以继续去处理请求了, 两者相不干扰
+
+如果主线程想要修改数据, 就会采用 Copy-On-Write 的方式, 给内存中的原始 Page 数据加上 ReadOnly Lock, 然后复制一份出来进行修改, 修改完再去修改 Page Table 的指向，指向最新的副本，这也保证了后续可以读取到最新的数据。
+
+在写时复制（Copy-On-Write, COW）机制中，每次复制的并不是整个数据或整个内存，而是具体的 “页面”（通常是 4KB 的内存块），即只有在被访问或修改的页面发生变化时，才会触发对这个页面的复制操作。
 
 - Page Table 中记录了虚拟地址和物理地址的映射, 子进程就可以通过这个 Page Table 去读取数据进行持久化操作了
+- Page Directory 是顶层，包含多个 Page Table 的指针
+
+
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401021948769.png)
 
@@ -1730,6 +1594,9 @@ AOF (Append Only File) 会去追加写入所有的修改命令到 AOF 文件中,
 
 AOF 丢失数据的风险会小很多, 并且通过追加的方式写入, 不存在 Path-Seeking 问题
 
+- 寻路问题通常是指数据文件在读取时，需要寻找某个特定数据的位置，从而涉及到复杂的索引结构或多次磁盘跳转。传统数据库可能需要索引树或复杂的数据结构来记录数据的存储位置，以便在查询时快速定位数据。
+- AOF 则采用简单的日志记录方式，将每个操作按顺序记录下来，读取时也按顺序回放，完全不需要在文件中跳转到特定位置，消除了磁盘寻道的开销。
+
 AOF 记录的命令多, 占用更大, 恢复也需要一条一条的执行, 恢复很慢, 占用的 CPU 资源也相当多
 
 开启 AOF
@@ -1745,7 +1612,7 @@ appendfilename "appendonly.aof"
 appenddirname "appendonlydir"
 ```
 
-Redis 将写入操作追加到 AOF Buffer 中, 再自动将数据写入到 OS 的 Page Cache 中, 接着执行 fsync() 将 Page Cache 中的数据立刻刷入 (flush) 到 Disk
+Redis 将写入操作追加到 AOF Buffer 中, 再自动将数据写入到 OS 的 Page Cache 中, 接着执行 fsync() 将 Page Cache 中的数据立刻刷入 (flush) 到 Disk。主线程执行完命令，会去判断上一次 fsync() 的耗时，如果超过 2s, 主线程就会进入堵塞, 等待 fsync 结束, 因为刷盘出了问题, 必须要保证数据的安全
 
 配置 AOF 的写入策略
 
@@ -1779,9 +1646,8 @@ aof-use-rdb-preamble yes
 
 追加写入修改命令, 会有很多无用的操作 (eg: `set k1 v1`, `set k1 v2`, `set k1 v3 ` 这几条命令就等价于 `set k1 v3`), 所以很有必要定期对 AOF 文件进行重写, 这就是 Log Rewriting
 
-开启 Auto Rewriting 后, 子线程会去读取 Old AOF File, 然后分析命令, 压缩命令, 写入到一个临时文件中. 主线程一直累积命令在缓存中, 正常写入命令到 Old AOF File 中, 保证 Old AOF File 的可用性. 当子线程完成 Rewriting 后, 会发送一个信号给主线程, 主线程再将缓存中的累积的命令追加写入到 New AOF File 中, 再通过 New AOF File 代替 Old AOF File
+开启 Auto Rewriting 后, 子线程会去读取 Old AOF File, 然后分析命令, 压缩命令, 写入到 New AOF File 中. 主线程一直累积命令在 AOF Buffer 中. 当子线程完成 Log Rewriting 后, 会发送一个信号给主线程, 主线程再将缓存中的累积的命令追加写入到 New AOF File 中, 再通过 New AOF File 代替 Old AOF File
 
-- 子线程读取 Old AOF File 后, 会将文件内容加载到内存中进行处理, 所以主线程后续修改 Old AOF File 不会对子线程的读取造成影响
 - 如果替换过程中如果发生了故障, Redis 依然可以通过 Old AOF File 来恢复数据, 这就是为什么在重写过程中 Old AOF File 一直要保持可用状态
 
 开启 Auto Log Rewriting
@@ -1799,8 +1665,6 @@ auto-aof-rewrite-min-size 64mb
 BGREWRITEAOF
 ```
 
-主线程执行完命令, 将命令写入 AOF Buffer 中, 每隔 1s 就从 AOF Buffer 中读取命令, 进行刷盘, 即 fsync. 主线程写入完后, 会去判断上一次 fsync 耗时, 如果超过 2s, 主线程就会进入堵塞, 等待 fsync 结束, 因为刷盘出了问题, 必须要保证数据的安全
-
 在 Log Rewriting 期间, 进行 AOF, 就有可能因为 AOF 导致主线程堵塞, 可以禁止在 Log Rewriting 期间进行 AOF
 
 ```shell
@@ -1815,13 +1679,73 @@ no-appendfsync-on-rewrite yes
 
 Redisson 底层通过 Redis 的 SETNX 进行加锁的, A 想要获取锁, 就会尝试通过 SETNX 去修改一个 Key, 如果修改成功, 就认为是成功获取了锁. B 这个时候想要获取锁, 也去尝试修改, 修改不成功就认为是没有获取到锁, B 就会进入自旋, 自旋到一定时间, 就会放弃
 
-Redisson 底层为了防止 A 执行的业务耗时太久, 导致锁的 TTL 到期失效的问题, 就让 Watch Dog 去监听这个锁, 每隔 releaseTime / 3 的时间就去重置 Lock 的过期时间为 releaseTime
+Redisson 底层为了防止 A 执行的业务耗时太久, 导致锁的 TTL 到期失效的问题, 就让 Watchdog 去监听这个锁, 每隔 releaseTime / 3 的时间就去重置 Lock 的过期时间为 releaseTime
 
 Redisson 底层通过 Redis 的 Hash 实现 Reentrant Lock, 存储 Key 为锁名, Field 为线程名, Value 为重入的次数. 重入获取锁时, 就去判断当前线程和锁的拥有者是否为相同, 如果相同, 就让 Value + 1, 释放锁后, 就让 Value - 1, 当 Value 为 0 时, 就认为该线程释放了锁
 
 Redisson 底层所有的操作中, 需要保证原子性的地方, 就会采用 Lua 脚本 (eg: 判断当前线程是否为锁的持有者和释放锁, 这两个操作需要保证原子性, 就会采用 Lua 脚本)
 
 Redisson 底层通过 RedLock 解决 Master-Slave 和 Cluster 环境下, Lock 的一致性问题, 创建分布式锁时, 直接在 n / 2 + 1 个 Redis 实例上创建锁, 即使当前 Redis 实例挂掉了, 也能保证数量的领先, 只会认定数量多的那把锁. 一般不建议采用这种方案, 性能太差, 而且 Redis 遵循的是 AP, 更注重性能, 后续可以通过 MQ 来保证最终一致性, 不在乎这点一致性. 如果非要保证 High Consistency, 就需要结合 Zookeeper 实现 Distributed Lock
+
+## Redisson Watchdog
+
+Redisson 中的 Watchdog（看门狗） 是分布式锁的重要组件，负责监控分布式锁的生命周期，并在锁持有者仍然活跃的情况下自动续期，确保锁不会意外释放。
+
+Watchdog（看门狗） 负责判断是否需要续期锁，并执行续期操作。Watchdog 判断是否续期锁的核心逻辑在于监控持有锁的线程的状态，如果线程仍在正常工作，则认为锁需要续期；如果线程失效，则停止续期，让锁自然过期。
+
+当 Redisson 客户端获取锁时，会通过 tryLock() 方法尝试加锁。如果成功获取到锁，Redisson 会启动一个 Watchdog 定时任务 来监控和续期锁。
+
+```java
+public void tryLock(long leaseTime, TimeUnit unit) {
+    long threadId = Thread.currentThread().getId();
+    // 尝试获取锁
+    Boolean acquired = tryAcquireLock(leaseTime, threadId);
+    if (acquired) {
+        // 如果成功获取到锁，启动 Watchdog 定时任务
+        scheduleExpirationRenewal(threadId);
+    }
+}
+```
+
+- tryAcquireLock() 方法通过 Redis 的 SET 命令和过期时间来尝试加锁。
+- scheduleExpirationRenewal() 方法用于启动 Watchdog 任务，定期续期锁的过期时间。
+
+scheduleExpirationRenewal 方法在成功获取锁后被调用，启动一个定时任务用于锁的续期。定时任务每隔 10 秒执行一次，将锁的过期时间续期为 30 秒。
+
+```java
+private void scheduleExpirationRenewal(final long threadId) {
+    ExpirationEntry entry = new ExpirationEntry();
+    expirationRenewalMap.putIfAbsent(getEntryName(), entry);
+    
+    // 创建定时任务，用于续期锁的过期时间
+    Timeout task = commandExecutor.getConnectionManager().newTimeout(timeout -> {
+        // 检查锁持有者是否仍然活跃
+        if (expirationRenewalMap.containsKey(getEntryName())) {
+            // 使用 Lua 脚本续期锁
+            renewExpiration(threadId);
+            scheduleExpirationRenewal(threadId);  // 继续下一次续期
+        }
+    }, 10, TimeUnit.SECONDS);
+    
+    entry.setTimeout(task);
+}
+```
+
+renewExpiration 方法通过 Redis 的 Lua 脚本续期锁的过期时间，确保续期操作的原子性。Lua 脚本的核心逻辑是：判断当前线程是否持有锁，如果是，则更新锁的过期时间。
+
+```java
+private void renewExpiration(long threadId) {
+    String script = "if redis.call('GET', KEYS[1]) == ARGV[1] then " +
+                    "return redis.call('PEXPIRE', KEYS[1], ARGV[2]) " +
+                    "else return 0 end";
+                    
+    commandExecutor.evalWriteAsync(getName(), RedisCommands.EVAL_LONG,
+                                   script,
+                                   Collections.singletonList(getEntryName()),
+                                   getLockName(threadId),
+                                   internalLockLeaseTime);
+}
+```
 
 ## DataStructure
 
@@ -1843,111 +1767,561 @@ Redisson 底层通过 RedLock 解决 Master-Slave 和 Cluster 环境下, Lock �
   - `SDIFF following:harvey following:brude` 实现可能认识的人
 - ZSet 实现微信点赞功能, 以时间戳作为 Priority, 实现热搜排行, 实现新闻排行- 
 
+## Multi Thread
+
+Redis 3.0 不支持多线程, Redis 4.0 仅仅支持多线程删除, Redis 5.0 对代码进行了大量重构, Redis 6.0 全面拥抱多线程 IO.
+
+Redis 当年使用单线程, 开发简单, 维护简单, 通过并发处理 Multiplexing IO + Non Blocking IO, 已经非常快速了, 而且当年性能的主要瓶颈不在于 CPU 是否采用多线程, 而在于 Memory 和 Network Bandwidth.
+
+Redis 的单线程, 想要删除一个 Big Key 非常头疼, 因为单线程是 Atomicity 的, 这边在删除, 另一边就需要进入等待, 所以后来引入了 unlink 和 flushdb async 让 BIO 的 Sub Thread 去进行异步删除.
+
+Redis 的单线程, 是需要 Main Thread 进行 IO, 非常耗时.
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241812949.png)
+
+Redis 的多线程, 将耗时的 IO 交给 Sub Thread 去处理, 同时只通过 Main Thread 进行 Calculate, 执行操作命令, 既使用上了多线程, 也保证了 Atomicity.
+
+Client 发送请求给 Server 后, 会在 Server 的 Socket File 中的写入当前 Client 对应的 File Descriptor, 即注册到 epoll 中. epoll 会去监听多个 Client 是否有 Request 发送过来, 即一个 Sub Thread 可以同时处理多个 Request, 这就保证了 Redis 即使在单线程环境下, 依旧有着相当高的吞吐量.
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241812950.png)
+
+Enable multi-thraed of write. (file: redis.conf)
+
+```
+# If you have a 8 cores, try to use 6 threads
+io-threads 4
+```
+
+Enable multi-thread of read. (file: redis.conf)
+
+```
+io-threads-do-reads yes
+```
+
+## Dual Write Consistency
+
+先更新 DB, 再更新 Cache, 在多线程场景下容易造成数据覆盖的问题. 如果在停机的情况下, 通过单线程来更新, 完全可以这么玩, 但是多线程环境下就是不行.
+
+先更新 Cache, 再更新 DB, 在多线程场景下也会造成数据覆盖的问题, 而且一般是以 DB 作为底单数据, 所以也不推荐这种设计方式.
+
+先删除 Cache, 再更新 DB, 在多线程场景下也会造成脏读的问题. 这里 A 先删除 Cache, 再去更新 DB, 此时 B 来读取 Cache 时, 发现没有 Cache 了, 就会去 DB 读取数据, 但是此时 A 还没更新完, B 就读取了脏数据, 还把脏数据写回了 Cache, 更是八达鸟啊.
+
+Delayed Dual Deletion 就是用来解决 B 的脏写问题的. A 更新完 DB 后, 会再去删除 B 回写的脏数据, 后续线程来读取数据时, 就会再去 DB 中读取, 然后回写正确的数据到 Cache 中. 这就需要 A 等待 B 回写完脏数据后删除, 需要估算两者的执行效率, 让 A 在 B 的基础上等待一个 100ms 即可, 还可以借助 Watch Dog 监控程序中的脏写, 新起一个异步的线程来执行这个删除脏数据的操作, 至于 B 那的脏读, 就不管他啦.
+
+先更新 DB, 再删除 Cache, 也会造成 B 的脏读, 但是这种破坏性是最小的, 也不需要通过 Delayed Dual Deletion 来防止脏写, 这是我们能容忍的.
+
+为了保证 High Availiability, 可以先更新 DB, 再删除 Cache. 可以更新完 DB 后, 直接通过 MQ 异步的修改 Cache. 可以更新完 DB 后直接不管了, 通过 Canal 监听 MySQL 的 BinLog 的变化, 再去更新 Cache, 这种解决方案没有任何侵入.
+
+为了保证 High Consistency, 可以通过 Lock 解决, 读数据时添加 S Lock, 写数据时添加时 X Lock.
+
+一般业务中是允许出现脏读的, 后续通过 MQ 进行兜底, 保证数据的最终一致性.
+
+## Cache Penetration
+
+Cache Penetration 是指请求的数据, 即不存在 Cache, 也不存在 DB, 请求会重复打到 DB, DB 小身板, 遭不住. 一般可以缓存一个空对象或者采用 Bloom Filter 来处理. 最好在设计数据库时, 就将查询字段的取值格式设计的复杂一点, 在业务过滤时, 就将这些非法的取值过滤处理.
+
+可以缓存一个空对象来解决 Cache Penetration, 这个实现起来非常简单, 但是会造成额外的内存消耗, 也会造成短期的数据不一致 (eg: 请求一个不存在的数据后, 缓存一个空对象, 但是此时又插入了该数据, 如果不更新缓存的话, 就会一直造成脏读), 一般都是结合过期时间, 来降低破坏性.
+
+```java
+public Result queryById(Long id) {
+    String key = CACHE_SHOP_KEY + id;
+    
+    // Query data from cache
+    String shopJson = stringRedisTemplate.opsForValue().get(key);
+    if (StrUtil.isNotBlank(shopJson)) {
+        return Result.ok(JSONUtil.toBean(shopJson, Shop.class));
+    }
+    
+    // Handle blank string, block requests to DB
+    if (StrUtil.isBlank(shopJson)) {
+        return Result.fail("Shop does not exists");
+    }
+    
+    // Query data from DB
+    Shop shop = getById(id);
+    if (shop == null) {
+        // Save a blank string to Redis to avoid cache penetration
+        stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
+        return Result.fail("Shop does not exists");
+    }
+    
+    // Save data to cache, set expiration time to avoid dirty writing
+    stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(shop), CACHE_SHOP_TTL, TimeUnit.MINUTES);
+    
+    return Result.ok(shop);
+}
+```
+
+可以通过 Bloom Filter 来解决 Cache Penetration, Bloom Filter 不真实存储数据, 而是存储 0 和 1 来表示该数据是否存在. 请求打过来时, 就先查询 Bloom Filter, 判断该数据是否存在, 如果不存在就让他滚蛋, 如果存在就放行. Redis 的 Bitmap 实现了 Bloom Filter, 爽死了 !!!
+
+Bloom Filter 会使用多个 Hash Algo 对 key 进行运算, 分别取模得到多个 Index, 设置这些 Index 为 1. 后续查询时, 就判断这几个 Index 是否都为 1, 只要有一个 0, 就说明这个 key 肯定不存在.
+
+想要修改某个 key 的状态, 可以重新分配一套 Hash, 而不是去修改之前 Hash 对应的 Index. 因为多个 Key 可能分配到相同的 Hash, 会导致其他 Key 受影响.
+
+在缓存预热阶段, 预热 Bloom Filter, 准备白名单, 一般采用 Guava 或 Redission 实现 Bloom Filter, 控制误判率在 5% 以内即可
+
+```java
+@Component
+public class BloomFilterUtils {
+    @Autowired
+    RedisTemplate redisTemplate;
+
+    // Init whitelist
+    @PostConstruct
+    public void initUserWhiteList() {
+        String key1 = "1";
+        String key2 = "2";
+        String key3 = "3";
+        
+        int hash1 = Math.abs(key1.hashCode());
+        int hash2 = Math.abs(key2.hashCode());
+        int hash3 = Math.abs(key3.hashCode());
+        
+        long index1 = (long) (hash1 % Math.pow(2, 32));
+        long index2 = (long) (hash2 % Math.pow(2, 32));
+        long index3 = (long) (hash3 % Math.pow(2, 32));
+        
+        redisTemplate.opsForValue().setBit("whitelist:user", index1, true);
+        redisTemplate.opsForValue().setBit("whitelist:user", index2, true);
+        redisTemplate.opsForValue().setBit("whitelist:user", index3, true);
+    }
+    
+    // Check if the key is on the whitelist
+    public boolean check(String checkItem, String key) {
+        int hash = Math.abs(key.hashCode());
+        long index = (long) (hash % Math.pow(2, 32));
+        return Boolean.TRUE.equals(redisTemplate.opsForValue().getBit(checkItem, index));
+    }
+}
+```
+
+在查询数据前, 通过 Bloom Filter 校验 User Id 是否存在白名单中
+
+```java
+@Autowired
+private BloomFilterUtils bloomFilterUtils;
+
+public User queryById(Integer id) {
+    // Check with bloom filter before query
+    if (!bloomFilterUtils.check("whitelist:user", id)) {
+        return null;
+    }
+    
+    User User = (User) redisTemplate.opsForValue().get(CACHE_USER_KEY + id);
+    if (User == null) {
+        user = getById(id);
+        if (user != null) {
+            redisTemplate.opsForValue().set(CACHE_USER_KEY + id, user);
+        }
+    }
+    return user;
+}
+```
+
+通过 Interceptor 拦截请求, 检查 User Id 是否存在白名单中
+
+```java
+@Component
+public class UserInterceptor implements HandlerInterceptor {
+    @Autowired
+    private BloomFilterUtils bloomFilterUtils;
+    
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if (!bloomFilterUtils.check("whitelist:user", UserHolder.getUser().getId())) {
+            response.setStatus(401);
+            return false;
+        }
+        return true;
+    }
+}
+```
+
+```java
+@Configuration
+public class WebConfiguration implements WebMvcConfigurer {
+    @Autowired
+    private UserInterceptor userInterceptor
+    
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(userInterceptor)
+                .excludePathPatterns(
+                    "/user/login",
+                    "/user/register"
+                )
+                .order(1);
+    }
+}
+```
+
+## Cache Invalidation
+
+Cache Invalidation 是指一些热点数据的突然失效, 缓存重建速度又太慢, 导致大量的请求又打到 DB, 啊啊啊受不了啦 !!! 一般都会采用 Mutex 和 Logical Expiration 解决.
+
+在多线程的环境下, 重建热点数据非常容易造成问题, 必须使用 Mutex 串行处理. A 获取到 Mutex 后去查询数据库, 重建缓存. B 查询缓存未命中, 就去尝试获取 Mutex, 获取失败, 就会进入等待, 直到 A 重建缓存完成, 通过 DCL 的方式, 让 B 直接查询到缓存数据.
+
+使用 Mutex 可以保证 High Consistency, 无法保证 High Availability, 还存在 Dead Lock 的风险.
+
+```java
+private Shop queryWithMutex(Long id) {
+    String key = CACHE_SHOP_KEY + id;
+    
+    // Query data from cache
+    String shopJson = stringRedisTemplate.opsForValue().get(key);
+    if (StrUtil.isNotBlank(shopJson)) {
+        return JSONUtil.toBean(shopJson, Shop.class);
+    }
+    
+    // Handle blank string
+    if (shopJson != null) {
+        return null;
+    }
+    
+    Shop shop;
+    String lockKey = LOCK_SHOP_KEY + id;
+    try {
+        // If obtaining the lock is unsuccessful, then retrieve it again
+        if (!tryLock(lockKey)) {
+            Thread.sleep(50);
+            return queryWithMutex(id);
+        }
+        
+        // DCL
+        shopJson = stringRedisTemplate.opsForValue().get(key);
+        if (StrUtil.isNotBlank(shopJson)) {
+            return JSONUtil.toBean(shopJson, Shop.class);
+        }
+        
+        // Query data from DB
+        shop = getById(id);
+        if (shop == null) {
+            stringRedisTemplate.opsForValue().set(key, "", CACHE_NULL_TTL, TimeUnit.MINUTES);
+            return null;
+        }
+        
+        // Save data to cache
+        stringRedisTemplate.opsForValue().set(key, JSONUtil.toJsonStr(shop), CACHE_SHOP_TTL, TimeUnit.MINUTES);
+    } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+    } finally {
+        unLock(lockKey);
+    }
+    
+    return shop;
+}
+
+private boolean tryLock(String key) {
+    Boolean flag = stringRedisTemplate.opsForValue().setIfAbsent(key, "1", 10, TimeUnit.SECONDS);
+    return BooleanUtil.isTrue(flag);
+}
+
+private void unLock(String key) {
+    stringRedisTemplate.delete(key);
+}
+```
+
+Logical Expiration 非常佛系, 在项目预热阶段, 就将这些热点数据永久存储在 Cache 中, 只设置一个逻辑上的过期时间. 当 A 发现 Cache 过期后, 就会去开启一个异步线程去重建 New Cache, 自己先用 Old Cache. B 来访问时, 发现还没有重建完, 就会直接使用 Old Cache, 直到重建成功后, 才能用上 New Cache.
+
+使用 Logical Expiration 可以保证 High Availability, 无法保证 Consistency, 还会造成一定额外内存的开销, 但是性能的显著提升, 让我们已经不在乎这些了 :)
+
+```java
+private static final ExecutorService CACHE_REBUILD_EXECUTOR = Executors.newFixedThreadPool(10);
+
+private Shop queryWithLogicalExpiration(Long id) {
+    String key = CACHE_SHOP_KEY + id;
+    
+    // Query data from cache
+    String shopJson = stringRedisTemplate.opsForValue().get(key);
+    
+    // The hot data here must be stored in Redis in advance to avoid cache invalidation
+    // If the shopJson does not exist, return null
+    if (StrUtil.isBlank(shopJson)) {
+        return null;
+    }
+    
+    RedisData redisData = JSONUtil.toBean(shopJson, RedisData.class);
+    Shop shop = JSONUtil.toBean((JSONObject) redisData.getData(), Shop.class);
+    LocalDateTime expireTime = redisData.getExpireTime();
+    
+    // If it is not expired, return the result
+    if (expireTime.isAfter(LocalDateTime.now())) {
+        return shop;
+    }
+    
+    // If it is expired, rebuild cache
+    String lockKey = LOCK_SHOP_KEY + id;
+    if (tryLock(lockKey)) {
+        // DCL
+        shopJson = stringRedisTemplate.opsForValue().get(key);
+        if (expireTime.isAfter(LocalDateTime.now())) {
+            return JSONUtil.toBean(shopJson, Shop.class);
+        }
+        
+        // Open a separate thread to rebuild the cache
+        CACHE_REBUILD_EXECUTOR.submit(() -> {
+            try {
+                saveShopToRedis(id, 10L);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                unLock(lockKey);
+            }
+        });
+    }
+    
+    return shop;
+}
+
+private void saveShopToRedis(Long id, Long expireTime) {
+    Shop shop = getById(id);
+    
+    // Set data and logical expiration time
+    RedisData redisData = new RedisData();
+    redisData.setData(shop);
+    redisData.setExpireTime(LocalDateTime.now().plusSeconds(expireTime));
+    
+    stringRedisTemplate.opsForValue().set(CACHE_SHOP_KEY + id, JSONUtil.toJsonStr(redisData));
+}
+```
+
+## Cache Avalanche
+
+Cache Avalanche 是指在一段时间内, 大量的 Cache 过期, 或者 Redis 直接挂掉了, 请求又直接打到了 DB, 遭老罪咯 !!!
+
+处理大量 Cache 同时过期的问题, 可以在分配 TTL 时, 尽量随机一些, 让他们的过期时间分散开, 减少同一时段的压力.
+
+处理 Redis 宕机的问题, 可以搭建 Master-Slave 或 Cluster 来解决, 还可以通过 Sentinel 给业务添加限流, 熔断, 降级策略, 还可以通过 Nginx 或 Gateway 进行分流, 通过 Nginx 设置多级缓存, 来保证 High Availability.
+
 # MyBatis
 
-## MyBatis Lazy Loading
+## 懒加载机制
 
-MyBatis 通过 CGLIB 创建 Proxy Obj, 在需要时去加载关联数据, 提高查询性能, 当调用 getOrderList() 时, 会被 Proxy Obj 的 invoke() 拦截, 判断 orderList 是否为空, 如果为空才去执行 SQL 查询数据, 填充到 orderList, 再去调用 getOrderList() 执行后续逻辑, 实现 Lazy Loading
+MyBatis 的懒加载机制主要用于优化性能，特别是在处理 一对多 和 多对一 的复杂关联关系时，避免不必要的 SQL 查询。为了更好地理解它的作用，下面通过一个具体的例子来说明。
 
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221740212.png)
+假设有一个电商系统，其中包括 User 和 Order 两个实体，分别表示用户和订单，关系是一对多，即一个用户可以拥有多个订单。在数据库中，这种关系可能会设计为如下结构：
 
-## MyBatis Cache
+- User 表：存储用户基本信息，如 id、name。
+- Order 表：存储订单信息，如 id、user_id、order_date，其中 user_id 是 User 表的外键。
 
-Local Cache 基于 PerpetualCache, 本质是一个 HashMap
+假设我们有一个业务场景，只需要展示用户的基本信息，而不关心用户的订单信息。此时，如果没有懒加载机制，每次查询 User 时，MyBatis 可能会立即加载与之相关联的 Order 信息，也就是进行一次 额外的 SQL 查询 来获取订单数据。这种加载方式叫做 立即加载（Eager Loading）。
 
-Lv1 Cache 基于 PerpetualCache, 作用于 Session, 执行 close() 和 flush() 后, 就会清空 Cache (def: enable)
+在懒加载开启时，只有在明确需要订单信息的时候，MyBatis 才会查询 Order 表，获取订单数据。这种按需加载的方式可以显著提升性能，因为减少了不必要的数据库查询。
 
-Lv2 Cache 作用于 Namespace 和 Mapper, 不依赖 Session (def: disable)
+这里定义了 User 对象的查询 SQL，并通过 `<collection>` 标签设置与 Order 的关联
 
-这里 userMapper1 和 userMapper2 的操作在同一个 Session 下, 所以 userMapper1 执行了 SQL 后, 缓存数据到 Cache 中, userMapper2 再次执行 selectById(1) 就是查询的 Cache 中的数据
+```xml
+<mapper namespace="UserMapper">
+    <select id="getUserById" resultMap="UserOrderMap">
+        SELECT * FROM User WHERE id = #{id}
+    </select>
 
-```java
-SqlSession sqlSession = sqlSessionFactory.openSession();
+    <resultMap id="UserOrderMap" type="User">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <collection property="orders" ofType="Order" select="getOrdersByUserId" lazy="true" />
+    </resultMap>
 
-UserMapper userMapper1 = sqlSession.getMapper(UserMapper.class);
-User user = userMapper1.selectById(1);
-
-UserMapper userMapper2 = sqlSession.getMapper(UserMapper.class);
-User user = userMapper2.selectById(1);
+    <select id="getOrdersByUserId" resultType="Order">
+        SELECT * FROM Order WHERE user_id = #{userId}
+    </select>
+</mapper>
 ```
 
-这里 userMapper1 和 userMapper2 的操作在不同的 Session 下, 所以无法共享 Cache
+我们这里调用 getUserById 获取到 user 对象后，只使用了 name 属性，并未访问 orders 列表。由于懒加载的存在，getOrdersByUserId 方法不会被调用，Order 表的数据不会查询，节省了数据库资源。
 
 ```java
-SqlSession sqlSession1 = sqlSessionFactory.openSession();
-UserMapper userMapper1 = sqlSession1.getMapper(UserMapper.class);
-User user = userMapper1.selectById(1);
-
-SqlSession sqlSession2 = sqlSessionFactory.openSession();
-UserMapper userMapper2 = sqlSession2.getMapper(UserMapper.class);
-User user = userMapper2.selectById(1);
+User user = mapper.getUserById(1);
+System.out.println("User Name: " + user.getName());
 ```
+
+只有在访问 orders 时，MyBatis 才会调用 getOrdersByUserId 查询 Order 表的数据，将结果填充到 orders 列表中。
+
+```java
+List<Order> orders = user.getOrders();
+for (Order order : orders) {
+    System.out.println("Order Date: " + order.getOrderDate());
+}
+```
+
+## 懒加载机制的实现原理
+
+MyBatis 的懒加载底层是通过 动态代理模式 和 懒加载触发器 实现的。其核心是在访问关联属性时，通过代理对象延迟查询数据。
+
+MyBatis 懒加载的主要实现组件包括：
+
+- 代理对象：用于延迟加载的属性并不是直接加载，而是通过一个代理对象来控制何时加载。
+- LazyLoader：懒加载触发器，负责在访问代理对象属性时触发实际的 SQL 查询。
+- ResultLoader：在真正执行 SQL 查询时使用，负责将查询结果映射到目标属性中。
+
+当查询 User 对象时，MyBatis 并不会直接查询并填充 orders 集合，而是创建一个代理对象，通过动态代理的方式来延迟加载 orders 集合。在 MyBatis 中，懒加载的代理对象创建主要通过 CglibProxyFactory 或 JavassistProxyFactory 实现：
+
+```java
+public Object createProxy(Target target) {
+    // 判断是否启用 CGLIB 或 Javassist
+    if (proxyFactory instanceof CglibProxyFactory) {
+        return ((CglibProxyFactory) proxyFactory).createProxy(target);
+    } else {
+        return ((JavassistProxyFactory) proxyFactory).createProxy(target);
+    }
+}
+```
+
+在代理对象被创建的同时，MyBatis 会创建一个 LazyLoader，LazyLoader 中包含了目标对象和需要懒加载的 SQL 语句。当用户访问 orders 属性时，代理对象会检测到这一访问，并调用 LazyLoader 触发懒加载。
+
+```java
+public class LazyLoader {
+    private final MetaObject metaObject;
+    private final ResultLoader resultLoader;
+    private boolean loaded;
+
+    public LazyLoader(MetaObject metaObject, ResultLoader resultLoader) {
+        this.metaObject = metaObject;
+        this.resultLoader = resultLoader;
+        this.loaded = false;
+    }
+
+    public boolean load() throws SQLException {
+        if (!loaded) {
+            resultLoader.loadResult();
+            loaded = true;
+            return true;
+        }
+        return false;
+    }
+}
+```
+
+LazyLoader 调用 ResultLoader 来执行 SQL 查询并填充目标属性。ResultLoader 的核心逻辑如下：
+
+```java
+public Object loadResult() throws SQLException {
+    final Statement stmt = configuration.newStatementHandler(...).prepareStatement();
+    ResultSet rs = stmt.executeQuery();
+    Object result = resultHandler.handleResultSets(rs);
+    metaObject.setValue(property, result);
+    return result;
+}
+```
+
+当调用 User 的目标方法（如 getOrders()）之前，代理会首先判断该方法是否是懒加载属性的方法（如 orders 属性的 getOrders()），如果是，则会触发数据库查询操作，将数据加载到该属性中。
+
+```java
+public class CglibLazyLoader implements MethodInterceptor {
+    private final ResultLoaderMap lazyLoader;
+    private final MetaObject metaObject;
+    private final String objectFactory;
+
+    @Override
+    public Object intercept(Object object, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        // 检查当前方法是否为懒加载属性的方法
+        if (lazyLoader.size() > 0 && lazyLoader.hasLoader(method.getName())) {
+            lazyLoader.load(method.getName());
+        }
+        return methodProxy.invokeSuper(object, args); // 调用真实的方法
+    }
+}
+```
+
+hasLoader() 是 MyBatis 懒加载机制中用于检查某个属性是否需要加载的一个方法。它在 ResultLoaderMap 类中实现，用于判断懒加载属性是否已经存在相应的 ResultLoader，从而确定是否需要触发 SQL 查询。下面将详细解析 hasLoader() 方法的源码及其作用。
+
+ResultLoaderMap 是 MyBatis 中的一个重要组件，用于管理懒加载的属性。它维护了一个 loaderMap，其中存储了需要懒加载的属性与其对应的 ResultLoader。ResultLoader 包含执行 SQL 查询的全部信息，包括查询语句、参数以及映射规则。
+
+```java
+public final class ResultLoaderMap {
+    private final Map<String, ResultLoader> loaderMap = new HashMap<>();
+
+    public boolean hasLoader(String property) {
+        return loaderMap.containsKey(property);
+    }
+
+    public void addLoader(String property, MetaObject metaResultObject, ResultLoader resultLoader) {
+        loaderMap.put(property, resultLoader);
+    }
+
+    public void load(String property) throws SQLException {
+        ResultLoader loader = loaderMap.remove(property);
+        if (loader != null) {
+            loader.loadResult();
+        }
+    }
+}
+```
+
+## 一级缓存
+
+一级缓存是 MyBatis 的本地缓存，作用范围是单个 SqlSession，默认开启。一级缓存的特点是，同一个 SqlSession 对象中执行相同查询时会直接从缓存中获取结果，避免重复查询数据库。
+
+```java
+// 开启一个 SqlSession
+SqlSession session = sqlSessionFactory.openSession();
+UserMapper mapper = session.getMapper(UserMapper.class);
+
+// 第一次查询，发送 SQL 查询数据库
+User user1 = mapper.getUserById(1);
+System.out.println("第一次查询用户：" + user1);
+
+// 第二次查询相同的 ID，命中一级缓存，不会发送 SQL
+User user2 = mapper.getUserById(1);
+System.out.println("第二次查询用户：" + user2);
+
+session.close();  // 关闭 SqlSession
+```
+
+- 第一次查询 getUserById(1) 时，MyBatis 会执行 SQL 查询数据库并将结果放入一级缓存。
+- 第二次查询 getUserById(1) 时，由于 SqlSession 没有关闭，一级缓存生效，所以 MyBatis 不会发送 SQL，而是直接从缓存中读取结果。
+
+在以下情况下，一级缓存会失效，从而再次查询数据库：
+
+- 不同的 SqlSession：一级缓存只在当前 SqlSession 中有效，不同的 SqlSession 无法共享缓存。
+- 执行了更新操作：在执行 INSERT、UPDATE 或 DELETE 后，一级缓存会被清空。
+- 手动清空缓存：调用 session.clearCache() 可以手动清空一级缓存。
+
+## 二级缓存
+
+二级缓存是 MyBatis 的全局缓存，作用范围是 Mapper 映射文件范围。二级缓存可以在不同的 SqlSession 间共享，但默认是关闭的，需要手动配置开启。
+
+```xml
+<configuration>
+    <settings>
+        <!-- 启用二级缓存 -->
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+</configuration>
+```
+
+```java
+// 第一次查询，使用第一个 SqlSession
+SqlSession session1 = sqlSessionFactory.openSession();
+UserMapper mapper1 = session1.getMapper(UserMapper.class);
+
+// 第一次查询，发送 SQL 查询数据库，并将结果存入二级缓存
+User user1 = mapper1.getUserById(1);
+System.out.println("第一次查询用户：" + user1);
+session1.close();  // 关闭 SqlSession，数据会存入二级缓存
+
+// 第二次查询，使用另一个 SqlSession
+SqlSession session2 = sqlSessionFactory.openSession();
+UserMapper mapper2 = session2.getMapper(UserMapper.class);
+
+// 第二次查询相同的 ID，此时从二级缓存中读取，不会发送 SQL
+User user2 = mapper2.getUserById(1);
+System.out.println("第二次查询用户：" + user2);
+
+session2.close();
+```
+
+- 第一次查询 getUserById(1) 会发送 SQL 查询数据库，并将结果存入二级缓存。
+- session1.close() 关闭时，MyBatis 会将一级缓存的数据提交到二级缓存。
+- 第二次查询使用不同的 SqlSession，但是由于二级缓存已启用且有数据，因此 MyBatis 会直接从二级缓存中获取结果，避免了数据库查询。
+
+二级缓存会在以下情况下失效：
+
+- 执行增、删、改操作：当执行 INSERT、UPDATE 或 DELETE 操作时，二级缓存会清空，保证数据一致性。
+- 不同 Mapper 之间无法共享缓存：二级缓存的作用范围是 Mapper 文件，每个 Mapper 有独立的二级缓存。
+- 手动清空缓存：可以通过 sqlSessionFactory.getConfiguration().getCache("namespace").clear() 手动清空某个 Mapper 的二级缓存。
 
 # Spring
-
-## Spring IOC
-
-IOC (Inversion of Control) 一种设计原则, 用于减小计算机程序中各模块之间的依赖关系. 我们只需要定义一个 Bean 的创建过程, 而真正的创建, 初始化, 装配, 生命周期都由 Container (eg: ApplicationContext, BeanFactory) 管理. 通过 DI 注入对象, 只需要关注自己的核心逻辑, 而不需要关注如何获取其他对象.
-
-IOC 最佳实践了 Singleton 和 Fast Fail, 不仅可以节省大量不必要的对象创建, 防止 GC, 还在项目启动时, 就实例化所有的 Bean, 可以将 Bean 的创建由运行期提前至启动期, 在启动时期就可以检测出问题, 而不是在运行时遇到问题停机. Singleton 是不可变状态, 可以保证线程安全.
-
-IOC 最佳实践了 DIP (Dependence Inversion Principle), 高层模块不直接依赖低层模块, 而是依赖低层模块的抽象, 低层模块去实现抽象 (eg: Controller 通过 Service 访问 ServcieImpl), 实现 Decoupling, 同时接口的引入便于后续扩展, 便于引入 Design Pattern (JDK's Dynamic Proxy).
-
-## Spring IOC Process
-
-IOC 的核心思想就将对象的管理交给容器, 应用需要使用某个对象的实例, 就去容器中获取即可, 降低了程序中对象和对象之间的耦合性
-
-IOC 初始化: 加载声明的 Bean, 保存到 IOC 中, IOC 的初始化就是保存这些 Bean Instance 到 singletonObjects 中功能
-
-IOC 的 Bean 的初始化: 通过反射去初始化那些没有设置 Layz Init 的 Bean
-
-IOC 的 Bean 的使用: 通过 DI 获取的 Bean 实例, 对于设置了 Lazy Init 的 Bean 则是在通过 DI 获取时, 才会进行初始化
-
-## Spring Lifecycle
-
-Starting: 通过 BootstrapContext 启动 Application, 发布 ﻿ApplicationStartingEvent
-
-Environment Prepared: 准备 ﻿Environment Obj, 会发布 ﻿ApplicationEnvironmentPreparedEvent
-
-Context Prepared: 准备 SpringApplication Obj, 加载 Source, 创建 ApplicationContext Obj, 发布 ApplicationContextInitializedEvent
-
-Context Loaded: 刷新 ApplicationContext, 初始化 Bean 的依赖关系, 发布 ApplicationPreparedEvent
-
-Started: 在启动 CommandLineRunner 和 ApplicationRunner 之前, 此时 ApplicationContext 已经被刷新并且所有的 ﻿Spring Bean 都已经被创建, 发布 ApplicationStartedEvent
-
-Ready: 在启动 CommandLineRunner 和 ApplicationRunner 之后, 已经完全启动并准备好接受 HTTP 请求, 发布 ApplicationReadyEvent
-
-Shutdown: 关闭 Application, 完成一些清理工作或者关闭应用所用的资源, 发布 ﻿ContextClosedEvent
-
-Failed: 启动过程中出现错误或异常, 就会发布 ApplicationFailedEvent 表示启动失败
-
-## Bean Lifecycle
-
-Spring 创建 Bean 的过程
-
-- 调用 loadBeanDefinitions() 扫描 XML 或 Annotation 声明的 Bean, 封装成 BeanDefinition Obj 放入 beanDefinitionMap 中, 再遍历 beanDefinitionMap, 通过 createBean() 创建 Bean
-- 调用 createBeanInstance() 构建 Bean Instance, 去获取 Constructor, 先准备 Constructor 需要的 Parameter, 再执行 Constructor
-- 调用 populateBean() 填充 Bean, 通过 Three-Level Cache 去注入当前 Bean 所依赖的 Bean (通过 @Autowired 注入的 Bean)
-
-Spring 初始化 Bean 的过程
-
-- 调用 initializeBean() 初始化 Bean
-- 调用 invokeAwareMethods() 去填充 Bean 实现的 Aware 信息, Bean 有可能实现了 BeanNameAware, BeanFactoryAware 或 ApplicationContextAware 去扩展 Bean (类似于 Neddle, 可以感知到 Bean Lifecycle 中的信息)
-- 调用 applyBeanProcessorsBeforeInitialization() 去处理 Bean 实现的 BeanPostProcessor 的 postProcessBeforeInitialization()
-- 调用 Bean 中添加了 @PostConstruct 的 Init Method
-- 调用 Bean 实现的 InitializingBean 的 afterPropertiesSet()
-- 调用 Bean 中添加了 @Bean(initMethod = "initMethod") 的 Init Method
-- 调用 applyBeanProcessorsAfterInitialization() 去处理 Bean 实现的 BeanPostProcessor 的 postProcessAfterInitialization(), AOP 动态代理就是由该 Processor 实现的
-- 调用 registerDisposableBean() 注册实现了 Disposable 的 Bean, 这样销毁时, 就会自动执行 destroy()
-- 调用 addSingleton() 将 Bean 放入 singletonObjects 中, 后续使用 Bean 都是从 singletonObjects 中获取
-
-jSpring 销毁 Bean 的过程
-
-- 调用 Bean 中添加了 @PreDestroy 的 Destroy Method
-- 调用 destroyBeans() 遍历 singletonObjects, 逐一销毁所有的 Bean, 这个过程会依次执行 Bean 的 destroy()
-- 调用 Bean 中添加了 @Bean(destroyMethod = "destroyMethod") 的 Destroy Method
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401081756800.png)
 
 ## SpringMVC Process
 
@@ -1983,23 +2357,71 @@ SpringMVC 处理 JSON 的流程
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221740209.png)
 
-## Spring AOP
+当应用启动时，Spring 会加载 DispatcherServlet，并初始化 HandlerMapping、HandlerAdapter、ViewResolver 等必要的组件。
 
-AOP (Aspect-Oriented Programming) 是面向切面编程, 可以不修改源代码的情况下, 抽取并封装一个可重用的模块, 可以同时作用于多个方法, 减少模块耦合的同时, 扩展业务功能. 可用于记录操作日志, 处理缓存, 事务处理
+```java
+protected void initStrategies(ApplicationContext context) {
+    this.initHandlerMappings(context);
+    this.initHandlerAdapters(context);
+    this.initViewResolvers(context);
+    // 初始化其他策略...
+}
+```
 
-OOP 可以解决 Class 级别的代码冗余问题, AOP 可以解决 Method 级别的代码冗余问题.
+当用户发送请求时，DispatcherServlet 的 doDispatch() 方法被调用。
 
-Bean Lifecycle 的 postProcessAfterInitialization 阶段, 会调用 BeanPostProcessor 的实现类 AbstractAutoProxyCreator 的 postProcessAfterInitialization(), 先判断 Bean 是否需要实现 Dynamic Proxy, 如果需要则会去根据当前 Bean 是否有 Interface 选择是采用 JDK 还是 CGLib 实现 Dynamic Proxy.
+```java
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    // 1. 获取处理器 (Handler)
+    HandlerExecutionChain mappedHandler = getHandler(request);
+    
+    // 2. 获取处理器适配器 (HandlerAdapter)
+    HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
 
-Spring 底层的 TRX 就是通过 AOP 实现的, 通过 Surround 的方式扩展, 在方法开启前开启事务, 在方法结束后提交事务, 无侵入, 碉堡了 !!!
+    // 3. 调用处理器 (执行 Controller 方法)
+    ModelAndView mv = ha.handle(request, response, mappedHandler.getHandler());
 
-## AspectJ AOP
+    // 4. 解析视图
+    processDispatchResult(request, response, mappedHandler, mv);
+}
+```
 
-Aspecjt AOP 通过 Weaver (AspectJ Aop 自己的 Compiler), 将 @Before, @After, @Around 的代码编译成字节码织入到目标方法的字节码文件中, 即 AspectJ AOP 在编译器期间就完成了增强, 而 Spring AOP 是通过 Dynamic Proxy 实现了目标方法的增强.
+DispatcherServlet 调用 getHandler() 方法，通过 HandlerMapping 匹配请求 URL 和处理器。
 
-AspectJ AOP 支持在方法调用, 方法内调, 构造器调用, 字段设置, 获取等级别的织入, 更加灵活强大.
+```java
+protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+    for (HandlerMapping hm : this.handlerMappings) {
+        HandlerExecutionChain handler = hm.getHandler(request);
+        if (handler != null) {
+            return handler;
+        }
+    }
+    return null;
+}
+```
 
-AspejcJ AOP 不需要借助 Dynamic Proxy, 而是直接编译成字节码, 所以性能也要好很多.
+DispatcherServlet 根据 HandlerAdapter 调用具体的处理器方法。
+
+```java
+ModelAndView mv = ha.handle(request, response, mappedHandler.getHandler());
+```
+
+```java
+public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    HandlerMethod handlerMethod = (HandlerMethod) handler;
+    ModelAndView mav = invokeHandlerMethod(request, response, handlerMethod);
+    return mav;
+}
+```
+
+控制器返回 ModelAndView 对象后，DispatcherServlet 调用 ViewResolver 将逻辑视图名转换为具体视图。
+
+```java
+protected void render(ModelAndView mv, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    View view = resolveViewName(mv.getViewName(), mv.getModel(), locale, request);
+    view.render(mv.getModel(), request, response);
+}
+```
 
 ## Auto Configuration
 
@@ -2010,72 +2432,6 @@ App.java 的 @EnableAutoConfiguration 底层包含 @Import({AutoConfigurationImp
 %s.imports 包含该 Dependency 提供的所有 Configuration (eg. xxx.AutoConfiguration.imports 包含 xxx.aop.AopAutoConfiguration, xxx.amqp.RabbitAutoConfiguration), Configuration 包含 @Import({xxxSelector.class}) 通过 @Condition 按条件导入 Bean, 实现 Auto Configuration
 
 通过 Auto Configuration 导入的 Configuration 用到的 Properties Obj 可以在 application.properties 中配置
-
-## Three-Level Cache
-
-Spring 的 DefaultSingletonBeanRegistry Cls 中声明了 singletonObjects (ConcurrentHashMap), earlySingletonObjects (ConcurrentHashMap) 和 singletonFactories (HashMap) 用于实现 Three-Level Cache
-
-- singletonObjects 是 Lv1 Cache, 存放经历了完整 Life Cycle 的 Bean Obj
-  - singletonObjects 的 Key 为 Bean Name, Val 为 Bean Obj
-  - 通过 applicationContext.getBean() 获取 Bean 就是访问 singletonObjects 这个 Map
-- earlySingletonObjects 是 Lv2 Cache, 存放未经历完整 Life Cycle 的 Bean Obj, 解决 Circurlar Reference 的关键
-- singletonFactories 是 Lv3 Cache, 存放各种 Bean 的 ObjectFactory, 可以用来创建 Normal Obj 或 Proxy Obj
-  - singletonFactories 是 HashMap, 而不是 ConcurrentHashMap, 因为 singletonFactories 通常只在 Bean 的创建过程中使用, 一旦 Bean 创建完成, 即使有多线程对创建好的 Bean 进行访问, 访问的是 singletonObjects, 而不是 singletonFactories, 不存在线程安全问题.
-
-```java
-// Lv1 Cache
-private final Map<String, Object> singletonObjects = new ConcurrentHashMap(256);
-// Lv2 Cache
-private final Map<String, Object> earlySingletonObjects = new ConcurrentHashMap(16);
-// Lv3 Cache
-private final Map<String, ObjectFactory<?>> singletonFactories = new HashMap(16);
-```
-
-Spring 的 DefaultSingletonBeanRegistry Cls 中声明了 singletonsCurrentlyInCreation (Collections.newSetFromMap(new ConcurrentHashMap<>(16))) 存储正在创建过程中的 Bean, 用来判断是否存在 Circular Reference.
-
-```java
-private final Set<String> singletonsCurrentlyInCreation = 
-    Collections.newSetFromMap(new ConcurrentHashMap<>(16));
-```
-
-Spring 通过 Three-Level Cache 解决了大部分的 Circular Reference, 需要使用 A 时, 会执行下面的步骤
-
-- 调用 getBean() 获取 A, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 未查询到 A Cache, 调用 getSingleton() 创建 A
-
-  - 调用 beforeSingletonCreation() 添加 A 到 singletonsCurrentlyInCreation 中, 表示 A 正在创建过程中
-  - 调用 singleFactory.getObject() 通过 Reflect 创建 A Obj, 此时 A Obj 的成员都是空的, 即 A 引用的 B 也是空的
-  - 生成 A 的 ObjectFactory 存入 singletonFactories, ObjectFactory 本质是一个 Lambda, 可用于动态创建 A 的 Normal Obj 或 Proxy Obj
-  - 通过 BeanPostProcessor 发现 A 依赖 B, 需要去创建 B
-
-- 调用 getBean() 获取 B, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 未查询到 B Cache, 调用 getSingleton() 创建 B
-
-  - 调用 beforeSingletonCreation() 添加 B 到 singletonsCurrentlyInCreation 中
-  - 调用 singleFactory.getObject() 通过 Reflect 创建 B Obj, 此时 B Obj 的成员都是空的, 即 B 引用的 A 也是空的
-  - 生成 B 的 ObjectFactory 存入 singletonFactories
-  - 通过 BeanPostProcessor 发现 B 依赖 A, 并发现 A 也在 singletonsCurrentlyInCreation 中, 说明 A 和 B 存在 Circular Reference, 需要去处理 Circular Reference
-
-- 调用 getBean() 获取 A, 依次查询 singletonObjects, earlySingletonObjects 和 singletonFactories, 从 singletonFactories 中获取到 A 的 OpenFactory, 执行 Lambda 创建 A Obj 放入 earlySingletonObjects, 并移除 singletonFactories 中 A 的 OpenFactory
-
-  - 如果 C 引用了 A, 直接从 earlySingletonObjects 获取 A 即可, 不需要再通过 A 的 OpenFactory 获取 A Obj 了
-
-- 调用 populateBean() 填充 B 依赖的 A, 此时 B 创建完成, 向 singleObjects 添加 B, 从 singletonsCurrentlyInCreation 和 singletonFactories 移除 B
-
-  - 如果再使用 B, 就可以直接从 singleObjects 中获取
-
-- 调用 populateBean() 填充 A 依赖的 B, 此时 A 创建完成, 向 singleObjects 添加 A, 从 singletonsCurrentlyInCreation 和 earlySingletonObjects 移除 A
-
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401152302912.png)
-
-Transaction ACID
-
-Atomicity 是指一个 TRX 是一个不可分割的工作单元, 要么全成功提交, 要么全失败回滚, 成王败寇, 没有妥协之说, 通过 Undo Log 保证.
-
-Consistency 是指数据需要从一个合法性状态变化到另一个合法性状态, 这个合法是业务层面的合法 (eg: A 扣钱, 扣成了负数, 则不符合业务层面的要求, 即不合法). 
-
-Isolation 是指一个 TRX 内部使用到的数据对其他 TRX 隔离, 不会受到其他 TRX 的影响, 通过 MVCC 保证.
-
-Durability 是指一个 TRX 一旦被提交, 它对数据库中数据的改变就是永久性的, 通过 Redo Log 保障的, 先将数据库的变化信息记录到 Redo Log 中, 再对数据进行修改, 这样做, 即使数据库崩掉了, 也可以根据 Redo Log 进行恢复.
 
 ## Design Pattern
 
@@ -2099,7 +2455,7 @@ Chain of Responsibility Pattern: Filter 和 Interceptor 采用了 Chain of Respo
 
 CAP: Consistency, Availability, Partition 同时只能满足两个, 结点之间形成分区后, 要么拒绝请求, 保证 Consistency, 放弃 Availability, 要么依旧提供服务, 保证 Availability, 放弃 Consistency
 
-BASE: 对 CAP 的一种解决方案, 结点之间形成分区后, 允许 Partial Availability, 要求 Core Availability, 允许 Temporary Incosistency, 要求 Eventual Consistency
+BASE: 对 CAP 的一种解决方案, 结点之间形成分区后, 允许 Partial Unavailability, 要求 Core Availability, 允许 Temporary Incosistency, 要求 Eventual Consistency
 
 - AP Mode: Sub Transaction 分别执行 Operation 和 Commit, 允许 Temporary Incosistency, 后续采用 Remedy, 保证 Eventual Consistency (eg: Redis)
 - CP mode: Sub Transaction 分别执行 Operation, 相互等待, 放弃 Partial Availability, 保证 Core Availability, 共同执行 Commit (eg: ElasticSearch)
@@ -2121,6 +2477,121 @@ Two Phase Commit 缺点
 - 单点故障: 如果在二阶段提交过程中, 协调者出现故障, 会导致所有参与者一直等待, 不能进行其它操作
 - 数据不一致: 如果 RM 接收到 Prepare 请求后, 未发送 ACK 确认就宕机, 而在此之后其它 RM 都发送了 ACK 确认, 则此时 TC 将发起 Commit 请求, 导致数据状态不一致
 
+下面这段代码，简单实现了两阶段提交的：
+
+```java
+SqlSession session1 = new SqlSession("t_db1");
+SqlSession session2 = new SqlSession("t_db2");
+
+try {
+    session1.startTransaction();
+    boolean prepared1 = session1.execute("update user");
+    
+    session2.startTransaction();
+    boolean prepared2 = session2.execute("update order");
+
+    if (prepared1 && prepared2) {
+        session1.commitTransaction();
+        session2.commitTransaction();
+    } else {
+        throw new SqlException();
+    }
+} catch (Throwable e) {
+    session1.rollbackTransaction();
+    session2.rollbackTransaction();
+}
+```
+
+下面这段代码，加入了一些设计和抽象：
+
+```java
+
+interface TransactionParticipant {
+    boolean prepare();
+    void commit();
+    void rollback();
+}
+
+class ParticipantA implements TransactionParticipant {
+    @Override
+    public boolean prepare() {
+        System.out.println("Participant A: preparing...");
+        return true; // 模拟准备成功
+    }
+
+    @Override
+    public void commit() {
+        System.out.println("Participant A: committed.");
+    }
+
+    @Override
+    public void rollback() {
+        System.out.println("Participant A: rolled back.");
+    }
+}
+
+class ParticipantB implements TransactionParticipant {
+    @Override
+    public boolean prepare() {
+        System.out.println("Participant B: preparing...");
+        return false; // 模拟准备失败
+    }
+
+    @Override
+    public void commit() {
+        System.out.println("Participant B: committed.");
+    }
+
+    @Override
+    public void rollback() {
+        System.out.println("Participant B: rolled back.");
+    }
+}
+
+class TwoPhaseCommitCoordinator {
+    private List<TransactionParticipant> participants = new ArrayList<>();
+
+    public void addParticipant(TransactionParticipant participant) {
+        participants.add(participant);
+    }
+
+    public void executeTransaction() {
+        boolean allPrepared = true;
+        // 第一阶段：准备
+        for (TransactionParticipant participant : participants) {
+            if (!participant.prepare()) {
+                allPrepared = false;
+                break;
+            }
+        }
+
+        // 第二阶段：提交或回滚
+        if (allPrepared) {
+            System.out.println("All participants prepared successfully. Committing...");
+            for (TransactionParticipant participant : participants) {
+                participant.commit();
+            }
+        } else {
+            System.out.println("One or more participants failed to prepare. Rolling back...");
+            for (TransactionParticipant participant : participants) {
+                participant.rollback();
+            }
+        }
+    }
+}
+
+public class TwoPhaseCommitExample {
+    public static void main(String[] args) {
+        TwoPhaseCommitCoordinator coordinator = new TwoPhaseCommitCoordinator();
+        
+        coordinator.addParticipant(new ParticipantA());
+        coordinator.addParticipant(new ParticipantB());
+
+        coordinator.executeTransaction();
+    }
+}
+```
+
 ## Three Phase Commit
 
 Three Phase Commit (3PC) 对 Two Phase Commit 进行了优化, 引入了 Timeout 和 CanCommit Phase, 以避免阻塞和单点故障问题
@@ -2129,11 +2600,156 @@ Three Phase Commit (3PC) 对 Two Phase Commit 进行了优化, 引入了 Timeout
 - PreCommit Phase: 如果所有 RM 都返回 Yes, TC 向 RM 发送 PreCommit 请求, 接收到请求的 RM 表示接受 TC 的决定, 并回复 ACK
 - doCommit Phase: TC 收到 RM 的 ACK 后, 向所有 RM 发送 doCommit 请求, RM 接受到请求后进行真正的事务提交并回复 ACK
 
+CanCommit Phase 的主要作用
+
+- 检查自身是否处于正常状态（如数据库连接、磁盘空间等）
+- 判断是否存在可能阻止提交的因素（如资源冲突、限制条件）
+- 不执行具体的事务逻辑，而是进行快速的条件验证（如判断事务相关的行是否被锁定，检查库存数量是否足够等）
+- 避免不必要的锁定和占用，降低分布式事务的开销。如果大部分事务在此阶段被中止，可以节约后续阶段的处理成本
+
 Three Phase Commit 的任一阶段, 只要有 RM 回复 No 或者超时未回复, TC 都会向所有 RM 发送 Abort 请求, 所有 RM 在执行完事务的回滚操作后回复 ACK
 
 Three Phase Commit 中的 TC 出现单点故障, 无法通知 RM 进行提交, 则 RM 会在等待一段时间后自动提交事务, 但是这也会导致一些问题. 如果某一个 RM 出现异常, 返回了 No, 刚好此时 TC 单点故障, 则会导致其他 RM 超时后自动提交, 造成不一致
 
 Three Phase Commit 虽然解决了 Two Phase 的一些问题, 但是增加了一次网络往返, 而且在处理网络分区和多数故障的情况下, Three Phase Commit 也无法保证一致性, 当前实际使用中更常见的是使用具有超时和故障恢复机制的 Two Phase Commit (eg: Paxos, Raft)
+
+```java
+interface TransactionParticipant {
+    boolean canCommit() throws InterruptedException;
+    boolean preCommit() throws InterruptedException;
+    void doCommit();
+    void rollback();
+}
+
+class Participant implements TransactionParticipant {
+    private boolean preCommitted = false;
+
+    @Override
+    public boolean canCommit() throws InterruptedException {
+        // 模拟网络延迟
+        Thread.sleep((long) (Math.random() * 2000));
+        System.out.println(Thread.currentThread().getName() + ": Can commit.");
+        return true; // 模拟成功
+    }
+
+    @Override
+    public boolean preCommit() throws InterruptedException {
+        // 模拟网络延迟
+        Thread.sleep((long) (Math.random() * 2000));
+        System.out.println(Thread.currentThread().getName() + ": Pre-committed.");
+        preCommitted = true;
+        return true; // 模拟成功
+    }
+
+    @Override
+    public void doCommit() {
+        if (preCommitted) {
+            System.out.println(Thread.currentThread().getName() + ": Committed.");
+        } else {
+            System.out.println(Thread.currentThread().getName() + ": Cannot commit without pre-commit!");
+        }
+    }
+
+    @Override
+    public void rollback() {
+        System.out.println(Thread.currentThread().getName() + ": Rolled back.");
+        preCommitted = false;
+    }
+
+    public boolean isPreCommitted() {
+        return preCommitted;
+    }
+}
+
+class ThreePhaseCommitCoordinator {
+    private final List<TransactionParticipant> participants = new ArrayList<>();
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+    private static final int TIMEOUT_MS = 3000; // 每个阶段的超时限制
+
+    public void addParticipant(TransactionParticipant participant) {
+        participants.add(participant);
+    }
+
+    public void executeTransaction() {
+        try {
+            // 第一阶段：可以提交阶段
+            if (!canCommitPhase()) {
+                System.out.println("Coordinator: Can-commit phase failed. Rolling back...");
+                rollbackAll();
+                return;
+            }
+
+            // 第二阶段：预提交阶段
+            if (!preCommitPhase()) {
+                System.out.println("Coordinator: Pre-commit phase failed. Rolling back...");
+                rollbackAll();
+                return;
+            }
+
+            // 第三阶段：提交阶段
+            commitPhase();
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    private boolean canCommitPhase() {
+        System.out.println("Coordinator: Starting can-commit phase...");
+        return executePhase(TransactionParticipant::canCommit);
+    }
+
+    private boolean preCommitPhase() {
+        System.out.println("Coordinator: Starting pre-commit phase...");
+        return executePhase(TransactionParticipant::preCommit);
+    }
+
+    private void commitPhase() {
+        System.out.println("Coordinator: Starting commit phase...");
+        for (TransactionParticipant participant : participants) {
+            participant.doCommit();
+        }
+    }
+
+    private boolean executePhase(Callable<Boolean> task) {
+        List<Future<Boolean>> futures = new ArrayList<>();
+        for (TransactionParticipant participant : participants) {
+            futures.add(executor.submit(() -> task.call(participant)));
+        }
+
+        for (Future<Boolean> future : futures) {
+            try {
+                if (!future.get(TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                    return false; // 如果任何一个参与者返回 false，阶段失败
+                }
+            } catch (TimeoutException e) {
+                System.out.println("Coordinator: Timeout detected during phase.");
+                return false; // 超时也视为失败
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false; // 其他异常视为失败
+            }
+        }
+        return true; // 所有参与者成功
+    }
+
+    private void rollbackAll() {
+        System.out.println("Coordinator: Rolling back all participants...");
+        for (TransactionParticipant participant : participants) {
+            participant.rollback();
+        }
+    }
+}
+
+public class ThreePhaseCommitWithAccurateTimeout {
+    public static void main(String[] args) {
+        ThreePhaseCommitCoordinator coordinator = new ThreePhaseCommitCoordinator();
+        coordinator.addParticipant(new Participant());
+        coordinator.addParticipant(new Participant());
+
+        coordinator.executeTransaction();
+    }
+}
+```
 
 ## Quorum
 
@@ -2264,26 +2880,6 @@ Micro Service 同一个模块可能有多个实例, 就需要通过 Load Balanci
 - Least Connections Load Balancing: 最少连接算法, 将新的请求分配给当前连接数最少的服务器, 适用于处理请求所需时间差异较大的情况
 - Source IP Hash Load Balancing: 源地址哈希算法, 根据请求的源地址进行哈希计算, 将请求分配给服务器, 可以保证来自同一源地址的请求总是被分配到同一台服务器
 
-## RPC
-
-RPC 和 HTTP 是两种常用的网络通信协议, 它们在设计理念, 使用场景, 优势和限制等方面有所不同
-
-RPC 允许一台计算机上的程序调用另一台计算机上的程序, 就像调用本地程序一样, 目的是为了使分布式系统中的跨网络的程序调用变得透明, RPC 可以基于多种底层传输协议实现 (eg: TCP, UDP, HTTP)
-
-- RPC 更适用于构建分布式系统和微服务架构中服务间的通信, 特别是在需要高效, 紧密耦合的系统组件间进行远程过程调用时
-- RPC 协议通常需要服务提供者和消费者之间有更紧密的协作和协议一致性, RPC 客户端和服务器可能需要使用相同的技术栈或遵循特定的协议规范
-- RPC 的安全性取决于所使用的底层传输协议和额外的安全措施 (eg: TLS/SSL 加密, 认证机制)
-
-HTTP 是一种应用层协议, 设计用于 Web 浏览器和服务器之间的通信, 但也被广泛用于不同系统之间的数据交换, HTTP 遵循请求响应模式, 主要用于传输 HTML 文档, 图片, 视频等超媒体信息
-
-- HTTP 相对简单, 易于理解和调试, 虽然 HTTP2 提供了性能改进 (eg: 头部压缩, 多路复用), 但通常来说，HTTP 在性能上可能不及专为远程调用优化的 RPC
-- HTTP 作为 Web 的基石, 具有极高的互操作性和灵活性, 它支持多种数据格式和编码标准, 使得不同技术栈的系统能够轻松集成和通信
-- HTTP 本身支持通过 HTTPS 进行加密通信, 提供了数据传输的安全性
-
-Dubbo 是基于 RPC 的分布式框架, 支持服务注册发现, 远程通信, 负载均衡, 超时处理, 熔断降级, 适用于构建高性能且复杂的微服务架构
-
-OpenFeign 是一个声明式的 Http 客户端, 简化了 Http 的远程通信过程, 可以像调用本地接口一样实现 Http 请求, 适用于构建简单的微服务
-
 # Network
 
 ## Multiplexing IO
@@ -2350,7 +2946,7 @@ TCP 的三次握手以最少的通信次数确认了双方的接收和发送能�
 ## 4-Way Wavehand
 
 TCP 的四次挥手是指在 TCP 连接中, Client 和 Server 中任意一方在数据传输结束后, 想要结束连接, 就务器必须要做的四个动作
-
+ 
 - Client 发送 FIN 给 Server, 表示要关闭连接, Client 切换状态为 FIN_WAIT_1
 - Server 接受到 FIN 后, 返回 ACK 给 Client, Server 切换状态为 CLOSE_WAIT, 在这个过程中, Server 还可以发送数据给 Client, Server 发送完数据后, 发送 FIN 给 Client, Server 切换状态为 LAST_ACK
 - Client 接受到 FIN 后, 返回 ACK 给 Server, Client 切换状态为 TIME_WAIT, 在这过程中, Client 会进入等待, 防止 Server 没有接受到刚才的 ACK 重新发送 FIN 要求结束, Client 等待两倍的 MSL 的时间后没有重新接受到 FIN, 就会切换状态为 CLOSED
@@ -2437,35 +3033,150 @@ OSI 和 TCP/IP 的对应关系
 
 ## Symmetric Key Cryptography
 
-Client 通过 Secret Key 对 Plaintext 进行 Encode 得到 Ciphertext, 发送给 Server
+对称加密的关键动作：
 
-Server 通过 Secret Key 对 Ciphertext 进行 Decode 得到 Plaintext
+- 密钥生成：加密和解密使用相同的密钥。发送方和接收方需要事先共享这个密钥。
+- 加密：发送方使用密钥和加密算法（如AES、DES）对明文数据进行加密，生成密文。
+- 传输：发送方将密文通过网络传输给接收方。
+- 解密：接收方收到密文后，使用相同的密钥和解密算法将密文还原为明文。
 
-Algo 必须内置在 Client 和 Server 中, 而 Nginx 又是 Open Source, 所以 Algo 也是公开的, 无法保障安全, Secret Key 需要通过 Network 传输, 也不安全
+对称加密的优点：
+
+- 速度快：对称加密算法通常计算量较小，处理速度较快，适合大数据量的加密。
+- 实现简单：算法简单，易于实现和部署。
+
+对称加密的缺点：
+
+- 密钥管理困难：需要在通信双方之间安全地共享和管理密钥，尤其在大规模网络中，密钥管理变得复杂。
+- 密钥泄露风险高：如果密钥被第三方获取，所有使用该密钥加密的数据都可能被破解。
+
+对称加密的算法都要内置在客户端和服务端，而常见的服务端程序都是开源的，比如 Nignx 就是开源的，所以算法也是公开的，无法保障安全，秘钥需要通过网络传输，非常的不安全。
 
 ## Asymmetric Key Cryptography
 
-Client 访问 Server, Server 生成 Public Key 返回给 Client
+非对称加密的关键动作：
 
-Client 通过 Publich Key 进行 Encode, 发送给 Server, Server 通过 Private Key 进行 Decode 得到 Plaintext
+- 密钥对生成：每个用户生成一对密钥，公钥和私钥。公钥公开，私钥保密。
+- 公钥加密：发送方使用接收方的公钥对明文数据进行加密，生成密文。
+- 私钥加密：用于数字签名，发送方使用自己的私钥对明文进行加密，生成签名。
+- 传输：发送方将密文（和签名）通过网络传输给接收方。
+- 私钥解密：接收方使用自己的私钥对密文进行解密，还原明文。
+- 公钥解密：接收方使用发送方的公钥验证签名，确保数据的完整性和发送方的身份。
+- 生成签名：发送方使用自己的私钥对明文的哈希值进行加密。
+- 验证签名：接收方使用发送方的公钥对数字签名进行解密，得到发送方生成的哈希值。接收方将自己生成的哈希值与解密得到的哈希值进行比较。如果两者一致，则验证通过，数据未被篡改且确实来自发送方。
 
-Server 通过 Private Key 进行 Encode, 发送给 Client, Client 通过 Private Key 进行 Decode 得到 Plaintext
+非对称加密的流程：
 
-Public Key 通过 Network 传输, Private Key 保存在 Server 不丢失
+- A 和 B 互为发送方和接收方，A 和 B 都需要生成一对公钥和私钥，分别是 PubA, PrvA, PubB, PrvB。
+- A 准备一条消息 M（例如 "Hello, B!"）。
+- A 对 M 进行哈希计算，得到一个固定长度的哈希值 H(M) = 0x1234abcd...
+- A 使用自己的私钥 PrvA 对 H(M) 进行加密，生成数字签名 SigA = Encrypt(PrivA, H(M)) = 0x5678efgh...。
+- A 将明文消息 M 和数字签名 SigA 打包成一个消息包 {M, SigA}
+- A 使用 PubB 对消息包加密，生成密文 Encrypted_Message = Encrypt(PubB, {"Hello, B!", 0x5678efgh...})，并发送给 B。
+- B 使用 PrvB 对秘文解密，得到消息包 {M, SigA} = Decrypt(PrvB, Encrypted_Message)
+- B 使用 PubA 对 SigA 进行解密，得到 H(M) = Decrypt(PubA, SigA) = 0x1234abcd...
+- B 对 M 进行哈希计算，得到 H'(M)，再对比 H'(M) 和 H(M)，验证是否发生篡改。
 
-Hacker 无法伪造 Client 通过 Publich Key 进行 Decode
+非对称加密的优点：
 
-Hacker 伪造 Server, 发送 Fake Public Key 给 Client, 让 Client 和 Hacker 交互, Hacker 再去跟 Server 交互, 所以只靠 Asymmetric Key Cryptography 无法保障安全
+- 密钥管理方便：无需共享私钥，公钥可以公开，私钥保密，解决了对称加密的密钥分发问题。
+- 安全性高：即使公钥被泄露，私钥仍然是安全的，通信的机密性和完整性能够得到保障。
 
-## Certification
+非对称加密的缺点：
 
-Server 提交 Public Key 给 Ca 认证, Ca 通过 Publich Key 进行 Encode得到 Certification 返回给 Server, Server 返回 Certification 给 Client
+- 速度慢：非对称加密算法计算复杂，处理速度较慢，不适合大数据量的加密。
+- 实现复杂：算法复杂，实现和部署难度较大。
 
-Client 通过 Ca 的 Public Key 对 Certification 进行 Decode 得到 Server 的 Public Key, 再通过 Asymmetric Encryption 和 Server 进行交互
+非对称加密的问题：
 
-Hacker 拦截到 Server 返回的 Certification 后, 可以通过 Public Key 进行 Decode, 但是没有 Private Key 就无法进行 Encode, 再次发送给 Client 后, Client 无法 Decode, 就会校验失败, 解决了 Hacker 伪造 Server 的问题
+- 攻击端依旧可以伪造服务方，发送假公钥给客户端，让客户端和服务端进行交互，攻击端再去跟服务端进行交互，所以只靠非对称加密无法保证安全，还是需要借助 TLS 来保障安全。
 
-# Computer
+## TLS
+
+HTTPS（HyperText Transfer Protocol Secure）使用 TLS（Transport Layer Security）或其前身 SSL（Secure Sockets Layer）协议来加密HTTP通信。HTTPS的凭证主要是数字证书，通常由受信任的证书颁发机构（CA）签发。
+
+数字证书在 HTTPS 中起到以下几个重要作用：
+
+- 验证服务器身份：确保客户端（浏览器）连接的是合法的服务器，而不是冒充的服务器。
+- 加密通信：提供服务器的公钥，用于在 TLS 握手过程中加密会话密钥，从而确保通信的机密性。
+
+数字证书通常包含以下信息：
+
+- 证书持有者信息：包括域名、组织名称等。
+- 公钥：用于加密通信的公钥。
+- 证书颁发机构信息：签发该证书的CA的信息。
+- 有效期：证书的有效期起始和结束日期。
+- 数字签名：CA对证书内容的数字签名，确保证书的完整性和真实性。
+
+TLS 通信的流程：
+
+- 服务器生成一对公钥和私钥。公钥用于加密数据，私钥用于解密数据。
+- 服务器将公钥和其他信息（如域名、组织信息）包含在证书签名请求（CSR）中，提交给证书颁发机构（CA）。
+- CA 使用自己的私钥对服务器的公钥和其他信息进行签名，生成数字证书（Certification）。
+- CA 将签名后的数字证书返回给服务器。这个证书包含服务器的公钥、服务器信息和CA的签名。
+- 服务器在 TLS 握手过程中将数字证书发送给客户端。
+- 客户端使用 CA 的公钥对数字证书进行解码（验证CA的签名），以确保证书的真实性和完整性。如果验证通过，客户端从证书中提取服务器的公钥。
+- 客户端使用服务器的公钥加密会话密钥，并发送给服务器。服务器使用自己的私钥解密会话密钥。之后，客户端和服务器使用对称加密（会话密钥）进行安全通信。
+
+TLS 是如何方法攻击端冒充服务器的：
+
+- 假设黑客拦截了服务器发送给客户端的数字证书。黑客可以使用 CA 的公钥解码证书，但无法伪造证书，因为没有 CA 的私钥。黑客也没有服务器的私钥，无法解密客户端加密的会话密钥。
+- 如果黑客试图伪造证书并发送给客户端，客户端会使用 CA 的公钥进行验证。由于伪造的证书没有 CA 的签名，验证会失败，客户端拒绝通信。
+
+# OS
+
+### File Descriptor
+
+fd（file descriptor，文件描述符）是一个整数，用于表示进程打开的文件或其他输入/输出资源的引用。它是一种抽象的标识符，用来统一管理文件、设备、套接字等资源，操作系统通过文件描述符来追踪和管理这些资源。
+
+每个进程都有一个文件描述符表（file descriptor table），由操作系统维护。文件描述符是表中的索引值，通常是一个非负整数。文件描述符与内核中的文件对象相关联，文件对象记录了文件的具体状态，如偏移量、权限等。
+
+open() 调用会让操作系统创建或打开文件，返回一个文件描述符 fd。
+
+- 操作系统在内核中为 fd 分配一个文件对象，记录文件名、打开模式、当前偏移量等信息。
+- 例如，返回值 fd = 3，它是该进程的文件描述符表中的一个索引。通常，0、1 和 2 分别对应标准输入、标准输出和标准错误，3 是进程打开的第一个文件。
+
+```c
+// 打开文件，获取文件描述符
+int fd = open("example.txt", O_RDWR | O_CREAT, 0644);
+```
+
+write() 使用 fd 来找到文件对象，将 text 中的数据写入到文件。
+
+系统调用流程：
+
+- 用户态传递 fd 和数据到内核态。
+- 内核根据 fd 找到对应的文件对象。
+- 将数据写入文件的指定位置，并更新文件偏移量。
+
+```c
+// 写入内容到文件
+const char *text = "Hello, File Descriptor!";
+ssize_t bytes_written = write(fd, text, 24);
+```
+
+lseek() 会操作内核中的文件对象，将偏移量设置为指定位置。
+
+```c
+// 调整文件指针到文件开头，用于后续读取。
+lseek(fd, 0, SEEK_SET);
+```
+
+read() 使用 fd 来找到文件对象，从当前偏移量读取数据。
+
+系统调用流程类似于 write()，但方向是从文件读取到内存。
+
+```c
+ssize_t bytes_read = read(fd, buffer, 24);
+```
+
+close() 释放文件描述符在文件描述符表中的位置。
+
+如果这是最后一个引用，内核会释放与文件对象相关的资源。
+
+```c
+close(fd);
+```
 
 ## Thread, Process
 
@@ -2534,7 +3245,7 @@ SSO: OAuth2 实现
 - User 请求 Client A, Client A 发现 User 没有 Token, 就引导 User 携带 Client Id 和 Redirect URL 去请求 Authorization Server, Authorizationi Server 会返回 code 给 User, User 携带 code ...
   - User 登录 Authorization Server 后, 会存储一个 Authorization Server 的 Token 到本地, 方便后续请求 Authorization Server 时, 判断该 User 是否已登陆, 通过 `token:login:auth:<user_agent>:<user_id>` list 进行存储
   - 由于 Authorization Server 的实现很多, 最好是前端请求后端, 后端返回对应 Authorization Server URL
-- User 请求 Client B, Client A 发现 User 没有 Token, 就引导 User 携带 Client Id 和 Redirect URL 去请求 Authorization Server, 此时 Authorizationi Server 发现 User 已经登录过了, 就直接返回 code 给 User, 不需要 User 登录, User 携带 ...
+- User 请求 Client B, Client B 发现 User 没有 Token, 就引导 User 携带 Client Id 和 Redirect URL 去请求 Authorization Server, 此时 Authorizationi Server 发现 User 已经登录过了, 就直接返回 code 给 User, 不需要 User 登录, User 携带 ...
 - 不同 Client 的权限策略是不同的, 共用同一个 Token, 明显不合适, 所以每次的 code 申请的 Token 都应该不同, 如果一个站点退出了, 就应该清除其他所有的 Token, Token 都使用 Redis 进行存储
 - 不同 User Agent 之间的 Token 管理应该相互隔离, 如果一个站点退出了, 也应该退出其他相同 User Agent 的 Token, 而不应该退出其他 User Agent 的 Token, 可以根据 `token:login:<client_id>:<user_agent>:<user_id>` list 进行存储
 - 用户修改密码后, 立即清空其他 Token, 或者删除所有 Token, 然后给当前用户再颁发一个新的 Token

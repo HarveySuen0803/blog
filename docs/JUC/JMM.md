@@ -107,7 +107,7 @@ volatile write 前面插入一个 StoreStore Fence, 防止和前面的 normal re
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202402031244590.png)
 
-这里, 如果通过 volatile 修饰 x, 无法避免 x 和 y 重排序, 如果通过 volatile 修饰 y, 可以避免 x 和 y 的重排序
+下面这段代码中, 如果通过 volatile 修饰 x, 无法避免 x 和 y 重排序, 如果通过 volatile 修饰 y, 可以避免 x 和 y 的重排序
 
 为了避免重排序, 要么全部加上 volatile, 要么就把 volatile read 放在最后, 把 volatile write 放在最前面, 巧妙利用 Memory Fence 避免重排序
 
@@ -177,8 +177,11 @@ DCL 是一种在单例模式中使用的延迟加载策略, 它尝试通过检�
 
 Object Creation 包含 Memory Allocation, Object Initialization, Reference Points to Memory 三个步骤, 在多线程环境下, 由于指令重排序的存在导致了 NullPointException
 
-- T1 进行 Object Creation 时, JVM 将 Reference Points to Memory 重排序到了 Object Initialization 之前
-- T2 又来访问, 发现 Reference 不为 null, 就会直接拿走, 但是此时 T1 还没有执行 Object Initialization, T2 直接访问就会导致 NullPointException
+- 在 Java 中，对象的实例化过程并非原子操作，它可以被分解为以下三个步骤：
+  - 为对象分配内存。
+  - 调用对象的构造函数，初始化对象。
+  - 将对象的引用赋值给变量。
+- 由于编译器和 CPU 可能会对指令进行重排序，步骤2和步骤3的执行顺序可能被颠倒。也就是说，可能先执行步骤3，再执行步骤2。这在单线程环境下没有问题，但在多线程环境下可能会导致另一个线程获取到一个未完全初始化的对象。
 
 通过 volatile 修饰 singleton, 禁止重排序, 避免 NullPointException
 

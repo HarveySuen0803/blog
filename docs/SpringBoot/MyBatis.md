@@ -542,11 +542,173 @@ generate primary key by Annotation prop
 User select(User user);
 ```
 
-# Lazy Loading
+# SqlSession
 
-MyBatis 通过 CGLIB 创建 Proxy Obj, 在需要时去加载关联数据, 提高查询性能, 当调用 getOrderList() 时, 会被 Proxy Obj 的 invoke() 拦截, 判断 orderList 是否为空, 如果为空才去执行 SQL 查询数据, 填充到 orderList, 再去调用 getOrderList() 执行后续逻辑, 实现 Lazy Loading
+在 Spring Boot 中，MyBatis 是通过 SqlSessionTemplate 来管理 SqlSession 的。SqlSessionTemplate 是 MyBatis-Spring 提供的一个模板类，它对 SqlSession 进行了封装，并负责管理 SqlSession 的生命周期，确保在使用过程中资源能够正确释放。
 
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221740212.png)
+- 事务范围内共享 SqlSession：SqlSessionTemplate 会在同一个事务中复用 SqlSession，在一个事务范围内，多个 Mapper 方法调用共享同一个 SqlSession 实例。
+- 自动提交和关闭：SqlSessionTemplate 会根据事务配置在事务结束时自动提交或回滚，并在操作完成后自动关闭 SqlSession，不需要手动管理。
+- 线程安全：SqlSessionTemplate 是线程安全的，可以在多线程环境下使用，而不需要担心 SqlSession 的并发问题。
+
+当调用 Mapper 的方法时，Spring Boot 项目中的 MyBatis 实际执行过程如下：
+
+1. 注入 Mapper 接口：在 Spring Boot 中注入 Mapper 接口时，MyBatis-Spring 会为 Mapper 创建一个代理对象，该代理对象在执行方法时会委托给 SqlSessionTemplate。
+2. 代理调用 SqlSessionTemplate：在 Mapper 的方法被调用时，代理对象会调用 SqlSessionTemplate 来获取 SqlSession，并执行对应的 SQL 操作。
+3. 在事务范围内共享 SqlSession：SqlSessionTemplate 会在同一个事务内共享 SqlSession，这意味着在同一个事务中，即使调用多次 Mapper 方法，也会使用相同的 SqlSession。
+4. 事务提交或回滚时关闭 SqlSession：SqlSessionTemplate 会在事务结束时自动提交或回滚 SqlSession，并释放资源。
+
+# 懒加载机制
+
+MyBatis 的懒加载机制主要用于优化性能，特别是在处理 一对多 和 多对一 的复杂关联关系时，避免不必要的 SQL 查询。为了更好地理解它的作用，下面通过一个具体的例子来说明。
+
+假设有一个电商系统，其中包括 User 和 Order 两个实体，分别表示用户和订单，关系是一对多，即一个用户可以拥有多个订单。在数据库中，这种关系可能会设计为如下结构：
+
+- User 表：存储用户基本信息，如 id、name。
+- Order 表：存储订单信息，如 id、user_id、order_date，其中 user_id 是 User 表的外键。
+
+假设我们有一个业务场景，只需要展示用户的基本信息，而不关心用户的订单信息。此时，如果没有懒加载机制，每次查询 User 时，MyBatis 可能会立即加载与之相关联的 Order 信息，也就是进行一次 额外的 SQL 查询 来获取订单数据。这种加载方式叫做 立即加载（Eager Loading）。
+
+在懒加载开启时，只有在明确需要订单信息的时候，MyBatis 才会查询 Order 表，获取订单数据。这种按需加载的方式可以显著提升性能，因为减少了不必要的数据库查询。
+
+这里定义了 User 对象的查询 SQL，并通过 `<collection>` 标签设置与 Order 的关联
+
+```xml
+<mapper namespace="UserMapper">
+    <select id="getUserById" resultMap="UserOrderMap">
+        SELECT * FROM User WHERE id = #{id}
+    </select>
+
+    <resultMap id="UserOrderMap" type="User">
+        <id property="id" column="id" />
+        <result property="name" column="name" />
+        <collection property="orders" ofType="Order" select="getOrdersByUserId" lazy="true" />
+    </resultMap>
+
+    <select id="getOrdersByUserId" resultType="Order">
+        SELECT * FROM Order WHERE user_id = #{userId}
+    </select>
+</mapper>
+```
+
+我们这里调用 getUserById 获取到 user 对象后，只使用了 name 属性，并未访问 orders 列表。由于懒加载的存在，getOrdersByUserId 方法不会被调用，Order 表的数据不会查询，节省了数据库资源。
+
+```java
+User user = mapper.getUserById(1);
+System.out.println("User Name: " + user.getName());
+```
+
+只有在访问 orders 时，MyBatis 才会调用 getOrdersByUserId 查询 Order 表的数据，将结果填充到 orders 列表中。
+
+```java
+List<Order> orders = user.getOrders();
+for (Order order : orders) {
+    System.out.println("Order Date: " + order.getOrderDate());
+}
+```
+
+# 懒加载机制的底层原理
+
+MyBatis 的懒加载底层是通过 动态代理模式 和 懒加载触发器 实现的。其核心是在访问关联属性时，通过代理对象延迟查询数据。
+
+MyBatis 懒加载的主要实现组件包括：
+
+- 代理对象：用于延迟加载的属性并不是直接加载，而是通过一个代理对象来控制何时加载。
+- LazyLoader：懒加载触发器，负责在访问代理对象属性时触发实际的 SQL 查询。
+- ResultLoader：在真正执行 SQL 查询时使用，负责将查询结果映射到目标属性中。
+
+当查询 User 对象时，MyBatis 并不会直接查询并填充 orders 集合，而是创建一个代理对象，通过动态代理的方式来延迟加载 orders 集合。在 MyBatis 中，懒加载的代理对象创建主要通过 CglibProxyFactory 或 JavassistProxyFactory 实现：
+
+```java
+public Object createProxy(Target target) {
+    // 判断是否启用 CGLIB 或 Javassist
+    if (proxyFactory instanceof CglibProxyFactory) {
+        return ((CglibProxyFactory) proxyFactory).createProxy(target);
+    } else {
+        return ((JavassistProxyFactory) proxyFactory).createProxy(target);
+    }
+}
+```
+
+在代理对象被创建的同时，MyBatis 会创建一个 LazyLoader，LazyLoader 中包含了目标对象和需要懒加载的 SQL 语句。当用户访问 orders 属性时，代理对象会检测到这一访问，并调用 LazyLoader 触发懒加载。
+
+```java
+public class LazyLoader {
+    private final MetaObject metaObject;
+    private final ResultLoader resultLoader;
+    private boolean loaded;
+
+    public LazyLoader(MetaObject metaObject, ResultLoader resultLoader) {
+        this.metaObject = metaObject;
+        this.resultLoader = resultLoader;
+        this.loaded = false;
+    }
+
+    public boolean load() throws SQLException {
+        if (!loaded) {
+            resultLoader.loadResult();
+            loaded = true;
+            return true;
+        }
+        return false;
+    }
+}
+```
+
+LazyLoader 调用 ResultLoader 来执行 SQL 查询并填充目标属性。ResultLoader 的核心逻辑如下：
+
+```java
+public Object loadResult() throws SQLException {
+    final Statement stmt = configuration.newStatementHandler(...).prepareStatement();
+    ResultSet rs = stmt.executeQuery();
+    Object result = resultHandler.handleResultSets(rs);
+    metaObject.setValue(property, result);
+    return result;
+}
+```
+
+当调用 User 的目标方法（如 getOrders()）之前，代理会首先判断该方法是否是懒加载属性的方法（如 orders 属性的 getOrders()），如果是，则会触发数据库查询操作，将数据加载到该属性中。
+
+```java
+public class CglibLazyLoader implements MethodInterceptor {
+    private final ResultLoaderMap lazyLoader;
+    private final MetaObject metaObject;
+    private final String objectFactory;
+
+    @Override
+    public Object intercept(Object object, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        // 检查当前方法是否为懒加载属性的方法
+        if (lazyLoader.size() > 0 && lazyLoader.hasLoader(method.getName())) {
+            lazyLoader.load(method.getName());
+        }
+        return methodProxy.invokeSuper(object, args); // 调用真实的方法
+    }
+}
+```
+
+hasLoader() 是 MyBatis 懒加载机制中用于检查某个属性是否需要加载的一个方法。它在 ResultLoaderMap 类中实现，用于判断懒加载属性是否已经存在相应的 ResultLoader，从而确定是否需要触发 SQL 查询。下面将详细解析 hasLoader() 方法的源码及其作用。
+
+ResultLoaderMap 是 MyBatis 中的一个重要组件，用于管理懒加载的属性。它维护了一个 loaderMap，其中存储了需要懒加载的属性与其对应的 ResultLoader。ResultLoader 包含执行 SQL 查询的全部信息，包括查询语句、参数以及映射规则。
+
+```java
+public final class ResultLoaderMap {
+    private final Map<String, ResultLoader> loaderMap = new HashMap<>();
+
+    public boolean hasLoader(String property) {
+        return loaderMap.containsKey(property);
+    }
+
+    public void addLoader(String property, MetaObject metaResultObject, ResultLoader resultLoader) {
+        loaderMap.put(property, resultLoader);
+    }
+
+    public void load(String property) throws SQLException {
+        ResultLoader loader = loaderMap.remove(property);
+        if (loader != null) {
+            loader.loadResult();
+        }
+    }
+}
+```
 
 全局配置 Lazy Loading
 
@@ -566,34 +728,75 @@ mybatis.configuration.aggressive-lazy-loading=true
 User getUserById(int id);
 ```
 
-# Cache
+# 一级缓存
 
-Local Cache 基于 PerpetualCache, 本质是一个 HashMap
-
-Lv1 Cache 基于 PerpetualCache, 作用于 Session, 执行 close() 和 flush() 后, 就会清空 Cache (def: enable)
-
-Lv2 Cache 作用于 Namespace 和 Mapper, 不依赖 Session (def: disable)
-
-这里 userMapper1 和 userMapper2 的操作在同一个 Session 下, 所以 userMapper1 执行了 SQL 后, 缓存数据到 Cache 中, userMapper2 再次执行 selectById(1) 就是查询的 Cache 中的数据
+一级缓存是 MyBatis 的本地缓存，作用范围是单个 SqlSession，默认开启。一级缓存的特点是，同一个 SqlSession 对象中执行相同查询时会直接从缓存中获取结果，避免重复查询数据库。
 
 ```java
-SqlSession sqlSession = sqlSessionFactory.openSession();
+// 开启一个 SqlSession
+SqlSession session = sqlSessionFactory.openSession();
+UserMapper mapper = session.getMapper(UserMapper.class);
 
-UserMapper userMapper1 = sqlSession.getMapper(UserMapper.class);
-User user = userMapper1.selectById(1);
+// 第一次查询，发送 SQL 查询数据库
+User user1 = mapper.getUserById(1);
+System.out.println("第一次查询用户：" + user1);
 
-UserMapper userMapper2 = sqlSession.getMapper(UserMapper.class);
-User user = userMapper2.selectById(1);
+// 第二次查询相同的 ID，命中一级缓存，不会发送 SQL
+User user2 = mapper.getUserById(1);
+System.out.println("第二次查询用户：" + user2);
+
+session.close();  // 关闭 SqlSession
 ```
 
-这里 userMapper1 和 userMapper2 的操作在不同的 Session 下, 所以无法共享 Cache
+- 第一次查询 getUserById(1) 时，MyBatis 会执行 SQL 查询数据库并将结果放入一级缓存。
+- 第二次查询 getUserById(1) 时，由于 SqlSession 没有关闭，一级缓存生效，所以 MyBatis 不会发送 SQL，而是直接从缓存中读取结果。
+
+在以下情况下，一级缓存会失效，从而再次查询数据库：
+
+- 不同的 SqlSession：一级缓存只在当前 SqlSession 中有效，不同的 SqlSession 无法共享缓存。
+- 执行了更新操作：在执行 INSERT、UPDATE 或 DELETE 后，一级缓存会被清空。
+- 手动清空缓存：调用 session.clearCache() 可以手动清空一级缓存。
+
+# 二级缓存
+
+二级缓存是 MyBatis 的全局缓存，作用范围是 Mapper 映射文件范围。二级缓存可以在不同的 SqlSession 间共享，但默认是关闭的，需要手动配置开启。
+
+```xml
+<configuration>
+    <settings>
+        <!-- 启用二级缓存 -->
+        <setting name="cacheEnabled" value="true"/>
+    </settings>
+</configuration>
+```
 
 ```java
-SqlSession sqlSession1 = sqlSessionFactory.openSession();
-UserMapper userMapper1 = sqlSession1.getMapper(UserMapper.class);
-User user = userMapper1.selectById(1);
+// 第一次查询，使用第一个 SqlSession
+SqlSession session1 = sqlSessionFactory.openSession();
+UserMapper mapper1 = session1.getMapper(UserMapper.class);
 
-SqlSession sqlSession2 = sqlSessionFactory.openSession();
-UserMapper userMapper2 = sqlSession2.getMapper(UserMapper.class);
-User user = userMapper2.selectById(1);
+// 第一次查询，发送 SQL 查询数据库，并将结果存入二级缓存
+User user1 = mapper1.getUserById(1);
+System.out.println("第一次查询用户：" + user1);
+session1.close();  // 关闭 SqlSession，数据会存入二级缓存
+
+// 第二次查询，使用另一个 SqlSession
+SqlSession session2 = sqlSessionFactory.openSession();
+UserMapper mapper2 = session2.getMapper(UserMapper.class);
+
+// 第二次查询相同的 ID，此时从二级缓存中读取，不会发送 SQL
+User user2 = mapper2.getUserById(1);
+System.out.println("第二次查询用户：" + user2);
+
+session2.close();
 ```
+
+- 第一次查询 getUserById(1) 会发送 SQL 查询数据库，并将结果存入二级缓存。
+- session1.close() 关闭时，MyBatis 会将一级缓存的数据提交到二级缓存。
+- 第二次查询使用不同的 SqlSession，但是由于二级缓存已启用且有数据，因此 MyBatis 会直接从二级缓存中获取结果，避免了数据库查询。
+
+二级缓存会在以下情况下失效：
+
+- 执行增、删、改操作：当执行 INSERT、UPDATE 或 DELETE 操作时，二级缓存会清空，保证数据一致性。
+- 不同 Mapper 之间无法共享缓存：二级缓存的作用范围是 Mapper 文件，每个 Mapper 有独立的二级缓存。
+- 手动清空缓存：可以通过 sqlSessionFactory.getConfiguration().getCache("namespace").clear() 手动清空某个 Mapper 的二级缓存。

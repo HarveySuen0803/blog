@@ -29,7 +29,7 @@ set ElasticSearchClient
 
 ```java
 @Configuration
-    public class ElasticSearchConfiguration {
+public class ElasticSearchConfiguration {
     @Value("${elasticsearch.host}")
     private String host;
     @Value("${elasticsearch.port}")

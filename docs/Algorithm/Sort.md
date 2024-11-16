@@ -100,7 +100,7 @@ public static void selectSort(int[] arr) {
  * This sorting algorithm is efficient for small data sets, but it's less efficient for larger data sets.
  */
 public static void insertSort(int[] arr) {
-    for (int low = 1; low < arr.length; low++) {
+    for (int low = 1; low < arr.length; low++) { // Keep 0 ~ low is ordered
         // Select the current element and its index
         int idx = low;
         int val = arr[low];
@@ -958,4 +958,52 @@ public static class Pair {
                    '}';
     }
 }
+```
+
+# SmallSum
+
+[Explain 01:01:43](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=4)
+
+```java
+public int smallSum(int[] arr) {
+    return split(arr, 0, arr.length - 1);
+}
+
+public int split(int[] arr, int l, int r) {
+    if (l == r) return 0;
+    int m = (l + r) >>> 1;
+    return split(arr, l, m) + split(arr, m + 1, r) + merge(arr, l, m, m + 1, r);
+}
+
+public int merge(int[] a1, int i, int iEnd, int j, int jEnd) {
+    int[] a2 = new int[a1.length];
+    int k = 0;
+    int smallSum = 0;
+    while (i <= iEnd && j <= jEnd) {
+        if (a1[i] <= a1[j]) {
+            // 右边有 (jEnd - j + 1) 个元素比 a1[i] 大
+            smallSum += a1[i] * (jEnd - j + 1);
+            a2[k++] = a1[i++];
+        } else {
+            a2[k++] = a2[j++];
+        }
+    }
+    while (i <= iEnd) {
+        a2[k++] = a1[i++];
+    }
+    while (j <= jEnd) {
+        a2[k++] = a1[j++];
+    }
+    System.arraycopy(a2, 0, a1, 0, k);
+    return smallSum;
+}
+```
+
+# Count of Smaller Numbers After Self
+
+[Problem Description](https://leetcode.cn/problems/count-of-smaller-numbers-after-self/description/)
+
+[Explain 01:29:02](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=4)
+
+```java
 ```

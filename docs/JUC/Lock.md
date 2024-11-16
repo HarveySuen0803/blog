@@ -544,27 +544,6 @@ public static void write() {
 }
 ```
 
-# CountDownLatch
-
-CountDownLatch 是 Java 中用于多线程协作的同步工具之一, 类似于一个倒计时锁, 它允许一个或多个线程等待其他线程完成执行后再继续执行, 主要思想是在某个条件满足之前, 一个或多个线程一直阻塞等待, 常用于并行任务等待
-
-这里主线程创建了 10 个子线程, 并设置 CountDownLatch 初始值为 10, 每个线程执行结束后, 调用 countDown(), 让计数减一, 主线程调用 await() 进入堵塞的状态, 等待计数器减到零
-
-```java
-int threadSize = 10;
-// A synchronization aid that allows one or more threads to wait until a set of operations being performed in other threads completes.
-CountDownLatch countDownLatch = new CountDownLatch(threadSize);
-for (int i = 0; i < threadSize; i++) {
-    new Thread(() -> {
-        // ...
-        countDownLatch.countDown();
-    }).start();
-}
-// wait here for the thread
-countDownLatch.await();
-System.out.println(atomicInteger.get());
-```
-
 # wait(), notify()
 
 wait() 和 notify() 是在 Object 中定义的, 通常搭配 synchronized 使用, 用于基本的线程同步
@@ -698,6 +677,61 @@ thread.start();
 try {Thread.sleep(2000);} catch (InterruptedException e) {e.printStackTrace();}
 
 thread.interrupt();
+```
+
+# CountDownLatch
+
+`CountDownLatch` 是 Java 中用于多线程协作的同步工具之一，类似于一个倒计时锁。它允许一个或多个线程在其他线程完成执行后再继续执行。主要思想是在某个条件满足之前，一个或多个线程会一直阻塞等待，常用于并行任务的协调。
+
+在下面的示例中，主线程创建了 10 个子线程，并将 `CountDownLatch` 的初始计数设为 10。每个线程执行结束后调用 `countDown()` 方法，使计数减一。主线程调用 `await()` 方法进入阻塞状态，直到计数器减到零为止。
+
+```java
+int threadSize = 10;
+CountDownLatch countDownLatch = new CountDownLatch(threadSize);
+for (int i = 0; i < threadSize; i++) {
+    new Thread(() -> {
+        // 执行线程任务
+        atomiceInterger.addAndGet(1);
+        // 减少 1 个信号量
+        countDownLatch.countDown();
+    }).start();
+}
+// 等待所有线程完成
+countDownLatch.await();
+System.out.println(atomicInteger.get());
+```
+
+这段代码展示了如何使用 `CountDownLatch` 来同步多个线程的执行。每个子线程在完成其任务后调用 `countDown()`，而主线程在 `await()` 处等待，直到所有子线程都完成任务。这样可以确保主线程在所有子线程完成后再继续执行。
+
+# CyclicBarrier
+
+CyclicBarrier 是 Java 中的一个同步辅助类，它允许一组线程互相等待，直到到达某个公共的屏障点。与 CountDownLatch 不同的是，CyclicBarrier 可以被重用，即它可以在所有等待线程被释放后重新使用。
+
+CyclicBarrier 的常见用法是让一组线程在执行某个阶段的任务后等待，直到所有线程都到达同一个屏障点，然后再继续执行下一阶段的任务。
+
+CyclicBarrier 相比于 CountDownLatch，最大的区别在于 CyclicBarrier 可以进行分组，下面这段代码提交了 20 个线程执行任务，每 5 个为一组，分成了 4 组，当有线程完成任务后，就会卡在 barrier，卡住 5 个后，就会执行 CyclicBarrier 定义的任务。
+
+```java
+int batchSize = 5;
+CyclicBarrier barrier = new CyclicBarrier(batchSize, new Runnable() {
+    @Override
+    public void run() {
+        // 当执行到 barrier 的线程数量达到 batchSize 时，开始执行下面的聚合任务
+        System.out.println(atomicInteger.get());
+    }
+});
+
+int threadSize = 20;
+for (int i = 0; i < threadSize; i++) {
+    new Thread(() -> {
+        // 执行线程任务
+        atomiceInterger.addAndGet(1);
+        // 卡在 barrier，减少一个信号量
+        barrier.await();
+        // 等 barrier 执行完成后，开始执行这一行
+        System.out.println("current thread has work down");
+    })
+}
 ```
 
 # False Awaken
@@ -1036,36 +1070,11 @@ public void consume() throws InterruptedException {
 
 # Lock and Transaction
 
-直接给出结论，我们在开发中，应该让锁包含事务，避免事务包含锁。
+事务（Transaction）和 锁（Lock）同时使用时，应该保证 锁 包含 事务，避免 事务 包含 锁。
 
-应该避免在 Transaction 内部使用 Lock, 这里 T1 获取锁, 修改数据, 释放锁之后, 如果发生了等待 (CPU 时间片导致), 此时事务还没有提交, 即还是 old data, T2 获取锁进来, 发现还是 old data, 就又会去执行修改
+下面这段代码，主要是通过锁保证一次只有一个线程进来更改数据，将数据从 "old data" 更新成 "new data"，同时通过事务保证数据库操作的原子性，但是这里存在一个漏洞。
 
-```java
-@Resource
-private UserDao userDao;
-
-@Transactional
-public void test() {
-    boolean isAcquire = lock.acquire();
-    if (!isAcquire) {
-        return;
-    }
-
-    try {
-        if (userDao.getData() == "new") {
-            return;
-        }
-        userDao.updData("new")
-    } finally {
-        lock.release();
-        // waiting...
-    }
-}
-```
-
-Transaction 内部使用锁, 处理 DCL 时, 可能由于 Isolation Level 导致读取的数据都是同一份数据, 造成并发问题
-
-这里在事务内部使用 DCL, 由于事务设置的是 RR Isolation Level, 就会在第二次 Check 时, 读取到的依旧是第一次 Check 时读取到的值, 这里 T1 第一次 Check 时读取到 old, 此时 Page View 已经生成, 已经不会再变动了, 导致第二次 Check 读取时, 依旧读取的 old
+假设，T1 获取锁，修改数据，释放锁之后，如果 T1 发生了等待（例如，CPU 时间片轮转），事务还没有提交，即还是 "old data"；此时 T2 获取锁进来，发现还是 "old data"，就又会去执行修改；等 T1 恢复执行后，就会提交事务，将刚刚 T2 的修改覆盖掉。
 
 ```java
 @Resource
@@ -1073,34 +1082,67 @@ private UserDao userDao;
 
 @Transactional
 public void test() {
-    if (userDao.getData() == "new") {
-        return;
-    }
-    
     boolean isAcquire = lock.acquire();
     if (!isAcquire) {
         return;
     }
+
+    // 2. T2 running here
+    if (StrUtil.equals(userDao.getData(), "new data")) {
+        return;
+    }
     
     try {
-        if (userDao.getData() == "new") {
-            return;
-        }
-        userDao.updData("new")
+        userDao.updData("new data")
     } finally {
         lock.release();
-        // waiting...
+        // 1. T1 waiting here
     }
 }
 ```
 
-可以在 Lock 内部使用 Transaction
+区别于上一段代码，这一段使用了完全的双检索（Double Check Lock），在获取锁的前后进行一次检查操作，此时就会因为 Mysql 的 RR 事务隔离级别导致脏读问题。
+
+假设，T1 获取到锁，正在执行修改；T2 也进来了，执行了第一次 Check，生成了一个 Page View，Page View 里存储的是 "old data"；T1 执行完修改，将 "new data" 修改为了 "old data"，释放锁，提交事务；T2 获取到锁，执行第二次 Check 时就会存在问题，由于采用的是 RR 事务隔离级别，当生成一个 Page View 后，就不会再去生成新的 Page View，所以 T2 在第二次 Check 时，查询到的是 "old data"，而非刚刚 T1 修改的 "new data"。
 
 ```java
 @Resource
 private UserDao userDao;
+
+@Transactional
+public void test() {
+    if (StrUtil.equals(userDao.getData(), "new data")) {
+        return;
+    }
+
+    // 2. T2 running here
+    boolean isAcquire = lock.acquire();
+    if (!isAcquire) {
+        return;
+    }
+
+    // 4. T2 running here, dirty reading
+    if (StrUtil.equals(userDao.getData(), "new data")) {
+        return;
+    }
+    try {
+        // 1. T1 running here
+        userDao.updData("new data")
+    } finally {
+        lock.release();
+    }
+}
+// 3. T2 running here
+```
+
+由此，我们可以发现在事务内部使用锁，会导致非常多的问题，当我们在锁内部使用事务时，这一切就都不是问题了。
+
+```java
 @Resource
-private UserService userService;
+private UserDao userDao;
+@Lazy
+@Resource
+private UserService self;
 
 public void test() {
     boolean isAcquire = lock.acquire();
@@ -1108,23 +1150,24 @@ public void test() {
         return;
     }
     
+    if (StrUtil.equals(userDao.getData(), "new data")) {
+        return;
+    }
+    
     try {
-        if (userDao.getData() == "new") {
-            return;
-        }
-        userService.updData();
+        self.updData();
     } finally {
         lock.release();
     }
 }
 
-@Transactional(propagation = Propagation.REQUIRES_NEW)
+@Transactional
 public void updData() {
-    userDao.updData("new")
+    userDao.updData("new data")
 }
 ```
 
-一般项目中会采用编程式事务进行处理
+除了上面这种通过 `@Transactional` 注解实现声名式的事务，也可以采用编程式事务解决问题。
 
 ```java
 @Resource
@@ -1137,14 +1180,12 @@ public void test() {
     if (!isAcquire) {
         return;
     }
-    
+    if (StrUtil.equals(userDao.getData(), "new data")) {
+        return;
+    }
     try {
-        if (userDao.getData() == "new") {
-            return;
-        }
-        
         transactionTemplate.execute((status) -> {
-            userDao.updData("new")
+            userDao.updData("new data")
             return null;
         });
     } finally {

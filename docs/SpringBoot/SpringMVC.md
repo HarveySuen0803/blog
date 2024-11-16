@@ -53,6 +53,72 @@ SpringMVC 处理 JSON 的流程
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401221740209.png)
 
+当应用启动时，Spring 会加载 DispatcherServlet，并初始化 HandlerMapping、HandlerAdapter、ViewResolver 等必要的组件。
+
+```java
+protected void initStrategies(ApplicationContext context) {
+    this.initHandlerMappings(context);
+    this.initHandlerAdapters(context);
+    this.initViewResolvers(context);
+    // 初始化其他策略...
+}
+```
+
+当用户发送请求时，DispatcherServlet 的 doDispatch() 方法被调用。
+
+```java
+protected void doDispatch(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    // 1. 获取处理器 (Handler)
+    HandlerExecutionChain mappedHandler = getHandler(request);
+    
+    // 2. 获取处理器适配器 (HandlerAdapter)
+    HandlerAdapter ha = getHandlerAdapter(mappedHandler.getHandler());
+
+    // 3. 调用处理器 (执行 Controller 方法)
+    ModelAndView mv = ha.handle(request, response, mappedHandler.getHandler());
+
+    // 4. 解析视图
+    processDispatchResult(request, response, mappedHandler, mv);
+}
+```
+
+DispatcherServlet 调用 getHandler() 方法，通过 HandlerMapping 匹配请求 URL 和处理器。
+
+```java
+protected HandlerExecutionChain getHandler(HttpServletRequest request) throws Exception {
+    for (HandlerMapping hm : this.handlerMappings) {
+        HandlerExecutionChain handler = hm.getHandler(request);
+        if (handler != null) {
+            return handler;
+        }
+    }
+    return null;
+}
+```
+
+DispatcherServlet 根据 HandlerAdapter 调用具体的处理器方法。
+
+```java
+ModelAndView mv = ha.handle(request, response, mappedHandler.getHandler());
+```
+
+```java
+public ModelAndView handle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    HandlerMethod handlerMethod = (HandlerMethod) handler;
+    ModelAndView mav = invokeHandlerMethod(request, response, handlerMethod);
+    return mav;
+}
+```
+
+控制器返回 ModelAndView 对象后，DispatcherServlet 调用 ViewResolver 将逻辑视图名转换为具体视图。
+
+```java
+protected void render(ModelAndView mv, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    View view = resolveViewName(mv.getViewName(), mv.getModel(), locale, request);
+    view.render(mv.getModel(), request, response);
+}
+```
+
 # Request Protocol
 
 ```java

@@ -1,6 +1,6 @@
 {
   "attachmentFolderPath": "./image/",
-  "useMarkdownLinks": true,
+  "useMarkdownLinks": false,
   "readableLineLength": false,
   "foldHeading": false,
   "foldIndent": false,

@@ -10,7 +10,7 @@ Redis 的单线程, 是需要 Main Thread 进行 IO, 非常耗时.
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202312241812949.png)
 
-Redis 的多线程, 将耗时的 IO 交给 Sub Thread 去处理, 同时只通过 Main Thread 进行 Caculate, 执行操作命令, 既使用上了多线程, 也保证了 Atomicity.
+Redis 的多线程, 将耗时的 IO 交给 Sub Thread 去处理, 同时只通过 Main Thread 进行 Calculate, 执行操作命令, 既使用上了多线程, 也保证了 Atomicity.
 
 Client 发送请求给 Server 后, 会在 Server 的 Socket File 中的写入当前 Client 对应的 File Descriptor, 即注册到 epoll 中. epoll 会去监听多个 Client 是否有 Request 发送过来, 即一个 Sub Thread 可以同时处理多个 Request, 这就保证了 Redis 即使在单线程环境下, 依旧有着相当高的吞吐量.
 
@@ -27,22 +27,6 @@ Enable multi-thread of read. (file: redis.conf)
 
 ```
 io-threads-do-reads yes
-```
-
-# DCL
-
-```java
-UserDO userDO = (UserDO) redisTemplate.opsForValue().get(key);
-
-if (userDO == null) {
-    synchronized (UserServiceImpl.class) {
-        userDO = (UserDO) redisTemplate.opsForValue().get(key);
-        if (userDO == null) {
-            userDO = userMapper.selectById(id);
-            redisTemplate.opsForValue().setIfAbsent(key, userDO);
-        }
-    }
-}
 ```
 
 # Dual Write Consistency
