@@ -579,21 +579,21 @@ public int getDepth(TreeNode node) {
 [Problem Description](https://leetcode.cn/problems/diameter-of-binary-tree/?envType=study-plan-v2&envId=top-100-liked)
 
 ```java
-public static int maxDepth = 1;
+public int diameter = 0;
 
-public static int diameterOfBinaryTree(TreeNode root) {
+public int diameterOfBinaryTree(TreeNode root) {
     depth(root);
-    return maxDepth - 1;
+    return diameter;
 }
 
-public static int depth(TreeNode node) {
+public int depth(TreeNode node) {
     if (node == null) {
         return 0;
     }
-    int leftDepth = depth(node.left);
-    int rightDepth = depth(node.right);
-    maxDepth = Math.max(maxDepth, leftDepth + rightDepth + 1);
-    return Math.max(leftDepth, rightDepth) + 1;
+    int ld = depth(node.left);
+    int rd = depth(node.right);
+    diameter = Math.max(diameter, ld + rd);
+    return Math.max(ld, rd) + 1;
 }
 ```
 

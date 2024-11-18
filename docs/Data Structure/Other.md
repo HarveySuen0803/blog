@@ -59,6 +59,152 @@ public class LRUCache {
 }
 ```
 
+# LRU Cache
+
+```java
+class LRUCache {
+    private final HashMap<Integer, Integer> map;
+    private final Deque<Integer> queue;
+    private int cap;
+
+    public LRUCache(int cap) {
+        this.map = new HashMap<>();
+        this.queue = new ArrayDeque<>();
+        this.cap = cap;
+    }
+    
+    public int get(int key) {
+        if (map.containsKey(key)) {
+            queue.remove(key);
+            queue.addFirst(key);
+            return map.get(key);
+        } else {
+            return -1;
+        }
+    }
+    
+    public void put(int key, int val) {
+        if (map.containsKey(key)) {
+            queue.remove(key);
+        } else if (queue.size() == cap) {
+            int lastKey = queue.removeLast();
+            map.remove(lastKey);
+        }
+        queue.addFirst(key);
+        map.put(key, val);
+    }
+}
+```
+
+# LRU Cache
+
+```java
+class LRUCache {
+    private LinkedHashMap<Integer, Integer> cache;
+    private int cap;
+
+    public LRUCache(int cap) {
+        this.cap = cap;
+        this.cache = new LinkedHashMap<>(cap, 0.75f, true) {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Integer, Integer> eldest) {
+                return size() > cap;
+            }
+        };
+    }
+    
+    public int get(int key) {
+        return cache.getOrDefault(key, -1);
+    }
+    
+    public void put(int key, int val) {
+        cache.put(key, val);
+    }
+}
+```
+
+# LRU Cache
+
+```java
+class LRUCache {
+    private HashMap<Integer, Node> cache;
+    private int cap;
+    private Node head;
+    private Node tail;
+
+    public LRUCache(int cap) {
+        this.cap = cap;
+        this.cache = new HashMap<>();
+
+        this.head = new Node(0, 0);
+        this.tail = new Node(0, 0);
+        this.head.next = this.tail;
+        this.tail.prev = this.head;
+    }
+    
+    public int get(int key) {
+        if (cache.containsKey(key)) {
+            Node node = cache.get(key);
+            moveToFirst(node);
+            return node.val;
+        } else {
+            return -1;
+        }
+    }
+    
+    public void put(int key, int val) {
+        if (cache.containsKey(key)) {
+            Node node = cache.get(key);
+            node.val = val;
+            moveToFirst(node);
+        } else {
+            if (cache.size() == cap) {
+                Node last = removeLast();
+                cache.remove(last.key);
+            }
+            Node node = new Node(key, val);
+            addToFirst(node);
+            cache.put(key, node);
+        }
+    }
+
+    private void moveToFirst(Node node) {
+        removeNode(node);
+        addToFirst(node);
+    }
+
+    private void addToFirst(Node node) {
+        node.next = head.next;
+        node.prev = head;
+        head.next.prev = node;
+        head.next = node;
+    }
+
+    private void removeNode(Node node) {
+        node.prev.next = node.next;
+        node.next.prev = node.prev;
+    }
+
+    private Node removeLast() {
+        Node last = tail.prev;
+        removeNode(last);
+        return last;
+    }
+}
+
+class Node {
+    public int key;
+    public int val;
+    public Node prev;
+    public Node next;
+
+    public Node(int key, int val) {
+        this.key = key;
+        this.val = val;
+    }
+}
+```
+
 # LFU Cache
 
 [Problem Description](https://leetcode.cn/problems/lfu-cache/)

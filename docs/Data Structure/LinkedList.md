@@ -606,7 +606,7 @@ public static ListNode swapPairs(ListNode head) {
  */
 public static ListNode reverseKGroup(ListNode head, int k) {
     int i = 0;
-    ListNode nil = new ListNode(-1, head);
+    ListNode nil = new ListNode(-1, null);
     ListNode srt = head;
     ListNode end = head;
     ListNode cur = nil;
@@ -617,8 +617,10 @@ public static ListNode reverseKGroup(ListNode head, int k) {
                 cur = cur.next;
             }
             srt = end.next;
+            end = end.next;
+        } else {
+            end = end.next;
         }
-        end = end.next;
     }
     if (i % k != 0) {
         cur.next = srt;
@@ -1625,6 +1627,9 @@ public static ListNode sortList(ListNode head) {
     return sortList(head, null);
 }
 
+/**
+ * @param tail 链表的最后一个元素的后一个元素，帮助定位
+ */
 public static ListNode sortList(ListNode head, ListNode tail) {
     if (head == null) {
         return null;
@@ -1643,8 +1648,8 @@ public static ListNode sortList(ListNode head, ListNode tail) {
         }
     }
     ListNode midd = slow;
-    ListNode head1 = sortList(head, midd);
-    ListNode head2 = sortList(midd, tail);
+    ListNode head1 = sortList(head, midd); // 合并 [head, midd - 1]
+    ListNode head2 = sortList(midd, tail); // 合并 [midd, tail - 1]
     return merge(head1, head2);
 }
 
