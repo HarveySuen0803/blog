@@ -29,3 +29,12 @@ launch.json
   ]
 }
 ```
+
+### 禁用指定告警
+
+- [如何禁用指定告警](https://stackoverflow.com/questions/74870169/vscode-java-linting-disable-specific-warnings)
+- [告警配置列表](https://github.com/eclipse-jdtls/eclipse.jdt.ls/issues/581#issuecomment-373804678)
+
+### 配置格式化
+
+- [如何自定义 Google Java Formatter 格式化](https://dev.to/marcushellberg/how-to-configure-vs-code-java-formatting-1p10)

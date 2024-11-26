@@ -267,3 +267,47 @@ public static void main(String[] args) {
 }
 ```
 
+# Jump Game
+
+[Problem Description](https://leetcode.cn/problems/jump-game/description/?envType=study-plan-v2&envId=top-interview-150)
+
+```java
+public static boolean canJump(int[] nums) {
+    int farthest = 0;
+    for (int i = 0; i < nums.length; i++) {
+        // 如果当前位置超出了最远可达位置，返回 false
+        if (i > farthest) return false;
+        // 更新最远可达位置
+        farthest = Math.max(farthest, i + nums[i]);
+        // 如果最远可达位置已经覆盖了最后一个索引，返回 true
+        if (farthest >= nums.length - 1) return true;
+    }
+    return false;
+}
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202411191720252.png)
+
+# Jump Game II
+
+[Problem Description](https://leetcode.cn/problems/jump-game-ii/description/?envType=study-plan-v2&envId=top-interview-150)
+
+```java
+public static int jump(int[] nums) {
+    int count = 0;
+    int farthest = 0; // 在 boundary 范围内，最远的跳跃举例
+    int boundary = 0; // 可以跳跃到的边界
+    for (int i = 0; i < nums.length - 1; i++) {
+        farthest = Math.max(farthest, i + nums[i]);
+        // 记录 boundary 范围内，可以跳到的最远距离
+        if (i == boundary) {
+            count++;
+            boundary = farthest;
+        }
+    }
+    return count;
+}
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202411191741452.png)
+

@@ -564,6 +564,34 @@ public static class Pillar {
 }
 ```
 
+# Trapping Rain Water
+
+```java
+public static int trap(int[] hts) {
+    // lhts[i] 表示在 i 处，左侧的柱子高度
+    int[] lhts = new int[hts.length];
+    lhts[0] = hts[0];
+    for (int i = 1; i < hts.length; i++) {
+        lhts[i] = Math.max(lhts[i - 1], hts[i]);
+    }
+
+    // rhts[i] 表示在 i 处，右侧柱子的高度
+    int[] rhts = new int[hts.length];
+    rhts[hts.length - 1] = hts[hts.length - 1];
+    for (int i = hts.length - 2; i > -1; i--) {
+        rhts[i] = Math.max(rhts[i + 1], hts[i]);
+    }
+
+    int area = 0;
+    for (int i = 0; i < hts.length; i++) {
+        // 左右侧最矮柱子 - 当前 i 处的高度，即可计算出在 i 处的水量
+        area += Math.min(lhts[i], rhts[i]) - hts[i];
+    }
+
+    return area;
+}
+```
+
 # Min Stack (Val)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=192&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)

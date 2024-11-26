@@ -109,6 +109,19 @@ public static int findKthLargest(int[] nums, int k) {
 }
 ```
 
+```java
+public static int findKthLargest(int[] nums, int k) {
+    PriorityQueue<Integer> queue = new PriorityQueue<>(Collections.reverseOrder());
+    for (int num : nums) {
+        queue.offer(num);
+    }
+    for (int i = 0; i < k - 1; i++) {
+        queue.poll();
+    }
+    return queue.poll();
+}
+```
+
 # Kth Largest Element in a Stream
 
 [Problem Description](https://leetcode.cn/problems/kth-largest-element-in-a-stream/description/)

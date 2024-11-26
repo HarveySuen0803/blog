@@ -4,127 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "8372fa3d04a030fc",
+        "id": "32a26aee1c6a7c1e",
         "type": "tabs",
         "children": [
           {
-            "id": "5f899627322780a7",
+            "id": "0f255339088153c5",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Interview/Basic.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Basic"
-            }
-          },
-          {
-            "id": "c84879d79810268f",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Redis/DataStructure.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "DataStructure"
-            }
-          },
-          {
-            "id": "42bdef35ed42c447",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Data Structure/LSM Tree.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "LSM Tree"
-            }
-          },
-          {
-            "id": "6eecdd874d1c15a1",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Distributed/Raft.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Raft"
-            }
-          },
-          {
-            "id": "222a68caab23800f",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Mysql/Index.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Index"
-            }
-          },
-          {
-            "id": "510b0ddead9c3adc",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Mysql/Optimization.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Optimization"
-            }
-          },
-          {
-            "id": "0160d3c551b634cc",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Mysql/Primary Key.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Primary Key"
-            }
-          },
-          {
-            "id": "215f7c5d5e1c6bb7",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Java/NIO.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "NIO"
+              "title": "New tab"
             }
           }
         ]
@@ -158,7 +48,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "snow",
+                "query": "strStr",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -190,11 +80,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Interview/Basic.md"
-              },
+              "state": {},
               "icon": "lucide-list",
-              "title": "Outline of Basic"
+              "title": "Outline"
             }
           }
         ]
@@ -211,36 +99,37 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "5f899627322780a7",
+  "active": "0f255339088153c5",
   "lastOpenFiles": [
-    "Distributed/Raft.md",
-    "Interview/Basic.md",
-    "Java/NIO.md",
-    "Mysql/Primary Key.md",
-    "Data Structure/LSM Tree.md",
-    "Mysql/Index.md",
-    "Mysql/Optimization.md",
-    "Redis/DataStructure.md",
-    "Rocksdb/Basic.md",
-    "Data Structure/BinarySearchTree.md",
-    "Data Structure/Other.md",
-    "Data Structure/BinaryTree.md",
+    "Algorithm/Sort.md",
     "Data Structure/LinkedList.md",
-    "Algorithm/Other.md",
-    "Data Structure/Queue.md",
+    "Data Structure/BinaryTree.md",
+    "Algorithm/Search.md",
+    "Data Structure/Heap.md",
+    "Environment/Raycast.md",
+    "Environment/VsCode.md",
+    "Data Structure/Array.md",
+    "Data Structure/String.md",
     "Data Structure/Stack.md",
-    "Algorithm/Divide And Conquer.md",
-    "Data Structure/HashTable.md",
-    "Algorithm/Backtracking.md",
-    "LeetCode/Basic.md",
-    "OS/Basic.md",
-    "Nginx/Basic.md",
-    "OpenResty/Basic.md",
+    "Algorithm/Other.md",
+    "Data Structure/Other.md",
+    "Rocksdb/Basic.md",
+    "JUC/CAS.md",
+    "Data Structure/SkipList.md",
+    "JUC/JMM.md",
+    "Interview/Basic.md",
+    "Data Structure/Index.md",
+    "Mysql/Index.md",
+    "Data Structure/Merge Tree.md",
+    "ClickHouse/Basic.md",
+    "Data Structure/LSM Tree.md",
+    "mysql/Persistence.md",
+    "ClickHouse",
+    "JUC/ThreadLocal.md",
+    "Redis/Persistence.md",
+    "Algorithm/Greedy.md",
     "Distributed/image/Pasted image 20241117151014.png",
     "Distributed/image",
-    "Distributed/Paxos.md",
-    "Distributed/ZAB.md",
-    "Distributed/WARO.md",
     "Storage",
     "Rocksdb",
     "Redis/image/Pasted image 20241114124425.png",
@@ -251,7 +140,6 @@
     "Disruptor",
     "Geek",
     "Sharing/Algorithm",
-    "Sharing/JUC",
     "Meituan/Cache/image/Pasted image 20240921130427.png",
     "Draft/image/Pasted image 20240908142244.png",
     "Draft/image/Pasted image 20240908142236.png",

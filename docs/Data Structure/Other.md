@@ -410,6 +410,61 @@ public String encode(String longUrl) {
 }
 ```
 
+# Insert Delete GetRandom O(1)
+
+[Problem Description](https://leetcode.cn/problems/insert-delete-getrandom-o1/description/?envType=study-plan-v2&envId=top-interview-150)
+
+这里要求 insert(), delete(), getRandom() 都是 O(1)，可以使用 ArrayList 存储 val，使用 HashMap 存储 val 到 idx 的映射。
+
+这里不能直接使用 HashMap 直接存储 val，因为 HashMap 无法实现等概率 O(1) 的 getRandom()。
+
+```java
+public class RandomizedSet {
+    private List<Integer> vals;
+    private Map<Integer, Integer> valToIdx;
+    private Random random;
+
+    public RandomizedSet() {
+        vals = new ArrayList<>();
+        valToIdx = new HashMap<>();
+        random = new Random();
+    }
+
+    public boolean insert(int val) {
+        if (valToIdx.containsKey(val)) {
+            return false;
+        } else {
+            int idx = vals.size();
+            vals.add(idx, val);
+            valToIdx.put(val, idx);
+            return true;
+        }
+    }
+
+    public boolean remove(int val) {
+        if (valToIdx.containsKey(val)) {
+            int idx = valToIdx.get(val);
+            int lastIdx = vals.size() - 1;
+            int lastVal = vals.get(lastIdx);
+            // 取出最后一个节点，覆盖待删除的节点，实现 O(1) 的删除，避免遍历 ArrayList 删除节点
+            vals.set(idx, lastVal);
+            valToIdx.put(lastVal, idx);
+            // 移除最后一个节点
+            vals.remove(lastIdx);
+            valToIdx.remove(val);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public int getRandom() {
+        int idx = random.nextInt(vals.size());
+        return vals.get(idx);
+    }
+}
+```
+
 # Design Twitter
 
 [Problem Description](https://leetcode.cn/problems/design-twitter/description/)

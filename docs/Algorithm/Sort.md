@@ -1,3 +1,7 @@
+# Sort
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202411241608201.png)
+
 # Bubble Sort
 
 ```java
@@ -159,44 +163,36 @@ public static void insertSort(int[] arr, int low) {
 [Explain](https://www.bilibili.com/video/BV1Lv4y1e7HL/?p=140)
 
 ```java
-public static void heapSort(int[] arr) {
-    // Build max heap
-    for (int i = arr.length / 2 - 1; i >= 0; i--) {
-        moveDown(arr, i, arr.length);
+public static void heapSort(int[] nums) {
+    // len / 2 - 1 为倒数第二层的最右边的节点的索引
+    // 从该处开始，从右向左，从下向上，依次进行 heapify，构建堆
+    for (int i = nums.length / 2 - 1; i > -1; i--) {
+        moveDown(nums, i, nums.length);
     }
-    
-    // Heap sort
-    for (int size = arr.length - 1; size > 1; size--) {
-        // Swap the root(maximum value) of the heap with the last element of the heap
-        swap(arr, 0, size);
-        
-        // Call max heapify on the reduced heap
-        moveDown(arr, 0, size);
+    // 构建好堆之后，依次将堆顶元素移动至最后，表示已经排好序的元素
+    // size = 5 时，将 idx = 0 和 idx = 4 交换，即最大的元素放在了最后，设置 size--
+    // size = 4 时，将 idx = 0 和 idx = 3 交换，即倒数第二大的元素移到了后面
+    for (int size = nums.length - 1; size > -1; size--) {
+        swap(nums, 0, size);
+        moveDown(nums, 0, size);
     }
 }
 
-private static void moveDown(int[] arr, int par, int size) {
-    int left = par * 2 + 1;  // left child
-    int right = par * 2 + 2; // right child
-    int max = par;  // Initialize max as root
-    
-    // If left child is larger than root
-    if (left < size && arr[left] > arr[max]) {
+public static void moveDown(int[] nums, int par, int size) {
+    int max = par;
+    int left = par * 2 + 1;
+    int right = par * 2 + 2;
+
+    if (left < size && nums[left] > nums[max]) {
         max = left;
     }
-    
-    // If right child is larger than max so far
-    if (right < size && arr[right] > arr[max]) {
+    if (right < size && nums[right] > nums[max]) {
         max = right;
     }
-    
-    // If max is not root
+
     if (max != par) {
-        // Swap
-        swap(arr, par, cur);
-        
-        // Recursively move down the affected sub-tree
-        moveDown(arr, max, size);
+        swap(nums, par, max);
+        moveDown(nums, max, size);
     }
 }
 ```
@@ -423,132 +419,82 @@ private static void merge(int[] a1, int i, int iEnd, int j, int jEnd, int[] a2) 
 }
 ```
 
-# Quick Sort (Unilateral)
+# Dutch National Flag Problem
 
-[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=56&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+[Explain 01:44:40](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.videopod.episodes&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=4)
 
 ```java
-/**
- * The main function that implements QuickSort on an array within a given range.
- *
- * @param arr   The array to be sorted.
- * @param left  The starting index of the range to be sorted.
- * @param right The ending index of the range to be sorted.
- */
-public static void quickSort(int[] arr, int left, int right) {
-    // Base case: If the range has less than 2 elements, return.
-    if (left >= right) {
-        return;
-    }
-
-    // Partition the array and get the pivot's final location.
-    int p = partition(arr, left, right);
-
-    // Recursively sort the elements less than the pivot.
-    quickSort(arr, left, p - 1);
-
-    // Recursively sort the elements greater than the pivot.
-    quickSort(arr, p + 1, right);
-}
-
-/**
- * Helper function to partition the array on the basis of pivot and arrange the elements.
- *
- * @param arr   The array to be partitioned.
- * @param left  The starting index of the range to be partitioned.
- * @param right The ending index of the range to be partitioned.
- * @return The final index of the pivot element.
- */
-private int partition(int[] arr, int left, int right) {
-    // Choose a random element as pivot and swap it with the rightmost element
-    // This is done to optimize the algorithm's performance for the worst-case scenario
-    swap(arr, ThreadLocalRandom.current().nextInt(right - left + 1) + left, right);
-    
-    // Choose the rightmost element as pivot.
-    int pv = arr[right];
-
-    // Pointer for greater element.
-    int i = left;
-
-    // Traverse each element of the array.
-    // Compare them with the pivot.
-    for (int j = left; j < right; j++) {
-        if (arr[j] < pv) {
-            // Swap elements at i and j.
-            if (i != j) {
-                swap(arr, i, j);
-            }
+public static void sort(int[] nums, int tar) {
+    int i = 0;
+    // 从 l 开始，左边的元素都小于等于 tar
+    int l = -1;
+    // 从 r 开始，右边的元素都大于等于 tar
+    int r = nums.length;
+    // 只需要从 i 遍历到 r 即可，因为从 r 开始，右边的元素都是由 i 换过去的，即都遍历过了
+    while (i < r) {
+        if (nums[i] < tar) {
+            swap(nums, l + 1, i);
+            l++;
+            i++;
+        } else if (nums[i] > tar) {
+            // 交换了 r - 1 和 i 的元素，这里只能 r--，不能 i++，
+            // 因为 r - 1 的元素是从右边来的，我们还没有访问过，
+            // 上面可以执行 i++，是因为 l + 1 的元素，是经过 i 遍历的
+            swap(nums, r - 1, i);
+            r--;
+        } else {
             i++;
         }
     }
-
-    // Swap the pivot element with the greater element specified by i.
-    swap(arr, i, right);
-
-    // Return the pivot's final location.
-    return i;
-}
-
-private static void swap(int[] arr, int i, int j) {
-    int temp = arr[i];
-    arr[i] = arr[j];
-    arr[j] = temp;
 }
 ```
 
-# Quick Sort (Bilateral)
+# Quick Sort
 
-[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=57&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+[Explain 02:22:00](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.videopod.episodes&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=4)
 
 ```java
-public static void quickSort(int[] arr, int l, int r) {
-    if (l >= r) {
-        return;
-    }
-    
-    int p = partition(arr, l, r);
-    quickSort(arr, l, p - 1);
-    quickSort(arr, p + 1, r);
+public static void quickSort(int[] nums, int l, int r) {
+    if (l >= r) return;
+    int[] p = partition(nums, l, r);
+    quickSort(nums, l, p[0] - 1);
+    quickSort(nums, p[0] + 1, r);
 }
 
-public static int partition(int[] arr, int l, int r) {
-    // Choose a random element as pivot and swap it with the leftmost element
-    // This is done to optimize the algorithm's performance for the worst-case scenario
-    swap(arr, l, ThreadLocalRandom.current().nextInt(r - l + 1) + l);
-    
-    // Pivot value, choose the leftmost element as pivot
-    int pv = arr[l];
-    // Index of smaller element
-    int pl = l + 1;
-    // Index of larger element
-    int pr = r;
-    
-    // Partition the array around the pivot
-    while (pl <= pr) {
-        // Find the first element from the left that is greater than the pivot
-        while (pl <= pr && arr[pl] <= pv) {
+public static int[] partition(int[] nums, int l, int r) {
+    int pv = nums[ThreadLocalRandom.current().nextInt(r - l + 1) + l];
+    int pi = l;
+    int pl = l - 1;
+    int pr = r + 1;
+    while (pi < pr) {
+        if (nums[pi] < pv) {
+            swap(nums, pl + 1, pi);
             pl++;
-        }
-        // Find the first element from the right that is less than the pivot
-        while (pl <= pr && arr[pr] >= pv) {
+            pi++;
+        } else if (nums[pi] > pv) {
+            swap(nums, pr - 1, pi);
             pr--;
-        }
-        // If there are elements greater than pivot on the left
-        // or smaller than pivot on the right, swap them
-        if (pl <= pr) {
-            swap(arr, pl, pr);
-            pl++;
-            pr--;
+        } else {
+            pi++;
         }
     }
-    
-    // Swap the pivot element with the element at the r pointer
-    swap(arr, l, pr);
-    
-    // Return the pivot index
-    return pr;
+    return new int[] { pl + 1, pr - 1 };
 }
 ```
+
+快排的空间复杂度分析
+
+1. 递归深度
+
+- 快速排序是基于分治思想的，递归调用栈的深度取决于数组划分的方式。
+- 最优情况（每次均匀划分，递归深度为 logn）：每次划分后，子数组的大小减半，因此递归的最大深度为 logn。
+- 最差情况（每次划分都在极端位置，如升序数组中以第一个元素为基准）：每次划分时，只有一个元素进入一侧，递归深度为 n 。
+
+2. 辅助空间
+
+- 除了递归调用栈外，该算法没有使用额外的数据结构。
+- partition 方法返回一个长度为 2 的数组（常数级空间）。
+- 整体辅助空间为  O(1) ，不随着输入规模增长。
 
 # Counting Sort
 
@@ -638,35 +584,6 @@ public static void bucketSort(int[] nums, int range) {
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=64&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
-public static void radixSort(int[] nums) {
-    int max = nums[0];
-    for (int num : nums) {
-        max = Math.max(max, num);
-    }
-    
-    ArrayList<Integer>[] buckets = new ArrayList[10];
-    for (int i = 0; i < buckets.length; i++) {
-        buckets[i] = new ArrayList<>();
-    }
-    
-    int len = (max + "").length();
-    int radix = 10;
-    for (int i = 0; i < len; i++) {
-        for (int num : nums) {
-            buckets[num % radix].add(num);
-        }
-        
-        int k = 0;
-        for (ArrayList<Integer> bucket : buckets) {
-            for (Integer num : bucket) {
-                nums[k++] = num;
-            }
-            bucket.clear();
-        }
-        
-        radix *= 10;
-    }
-}
 
 public static void radixSort(int[] nums) {
     // Find the maximum number to determine the number of digits
@@ -1006,4 +923,67 @@ public int merge(int[] a1, int i, int iEnd, int j, int jEnd) {
 [Explain 01:29:02](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=4)
 
 ```java
+```
+
+# Nearly Sorted Array
+
+已知一个几乎有序的数组，几乎有序是指，如果把数组排好顺序的话，每个元素移动的距离可以不超过k，并且k相对于数组来说比较小。请选择一个合适的排序算法针对这个数据进行排序。
+
+[Explain 01:20:50](https://www.bilibili.com/video/BV13g41157hK/?spm_id_from=333.788.videopod.episodes&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=5)
+
+```java
+public static void sortNearlySortedArray(int[] nums, int k) {
+    PriorityQueue<Integer> minHeap = new PriorityQueue<>();
+
+    // 将 [0, 0 + k + 1] 的元素放入到小顶堆中，其中必然包含排好序后 idx = 0 的元素
+    for (int i = 0; i <= k && i < nums.length; i++) {
+        minHeap.offer(nums[i]);
+    }
+
+    // 遍历数组，将堆顶元素放入结果，同时加入新的元素
+    // 将 [1, 1 + k + 1] 的元素放入到小顶堆，其中必然包含排好序后 idx = 1 的元素
+    // 将 [2, 2 + k + 1] 的元素放入到小顶堆，其中必然包含排好序后 idx = 2 的元素
+    int idx = 0;
+    for (int i = k + 1; i < nums.length; i++) {
+        nums[idx++] = minHeap.poll();
+        minHeap.offer(nums[i]);
+    }
+
+    // 处理堆中剩余的元素
+    while (!minHeap.isEmpty()) {
+        nums[idx++] = minHeap.poll();
+    }
+}
+
+public static void main(String[] args) {
+    int[] arr = {6, 5, 3, 2, 8, 10, 9};
+    int k = 3;
+    sortNearlySortedArray(arr, k);
+    System.out.println(Arrays.toString(arr)); // 输出: [2, 3, 5, 6, 8, 9, 10]
+}
+```
+
+# Odd Even Partition
+
+要将数组调整为奇数在左边，偶数在右边，并且不要求稳定性，可以使用双指针法来实现。该方法通过两个指针从数组的两端开始遍历，找到不符合要求的元素，然后交换它们的位置。这样可以在 O(n) 的时间复杂度内完成操作，空间复杂度为 O(1)。
+
+```java
+public static void rearrange(int[] nums) {
+    int l = 0;
+    int r = nums.length - 1;
+    while (l < r) {
+        // 在左边找到第一个偶数
+        while (l < r && nums[l] % 2 != 0) l++;
+        // 在右边找到第一个奇数
+        while (l < r && nums[r] % 2 == 0) r--;
+        // 交换 左边的偶数 和 右边的奇数
+        if (l < r) swap(nums, l, r);
+    }
+}
+
+public static void main(String[] args) {
+    int[] nums = {12, 17, 70, 15, 22, 65, 21, 90};
+    rearrange(nums);
+    System.out.println(Arrays.toString(nums));
+}
 ```

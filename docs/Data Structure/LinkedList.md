@@ -1314,24 +1314,23 @@ public static ListNode reverseList(ListNode p1) {
 
 [Problem Description](https://leetcode.cn/problems/palindrome-linked-list/description/)
 
+时间复杂度为 O(n)，空间复杂度为 O(1)，实现最复杂。
+
 ```java
-/*
-    p1
-    1 -> 2 -> 3 -> 2 -> 1
-        Find the middle node
-    
-    p1        m
-    1 -> 2 -> 3 -> 2 -> 1
-        Reverse subsequent linked list (3 -> 2 -> 1 ===> 1 -> 2 -> 3)
-    
-    p1                      p2
-    1 -> 2 -> 3 -> 2 -> 1   1 -> 2 -> 3
-        Compare two linked lists to see if they are the same
- */
 public static boolean isPalindrome(ListNode head) {
-    ListNode p1 = head;
-    ListNode p2 = getReverseList(getMiddleNode(head));
-    
+    ListNode headHalf = head;
+    // 返回 midd ~ tail 的链表
+    ListNode tailHalf = reverse(middle(head));
+    // 保存反转后的尾部元素用于恢复链表
+    ListNode tail = tailHalf;
+    // 判断是否为回文链表
+    boolean isPalindrome = isPalindrome(headHalf, tailHalf);
+    // 恢复链表
+    reverse(tail);
+    return isPalindrome;
+}
+
+public static boolean isPalindrome(ListNode p1, ListNode p2) {
     while (p2 != null) {
         if (p1.val != p2.val) {
             return false;
@@ -1339,32 +1338,28 @@ public static boolean isPalindrome(ListNode head) {
         p1 = p1.next;
         p2 = p2.next;
     }
-    
     return true;
 }
 
-public static ListNode getMiddleNode(ListNode head) {
-    ListNode p1 = head;
-    ListNode p2 = head;
-    
-    while (p2 != null) {
-        p1 = p1.next;
-        p2 = p2.next.next;
+public static ListNode middle(ListNode head) {
+    ListNode slow = head;
+    ListNode fast = head;
+    while (fast != null && fast.next != null) {
+        slow = slow.next;
+        fast = fast.next.next;
     }
-    
-    return p1;
+    return slow;
 }
 
-public static ListNode getReverseList(ListNode head) {
-    ListNode p1 = null;
-    ListNode p2 = head;
-    
-    while (p2 != null) {
-        p1 = new ListNode(p2.val, p1);
-        p2 = p2.next;
+public static ListNode reverse(ListNode node) {
+    ListNode prev = null;
+    while (node != null) {
+        ListNode next = node.next;
+        node.next = prev;
+        prev = node;
+        node = next;
     }
-    
-    return p1;
+    return prev;
 }
 ```
 
@@ -1439,6 +1434,7 @@ public static boolean isPalindrome(ListNode head) {
 
 ```java
 public static boolean hasCycle(ListNode head) {
+    // 通过 set 存储访问过的节点，每次遍历时，先判断之前是否有访问过该节点，从而确定是否有环
     HashSet<ListNode> set = new HashSet<>();
     ListNode cur = head;
     while (cur != null) {
@@ -1618,7 +1614,7 @@ public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
 }
 ```
 
-# Sort List
+# Merge Sort List
 
 [Problem Description](https://leetcode.cn/problems/sort-list/?envType=study-plan-v2&envId=top-100-liked)
 
@@ -1672,5 +1668,133 @@ public static ListNode merge(ListNode p1, ListNode p2) {
         p3.next = p2;
     } 
     return nil.next;
+}
+```
+
+# Partition List
+
+将单向链表按某值划分成左边小、中间相等、右边大的形式。
+
+[Explain 01:34:20](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=6)
+
+```java
+public static ListNode partition(ListNode head, int val) {
+    // 小于 val 的头尾
+    ListNode lh = null, lt = null;
+    // 等于 val 的头尾
+    ListNode mh = null, mt = null;
+    // 大于 val 的头尾
+    ListNode rh = null, rt = null;
+
+    // 遍历链表，将链表分成三部分，分别有 l, m, r 管理
+    ListNode curr = head;
+    while (curr != null) {
+        ListNode next = curr.next;
+        curr.next = null;
+        if (curr.val < val) {
+            if (lh == null) {
+                lh = curr;
+                lt = curr;
+            } else {
+                lt.next = curr;
+                lt = curr;
+            }
+        } else if (curr.val > val) {
+            if (rh == null) {
+                rh = curr;
+                rt = curr;
+            } else {
+                rt.next = curr;
+                rt = curr;
+            }
+        } else {
+            if (mh == null) {
+                mh = curr;
+                mt = curr;
+            } else {
+                mt.next = curr;
+                mt = curr;
+            }
+        }
+        curr = next;
+    }
+
+    // 连接 l 和 m，如果 m 不存在，则连接 l 和 r
+    if (lt != null) {
+        lt.next = mh != null ? mh : rh;
+    }
+    // 连接 m 和 r
+    if (mt != null) {
+        mt.next = rh;
+    }
+
+    return lh != null ? lh : (mh != null ? mh : rh);
+}
+```
+
+# Copy List with Random Pointer
+
+[Problem Description](https://leetcode.cn/problems/copy-list-with-random-pointer/description/)
+
+[Explain 01:44:54](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=6)
+
+```java
+public static Node copyRandomList(Node head) {
+    Map<Node, Node> map = new HashMap<>();
+
+    // 拷贝节点的 val，但不设置 next 和 random
+    Node curr = head;
+    while (curr != null) {
+        map.put(curr, new Node(curr.val));
+        curr = curr.next;
+    }
+
+    curr = head;
+    while (curr != null) {
+        Node node = map.get(curr);
+        node.next = map.get(curr.next);
+        node.random = map.get(curr.random);
+        curr = curr.next;
+    }
+
+    return map.get(head);
+}
+```
+
+# Copy List with Random Pointer
+
+[Explain 01:52:50](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=6)
+
+```java
+public static Node copyRandomList(Node head) {
+    // 插入复制节点到每个原节点之后
+    Node curr = head;
+    while (curr != null) {
+        Node copy = new Node(curr.val);
+        copy.next = curr.next;
+        curr.next = copy;
+        curr = copy.next;
+    }
+
+    // 设置复制节点的随机指针
+    curr = head;
+    while (curr != null) {
+        Node copy = curr.next;
+        copy.random = curr.random != null ? curr.random.next : null;
+        curr = curr.next.next;
+    }
+
+    // 分离原链表和复制链表
+    curr = head;
+    Node copyHead = head != null ? head.next : null;
+    Node copyCurr = copyHead;
+    while (curr != null) {
+        curr.next = curr.next.next;
+        copyCurr.next = copyCurr.next != null ? copyCurr.next.next : null;
+        curr = curr.next;
+        copyCurr = copyCurr.next;
+    }
+
+    return copyHead;
 }
 ```

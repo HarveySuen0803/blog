@@ -788,6 +788,115 @@ public static boolean isValidBST(TreeNode node, long lower, long upper) {
 }
 ```
 
+# Validate Binary Search Tree
+
+```java
+public static boolean isValidBST(TreeNode root) {
+    return process(root).isBst;
+}
+
+public static Result process(TreeNode node) {
+    if (node == null) {
+        return null;
+    }
+
+    Result leftResult = process(node.left);
+    Result rightResult = process(node.right);
+
+    boolean isBst = true;
+    int min = node.val;
+    int max = node.val;
+    if (leftResult != null) {
+        min = Math.min(min, leftResult.min);
+        max = Math.max(max, leftResult.max);
+        if (!leftResult.isBst || leftResult.max >= node.val) isBst = false;
+    }
+    if (rightResult != null) {
+        min = Math.min(min, rightResult.min);
+        max = Math.max(max, rightResult.max);
+        if (!rightResult.isBst || rightResult.min <= node.val) isBst = false;
+    }
+    return new Result(isBst, min, max);
+}
+
+public static class Result {
+    boolean isBst;
+    int min;
+    int max;
+
+    public Result() {}
+
+    public Result(boolean isBst) {
+        this.isBst = isBst;
+    }
+
+    public Result(boolean isBst, int min, int max) {
+        this.isBst = isBst;
+        this.min = min;
+        this.max = max;
+    }
+}
+```
+
+# Check Completeness of a Binary Tree
+
+[Problem Description](https://leetcode.cn/problems/check-completeness-of-a-binary-tree/description/)
+
+[Explain 00:20:00](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=8)
+
+```java
+public static boolean isCompleteTree(TreeNode root) {
+    Queue<TreeNode> queue = new LinkedList<>();
+    queue.offer(root);
+    boolean isFoundNull = false;
+    while (!queue.isEmpty()) {
+        TreeNode cur = queue.poll();
+        if (cur == null) {
+            isFoundNull = true;
+        } else {
+            // 在空节点之后又遇到非空节点，不是完全二叉树
+            if (isFoundNull) return false;
+            queue.offer(cur.left);
+            queue.offer(cur.right);
+        }
+    }
+    return true;
+}
+```
+
+# Validate Full Binary Tree
+
+```java
+public static boolean isFull(TreeNode root) {
+    return process(root).isFull;
+}
+
+public static Result process(TreeNode node) {
+    if (node == null) return new Result(true, 0);
+    Result leftResult = process(node.left);
+    Result rightResult = process(node.right);
+    boolean isFull = leftResult.isFull && rightResult.isFull && leftResult.size == rightResult.size;
+    int size = leftResult.size + rightResult.size + 1;
+    return new Result(isFull, size);
+}
+
+public static class Result {
+    boolean isFull;
+    int size;
+
+    public Result() {}
+
+    public Result(boolean isFull) {
+        this.isFull = isFull;
+    }
+
+    public Result(boolean isFull, int size) {
+        this.isFull = isFull;
+        this.size = size;
+    }
+}
+```
+
 # Kth Smallest Element in a BST
 
 [Problem Description](https://leetcode.cn/problems/kth-smallest-element-in-a-bst/description/?envType=study-plan-v2&envId=top-100-liked)

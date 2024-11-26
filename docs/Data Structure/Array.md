@@ -212,18 +212,53 @@ public void merge(int[] a1, int i, int iEnd, int j, int jEnd, int[] a2, int k) {
 
 # Remove Duplicates from Sorted Array
 
+[Problem Description](https://leetcode.cn/problems/remove-duplicates-from-sorted-array/description/?envType=study-plan-v2&envId=top-interview-150)
+
 ```java
-public static int[] removeDuplicates(int[] nums) {
+public static int removeDuplicates(int[] nums1) {
+    int[] nums2 = new int[nums1.length];
     int i1 = 0;
-    int i2 = 1;
-    while (i2 < nums.length) {
-        if (nums[i1] != nums[i2]) {
+    int i2 = 0;
+
+    // 对于 [1, 1, 2, 2, 2, 3, 3]，会在 i1 移动到最后一个 1, 2, 3 时，才会存储进 nums2 中
+    while (i1 < nums1.length - 1) {
+        if (nums1[i1] != nums1[i1 + 1]) {
+            nums2[i2++] = nums1[i1++];
+        } else {
             i1++;
-            nums[i1] = nums[i2];
+        }
+    }
+    // 复制 nums1 的最后一个元素到 nums2 中
+    nums2[i2] = nums1[i1];
+    
+    System.arraycopy(nums2, 0, nums1, 0, nums1.length);
+    
+    return i2;
+}
+```
+
+# Remove Duplicates from Sorted Array II
+
+[Problem Description](https://leetcode.cn/problems/remove-duplicates-from-sorted-array-ii/description/?envType=study-plan-v2&envId=top-interview-150)
+
+```java
+public static int removeDuplicates(int[] nums) {
+    if (nums.length < 2) {
+        return nums.length;
+    }
+
+    // 快慢指针初始化为 2，前两个元素无需检查
+    int i1 = 2;
+    int i2 = 2;
+    while (i2 < nums.length) {
+        // 慢指针 指向的元素 和 快指针不同
+        if (nums[i1 - 2] != nums[i2]) {
+            nums[i1++] = nums[i2];
         }
         i2++;
     }
-    return Arrays.copyOfRange(nums, 0, i1 + 1);
+    
+    return i1;
 }
 ```
 
@@ -288,44 +323,29 @@ public static int maxSubArray(int[] nums) {
 
 ```java
 public int[][] merge(int[][] intervals) {
-    if (intervals.length == 0) {
-        return new int[0][2];
-    }
-    Arrays.sort(intervals, Comparator.comparingInt((int[] i) -> i[0]));
-    List<int[]> res = new ArrayList<>();
-    res.add(new int[]{intervals[0][0], intervals[0][1]});
-    for (int i = 1; i < intervals.length; i++) {
-        int lVal = intervals[i][0];
-        int rVal = intervals[i][1];
-        if (lVal > res.get(res.size() - 1)[1]) {
-            res.add(new int[]{lVal, rVal});
-        } else {
-            res.get(res.size() - 1)[1] = Math.max(res.get(res.size() - 1)[1], rVal);
+    // 对 intervals 进行排序，按照每个 interval 的第一个元素排序，即左区间
+    Arrays.sort(intervals, (a, b) -> Integer.compare(a[0], b[0]));
+    List<int[]> result = new ArrayList<>();
+    for (int[] curr : intervals) {
+        // 如果是第一个元素
+        if (result.isEmpty()) {
+            result.add(curr);
+        } 
+        // 如果不是第一个元素
+        else {
+            // 前一个元素
+            int[] prev = result.get(result.size() - 1);
+            // 比较 前一个区间 和 当前区间 是否有重合
+            if (prev[1] < curr[0]) {
+                // 没有重合就直接加入结果集
+                result.add(curr);
+            } else {
+                // 有重合就进行合并，取最大的右区间
+                prev[1] = Math.max(prev[1], curr[1]);
+            }
         }
     }
-    return res.toArray(new int[res.size()][]);
-}
-```
-
-# Merge Intervals
-
-```java
-public int[][] merge(int[][] intervals) {
-    if (intervals.length == 0) {
-        return new int[0][2];
-    }
-    Arrays.sort(intervals, Comparator.comparingInt(v -> v[0]));
-    int[][] res = new int[intervals.length][2];
-    res[0] = new int[]{intervals[0][0], intervals[0][1]};
-    int idx = 0;
-    for (int i = 1; i < intervals.length; i++) {
-        if (intervals[i][0] > res[idx][1]) {
-            res[++idx] = intervals[i];
-        } else {
-            res[idx][1] = Math.max(res[idx][1], intervals[i][1]);
-        }
-    }
-    return Arrays.copyOf(res, idx + 1);
+    return result.toArray(new int[result.size()][]);
 }
 ```
 
@@ -351,12 +371,16 @@ public static void rotate(int[] nums, int k) {
 # Rotate Array
 
 ```java
-public static void rotate(int[] nums1, int k) {
-    int[] nums2 = new int[nums1.length];
-    for (int i = 0; i < nums1.length; i++) {
-        nums2[(i + k) % nums2.length] = nums1[i];
+public void rotate(int[] nums1, int k) {
+    int len = nums1.length;
+    // 5 个元素，向右移动 8 位 等于 向右移动 8 % 5 = 3 位
+    k = k % len;
+    int[] nums2 = new int[len];
+    for (int i = 0; i < len; i++) {
+        nums2[(i + k) % len] = nums1[i];
     }
-    System.arraycopy(nums2, 0, nums1, 0, nums2.length);
+
+    System.arraycopy(nums2, 0, nums1, 0, len);
 }
 ```
 
@@ -366,43 +390,26 @@ public static void rotate(int[] nums1, int k) {
 
 ```java
 public static int[] productExceptSelf(int[] nums) {
+    // lCount[i] 表示在 i 左边的所有元素的乘积
     int[] lCount = new int[nums.length];
-    int[] rCount = new int[nums.length];
     lCount[0] = 1;
     for (int i = 1; i < nums.length; i++) {
         lCount[i] = lCount[i - 1] * nums[i - 1];
     }
+
+    // rCount[i] 表示在 i 右边的所有元素的乘积
+    int[] rCount = new int[nums.length];
     rCount[nums.length - 1] = 1;
     for (int i = nums.length - 2; i >= 0; i--) {
         rCount[i] = rCount[i + 1] * nums[i + 1];
     }
+
+    // 根据 lCount[i] 和 rCount[i] 计算 i 的左右所有元素的乘积
     for (int i = 0; i < nums.length; i++) {
         nums[i] = lCount[i] * rCount[i];
     }
+    
     return nums;
-}
-```
-
-# Product of Array Except Self
-
-[Explain](https://leetcode.cn/problems/product-of-array-except-self/submissions/509942756/?envType=study-plan-v2&envId=top-100-liked)
-
-```java
-public static int[] productExceptSelf(int[] nums) {
-    if (nums.length == 0) {
-        return new int[0];
-    }
-    int[] ans = new int[nums.length];
-    ans[0] = 1;
-    for (int i = 1; i < nums.length; i++) {
-        ans[i] = ans[i - 1] * nums[i - 1];
-    }
-    int tmp = 1;
-    for (int i = nums.length - 2; i >= 0; i--) {
-        tmp *= nums[i + 1];
-        ans[i] *= tmp;
-    }
-    return ans;
 }
 ```
 
@@ -436,5 +443,75 @@ public void setZeroes(int[][] matrix) {
             }
         }
     }
+}
+```
+
+# Gas Station
+
+[Problem Description](https://leetcode.cn/problems/gas-station/description/?envType=study-plan-v2&envId=top-interview-150)
+
+```java
+public static int canCompleteCircuit(int[] gas, int[] cost) {
+    int totalGas = 0;
+    int totalCost = 0;
+    int start = 0;
+    int tank = 0;
+    for (int i = 0; i < gas.length; i++) {
+        totalGas += gas[i];
+        totalCost += cost[i];
+        tank += gas[i] - cost[i];
+        // 如果当前油量不足以到达下一个加油站，则重置油箱，并从下一个加油站重新开始统计，
+        if (tank < 0) {
+            start = (i + 1) % gas.length;
+            tank = 0;
+        }
+    }
+    // 如果总汽油量大于等于总消耗量，则返回起点索引；否则返回 -1
+    return totalGas >= totalCost ? start : -1;
+}
+```
+
+# Candy
+
+[Problem Description](https://leetcode.cn/problems/candy/description/?envType=study-plan-v2&envId=top-interview-150)
+
+```java
+public static int candy(int[] ratings) {
+    int[] candies = new int[ratings.length];
+    Arrays.fill(candies, 1);
+    for (int i = 1; i < candies.length; i++) {
+        if (ratings[i] > ratings[i - 1]) {
+            candies[i] = candies[i - 1] + 1;
+        }
+    }
+    for (int i = candies.length - 2; i > -1; i--) {
+        if (ratings[i] > ratings[i + 1]) {
+            if (candies[i] < candies[i + 1] + 1) {
+                candies[i] = candies[i + 1] + 1;
+            }
+        }
+    }
+    int count = 0;
+    for (int candy : candies) {
+        count += candy;
+    }
+    return count;
+}
+```
+
+# H Index
+
+[Problem Description](https://leetcode.cn/problems/h-index/description/?envType=study-plan-v2&envId=top-interview-150)
+
+```java
+public static int hIndex(int[] citations) {
+    Arrays.sort(citations);
+    int len = citations.length;
+    for (int i = 0; i < len; i++) {
+        // 当前论文的 H 指数
+        int h = len - i;
+        if (citations[i] >= h) return h;
+    }
+    return 0;
 }
 ```

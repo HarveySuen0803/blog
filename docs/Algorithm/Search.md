@@ -398,8 +398,10 @@ public static int boundary(int[] nums, int target, boolean isLeftMost) {
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=154)
 
+根据 val 进行快速选择：
+
 ```java
-public static int quickSearch(int[] arr, int val, int l, int r) {
+public static int quickSearch(int[] arr, int l, int r, int val) {
     int p = partition(arr, l, r);
 
     if (arr[p] == val) {
@@ -407,17 +409,17 @@ public static int quickSearch(int[] arr, int val, int l, int r) {
     }
 
     if (arr[p] < val) {
-        return quickSearch(arr, val, p + 1, r);
+        return quickSearch(arr, p + 1, r, val);
     } else {
-        return quickSearch(arr, val, l, p - 1);
+        return quickSearch(arr, l, p - 1, val);
     }
 }
 ```
 
-# Quick Select
+根据 idx 进行快速选择：
 
 ```java
-public static int quickSearch(int[] arr, int idx, int l, int r) {
+public static int quickSearch(int[] arr, int l, int r, int idx) {
     int p = partition(arr, l, r);
 
     if (p == idx) {
@@ -425,9 +427,9 @@ public static int quickSearch(int[] arr, int idx, int l, int r) {
     }
 
     if (p < idx) {
-        return quickSelect(arr, idx, p + 1, r);
+        return quickSearch(arr, p + 1, r, idx);
     } else {
-        return quickSelect(arr, idx, l, p - 1);
+        return quickSearch(arr, l, p - 1, idx);
     }
 }
 ```
@@ -440,7 +442,7 @@ public static int quickSearch(int[] arr, int idx, int l, int r) {
 
 ```java
 public int findKthLargest(int[] nums, int k) {
-    return quickSelect(nums, 0, nums.length - 1, nums.length - k);
+    return quickSearch(nums, 0, nums.length - 1, nums.length - k);
 }
 ```
 
@@ -451,10 +453,10 @@ public int findKthLargest(int[] nums, int k) {
 ```java
 public static double findMedian(int[] nums) {
     if (nums.length % 2 == 1) {
-        return quickSelect(nums, 0, nums.length - 1, nums.length / 2);
+        return quickSearch(nums, 0, nums.length - 1, nums.length / 2);
     } else {
-        int num1 = quickSelect(nums, 0, nums.length - 1, nums.length / 2 - 1);
-        int num2 = quickSelect(nums, 0, nums.length - 1, nums.length / 2);
+        int num1 = quickSearch(nums, 0, nums.length - 1, nums.length / 2 - 1);
+        int num2 = quickSearch(nums, 0, nums.length - 1, nums.length / 2);
         return (num1 + num2) / 2.0;
     }
 }
@@ -520,3 +522,39 @@ public int rec(int[] arr, int l, int r) {
 }
 ```
 
+# Search in Rotated Sorted Array
+
+[Problem Description](https://leetcode.cn/problems/search-in-rotated-sorted-array/description/)
+
+```java
+public int search(int[] nums, int tar) {
+    int l = 0;
+    int r = nums.length - 1;
+    while (l <= r) {
+        int m = (l + r) >>> 1;
+        if (nums[m] == tar) {
+            return m;
+        }
+        // 左边是低位
+        if (nums[l] <= nums[m]) {
+            // 目标在 [l, m] 之间
+            if (nums[l] <= tar && tar < nums[m]) {
+                r = m - 1;
+            }
+            // 目标在 [m, r] 之间
+            else {
+                l = m + 1;
+            }
+        } 
+        // 左边是高位
+        else {
+            if (nums[m] < tar && tar <= nums[r]) {
+                l = m + 1;
+            } else {
+                r = m - 1;
+            }
+        }
+    }
+    return -1;
+}
+```
