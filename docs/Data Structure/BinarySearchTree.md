@@ -249,7 +249,7 @@ private V doGetMaxValue(Node<K, V> node) {
 }
 ```
 
-# Get Successor and Predecessor
+# Get Predecessor
 
 [Explain p167, p168](https://www.bilibili.com/video/BV1Lv4y1e7HL?p=167&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
@@ -276,7 +276,11 @@ public V getPredecessorVal(K key) {
     
     return null;
 }
+```
 
+# Get Successor
+
+```java
 public V getSuccessorVal(K key) {
     Node<K, V> cur = root;
     Node<K, V> rightPar = null;
@@ -298,6 +302,35 @@ public V getSuccessorVal(K key) {
     }
     
     return null;
+}
+```
+
+# Get Successor II
+
+TreeNode 有一个 par 字段记录父节点，有办法快速获取后继节点么？
+
+[Explain 01:53:54](https://www.bilibili.com/video/BV13g41157hK?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=8&spm_id_from=333.788.player.switch)
+
+```java
+public static TreeNode getSuccessorNode(TreeNode cur) {
+    if (cur == null) {
+        return cur;
+    }
+    // 如果有右子树
+    if (cur.right != null) {
+        return getMinNode(cur.right);
+    }
+    // 如果没有右子树
+    else {
+        // 一直往上找，如果打破了 par.right == cur 说明 cur 为 tar 的左子树的最右边的节点，则 cur 的后继节点就是 tar
+        // 如果打破了 par != null 说明 cur 为 root 的右子树的最右边的节点，则 cur 的后继节点就是 null
+        TreeNode par = cur.par;
+        while (par != null && par.right == cur) {
+            cur = par;
+            par = cur.par;
+        }
+        return par;
+    }
 }
 ```
 
@@ -329,7 +362,7 @@ public void del(K key) {
             cur = cur.left;
         } 
         // If the key is greater than the current node's key, go right
-        else if (cmp > 0) {
+        else if (cmp > 0) {2
             par = cur;
             cur = cur.right;
         } 
@@ -879,6 +912,52 @@ public TreeNode partition(int[] preOrder, int srt, int end) {
 
 [Problem Description](https://leetcode.cn/problems/lowest-common-ancestor-of-a-binary-search-tree/description/)
 
+[Explain 01:24:50](https://www.bilibili.com/video/BV13g41157hK?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=8&spm_id_from=333.788.player.switch)
+
+```java
+public static TreeNode lowestCommonAncestor(TreeNode root, TreeNode o1, TreeNode o2) {
+    // 遍历整颗树，存储每个节点的父节点
+    HashMap<TreeNode, TreeNode> pars = new HashMap<>();
+    pars.put(root, null);
+    fillPars(root, pars);
+
+    // 从 o1 开始向上遍历，将 o1 所有的父节点都存储在 set 中
+    HashSet<TreeNode> set = new HashSet<>();
+    TreeNode cur = o1;
+    while (cur != null) {
+        set.add(cur);
+        cur = pars.get(cur);
+    }
+
+    // 从 o2 开始向上遍历，如果有节点在 set 中，说明相遇了
+    cur = o2;
+    while (cur != null) {
+        if (set.contains(cur)) {
+            return cur;
+        }
+        cur = pars.get(cur);
+    }
+
+    return null;
+}
+
+public static void fillPars(TreeNode node, Map<TreeNode, TreeNode> pars) {
+    if (node == null) {
+        return;
+    }
+    if (node.left != null) {
+        pars.put(node.left, node);
+        fillPars(node.left, pars);
+    }
+    if (node.right != null) {
+        pars.put(node.right, node);
+        fillPars(node.right, pars);
+    }
+}
+```
+
+# Lowest Common Ancestor of a Binary Search Tree
+
 [Explain](https://www.bilibili.com/video/BV1Lv4y1e7HL?p=184&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
 ```java
@@ -914,3 +993,26 @@ public TreeNode lowestCommonAncestor(TreeNode root, TreeNode p, TreeNode q) {
 }
 ```
 
+# Lowest Common Ancestor of a Binary Search Tree
+
+[Explain 01:33:20](https://www.bilibili.com/video/BV13g41157hK?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=8&spm_id_from=333.788.player.switch)
+
+```java
+public static TreeNode lowestCommonAncestor(TreeNode node, TreeNode o1, TreeNode o2) {
+    if (node == null || node == o1 || node == o2) {
+        return node;
+    }
+    // 去左边找 o1 和 o2
+    TreeNode left = lowestCommonAncestor(node.left, o1, o2);
+    // 去右边找 o1 和 o2
+    TreeNode right = lowestCommonAncestor(node.right, o1, o2);
+    // 如果 o1 和 o2 都找到了，说明当前节点就是最近公共祖先
+    if (left != null && right != null) {
+        return node;
+    }
+    // 如果只在一边找到了 o1 或 o2，说明 o1 是 o2 的公共祖先，或者 o2 是 o1 的公共祖先
+    else {
+        return left != null ? left : right;
+    }
+}
+```

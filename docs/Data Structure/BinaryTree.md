@@ -1088,5 +1088,94 @@ public static void dfs(TreeNode node, int tarSum, List<List<Integer>> lv1, Linke
 [Problem Description](https://leetcode.cn/problems/path-sum-iii/description/?envType=study-plan-v2&envId=top-100-liked)
 
 ```java
+```
+
+# Serialize and Deserialize Binary Tree
+
+[Problem Description](https://leetcode.cn/problems/serialize-and-deserialize-binary-tree/description/)
+
+[Explain 02:01:47](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=8)
+
+```java
+public String serialize(TreeNode node) {
+    if (node == null) return "#";
+    return node.val + "," + serialize(node.left) + "," + serialize(node.right);
+}
+
+public TreeNode deserialize(String data) {
+    Queue<String> vals = new LinkedList<>(Arrays.asList(data.split(",")));
+    return buildTree(vals);
+}
+
+private TreeNode buildTree(Queue<String> vals) {
+    String val = vals.poll();
+    if (val.equals("#")) {
+        return null;
+    }
+    TreeNode node = new TreeNode(Integer.parseInt(val));
+    node.left = buildTree(vals);
+    node.right = buildTree(vals);
+    return node;
+}
+```
+
+### Fold Paper Problem
+
+[Problem Description](https://leetcode.cn/circle/discuss/7RCcxy/)
+
+[Explain 02:11:44](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.player.switch&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=8)
+
+假设一段纸条竖着放在桌面上：
+
+- 对折一次后展开，折痕为 down（凹痕）。
+- 对折两次后展开，折痕从上到下为：down, down, up。
+- 对折三次后展开，折痕从上到下为：down, down, up, down, down, up, up。
+
+折痕的规律：
+
+- 每次对折，上一次折痕的中间插入一个新的凹痕 (down)，并递归产生左右子折痕。
+- 折痕的生成结构可以用二叉树表示：
+- 根节点为 down。
+- 每个节点的左子节点为 down，右子节点为 up。
+
+本质：折痕顺序等同于对这棵二叉树的 中序遍历。
+
+N = 1
 
 ```
+down
+```
+
+N = 2
+
+```
+      down
+     /    \
+  down    up
+```
+
+N = 3
+
+```
+          down
+         /    \
+      down    up
+     /   \   /   \
+  down  up down  up
+```
+
+```java
+public void printAllFolds(int size) {
+    printFolds(1, size, true);
+}
+
+private void printFolds(int level, int size, boolean isDown) {
+    if (level > size) {
+        return;
+    }
+    printFolds(level + 1, size, true);
+    System.out.print(isDown ? "down " : "up ");
+    printFolds(level + 1, size, false);
+}
+```
+

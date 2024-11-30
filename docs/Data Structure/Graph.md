@@ -1,4 +1,4 @@
-# Graph
+# Graph Strcuture 1
 
 ```java
 public class Vertex {
@@ -82,7 +82,52 @@ public static void main(String[] args) {
 }
 ```
 
-# DFS (Recursive)
+# Graph Structure 2
+
+```java
+public class Graph {
+    public Map<Integer, Node> nodes;
+    public Set<Edge> edges;
+
+    public Graph() {
+        this.nodes = new HashMap<>();
+        this.edges = new HashSet<>();
+    }
+}
+```
+
+```java
+public class Node {
+    public int val;
+    public int in;
+    public int out;
+    public List<Node> nexts;
+    public List<Edge> edges;
+
+    public Node(int val) {
+        this.val = val;
+    }
+}
+
+```
+
+```java
+public class Edge {
+    public int weight;
+    public Node src;
+    public Node tar;
+
+    public Edge() {}
+
+    public Edge(int weight, Node src, Node tar) {
+        this.weight = weight;
+        this.src = src;
+        this.tar = tar;
+    }
+}
+```
+
+# DFS (S1, Recursive)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=76)
 
@@ -101,7 +146,7 @@ private static void dfs(Vertex v) {
 }
 ```
 
-# DFS (Stack)
+# DFS (S1, Stack)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=76)
 
@@ -129,7 +174,33 @@ private static void dfs(Vertex v) {
 }
 ```
 
-# BFS (Queue)
+# DFS (S2, Stack)
+
+[Explain 00:51:13](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.videopod.episodes&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=9)
+
+```java
+public static void dfs(Node cur) {
+    LinkedList<Node> stack = new LinkedList<>();
+    Set<Node> visisted = new HashSet<>();
+    stack.push(cur);
+    visisted.add(cur);
+    System.out.println("node: " + cur.val);
+    while (!stack.isEmpty()) {
+        cur = stack.pop();
+        for (Node next : cur.nexts) {
+            if (!visisted.contains(next)) {
+                stack.push(cur);
+                stack.push(next);
+                visisted.add(next);
+                System.out.println("node: " + cur.val);
+                break;
+            }
+        }
+    }
+}
+```
+
+# BFS (S1, Queue)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=77)
 
@@ -154,7 +225,30 @@ private static void bfs(Vertex v) {
 }
 ```
 
-# Topological Sort
+# BFS (S2, Queue)
+
+[Explain 00:42:20](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.videopod.episodes&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=9)
+
+```java
+public static void bfs(Node cur) {
+    LinkedList<Node> queue = new LinkedList<>();
+    Set<Node> visisted = new HashSet<>();
+    queue.offer(cur);
+    visisted.add(cur);
+    while (!queue.isEmpty()) {
+        cur = queue.poll();
+        System.out.println("node: " + cur.val);
+        for (Node next : cur.nexts) {
+            if (!visisted.contains(next)) {
+                queue.offer(next);
+                visisted.add(next);
+            }
+        }
+    }
+}
+```
+
+# Topological Sort (S1)
 
 [Explain p78, p79, p80](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=78&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
@@ -162,8 +256,6 @@ private static void bfs(Vertex v) {
 /**
  * This method implements the Topological Sort algorithm on a directed graph.
  * Topological Sort for a graph is not possible if the graph is not a Directed Acyclic Graph (DAG).
- * 
- * @param graph The directed graph input as a list of vertices. Each vertex contains a list of edges.
  */
 private static void topologicalSort(List<Vertex> graph) {
     // Create a queue and enqueue all vertices with in-degree 0
@@ -200,7 +292,7 @@ private static void topologicalSort(List<Vertex> graph) {
 }
 ```
 
-# Topological Sort (DFS)
+# Topological Sort (S1, DFS)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=80&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
@@ -258,6 +350,34 @@ private static void dfs(Vertex vtx, LinkedList<Vertex> stack) {
     
     // Push the vertex onto the stack after all its adjacent vertices have been visited
     stack.push(vtx);
+}
+```
+
+# Topological Sort (S2, DFS)
+
+[Explain 01:04:44](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.videopod.episodes&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=9)
+
+```java
+private static void topologicalSort(Graph graph) {
+    Map<Node, Integer> inMap = new HashMap<>();
+    LinkedList<Node> zeroInQueue = new LinkedList<>();
+    for (Node node : graph.nodes.values()) {
+        inMap.put(node, node.in);
+        if (node.in == 0) {
+            zeroInQueue.offer(node);
+        }
+    }
+
+    while (!zeroInQueue.isEmpty()) {
+        Node curr = zeroInQueue.poll();
+        System.out.println(curr.val);
+        for (Node next : curr.nexts) {
+            inMap.put(next, inMap.get(next) - 1);
+            if (inMap.get(next) == 0) {
+                zeroInQueue.offer(next);
+            }
+        }
+    }
 }
 ```
 
@@ -518,7 +638,7 @@ private static void prim(Vertex src, List<Vertex> graph) {
 }
 ```
 
-# Kruskal
+# Kruskal (S1)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=93&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
@@ -610,6 +730,11 @@ public static void main(String[] args) {
     
     kruskal(queue, vlist.size());
 }
+```
+
+# Kruskal (S2)
+
+```java
 ```
 
 # DisjointSet (Union by Size)
