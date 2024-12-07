@@ -11,10 +11,15 @@
             "id": "999987fc4c586dca",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "CPP/Basic.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "Basic"
             }
           }
         ]
@@ -79,9 +84,11 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {},
+              "state": {
+                "file": "CPP/Basic.md"
+              },
               "icon": "lucide-list",
-              "title": "Outline"
+              "title": "Outline of Basic"
             }
           }
         ]
@@ -100,15 +107,16 @@
   },
   "active": "999987fc4c586dca",
   "lastOpenFiles": [
+    "CPP/image/Pasted image 20241204154703.png",
+    "CPP/Basic.md",
+    "CPP/image",
+    "CPP/OOP.md",
     "Draft/Warmup Cache.md",
     "Distributed/Raft.md",
     "Distributed/SkyWalking.md",
-    "CPP/Basic.md",
-    "CPP/OOP.md",
     "Draft/image/Pasted image 20241207170826.png",
     "Draft/image",
     "Java/OOP.md",
-    "CPP/image/Pasted image 20241204154703.png",
     "CPP/image",
     "Environment/VsCode.md",
     "Data Structure/BinaryTree.md",
@@ -130,7 +138,6 @@
     "Spring/MVC.md",
     "Rocksdb/Basic.md",
     "Algorithm/Sort.md",
-    "Data Structure/LinkedList.md",
     "ClickHouse",
     "Distributed/image/Pasted image 20241117151014.png",
     "Distributed/image",
@@ -140,7 +147,6 @@
     "Redis/image",
     "Redis/image/Pasted image 20241113211551.png",
     "Redisson",
-    "OS",
     "Meituan/Cache/image/Pasted image 20240921130427.png",
     "Draft/image/Pasted image 20240908142244.png",
     "Draft/image/Pasted image 20240908142236.png",
