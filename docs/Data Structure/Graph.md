@@ -381,55 +381,6 @@ private static void topologicalSort(Graph graph) {
 }
 ```
 
-# Dijkstra
-
-[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=84&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
-
-```java
-/**
- * This method implements Dijkstra's algorithm which is a shortest path algorithm for a graph with non-negative edge path costs.
- * The algorithm works by maintaining a priority queue of vertices, ordered by their distance from the source vertex.
- * It repeatedly selects the vertex with the smallest distance and relaxes all of its outgoing edges.
- *
- * @param src  The source vertex from where we start the algorithm.
- * @param graph The graph represented as a list of vertices.
- */
-private static void dijkstra(Vertex src, List<Vertex> graph) {
-    // Initialize a priority queue to hold the vertices, which are prioritized by their distance values.
-    PriorityQueue<Vertex> heap = new PriorityQueue<>(Comparator.comparingInt(v -> v.dist));
-    
-    // Set the distance of the source vertex to 0.
-    src.dist = 0;
-    heap.offer(src);
-
-    // Process the vertices in the queue until it's empty.
-    while (!heap.isEmpty()) {
-        // Get the vertex with the smallest distance
-        Vertex cur = heap.poll();
-        // Mark the current vertex as visited
-        cur.isVisited = true;
-        // Iterate over each edge of the current vertex.
-        for (Edge edge : cur.edges) {
-            // Get the neighbor vertex at the other end of the edge.
-            Vertex nbr = edge.linked;
-            // If the new calculated distance is less than the neighbor's current distance, update it
-            if (!nbr.isVisited && nbr.dist > cur.dist + edge.wt) {
-                nbr.dist = cur.dist + edge.wt;
-                // Set the current vertex as the predecessor of the neighbor vertex
-                nbr.prev = cur;
-                // Add the neighbor vertex back to the queue to adjust its position according to the new distance
-                heap.add(nbr);
-            }
-        }
-    }
-
-    // Print the shortest path from the source to each vertex
-    for (Vertex v : graph) {
-        System.out.println((v.prev != null ? v.prev.name : "null") + " -> " + v.name + ": " + v.dist);
-    }
-}
-```
-
 # BellmanFord
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=85&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
@@ -602,42 +553,6 @@ private static void printPath(Vertex[][] prev, List<Vertex> graph) {
 }
 ```
 
-# Prim
-
-[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=92)
-
-```java
-/**
- * Prim's algorithm is a greedy algorithm that finds a minimum spanning tree for a connected weighted undirected graph.
- * It finds a subset of the edges that forms a tree that includes every vertex, where the total weight of all the edges in the tree is minimized.
- * This function implements Prim's algorithm.
- *
- * @param src The source vertex from where the algorithm starts.
- * @param graph The graph represented as a list of vertices.
- */
-private static void prim(Vertex src, List<Vertex> graph) {
-    src.dist = 0;
-    PriorityQueue<Vertex> heap = new PriorityQueue<>(Comparator.comparingInt((v) -> v.dist));
-    for (Vertex vtx : graph) {
-        heap.offer(vtx);
-    }
-    
-    while (!heap.isEmpty()) {
-        Vertex cur = heap.poll();
-        for (Edge edge : cur.edges) {
-            Vertex nbr = edge.linked;
-            // If nbr is still in heap and the edge weight is smaller than nbr.dist
-            if (heap.contains(nbr) && edge.wt < nbr.dist) {
-                heap.remove(nbr);
-                nbr.dist = edge.wt;
-                nbr.prev = cur;
-                heap.offer(nbr);
-            }
-        }
-    }
-}
-```
-
 # Kruskal (S1)
 
 [Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=93&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
@@ -734,87 +649,173 @@ public static void main(String[] args) {
 
 # Kruskal (S2)
 
+[Explain 01:13:11](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.videopod.episodes&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=9)
+
 ```java
+public static Set<Edge> kruskal(Graph graph) {
+    DisjointSet<Node> disjointSet = new DisjointSet<>();
+    for (Node node : graph.nodes.values()) {
+        disjointSet.add(node);
+    }
+
+    PriorityQueue<Edge> heap = new PriorityQueue<>(new EdgeComparator());
+    for (Edge edge : graph.edges) {
+        heap.offer(edge);
+    }
+
+    Set<Edge> result = new HashSet<>();
+    while (!heap.isEmpty()) {
+        Edge edge = heap.poll();
+        Node srcNode = edge.src;
+        Node tarNode = edge.tar;
+        if (!disjointSet.isConnected(srcNode, tarNode)) {
+            result.add(edge);
+            disjointSet.union(srcNode, tarNode);
+        }
+    }
+
+    return result;
+}
 ```
 
-# DisjointSet (Union by Size)
+# Prim (S1)
 
-[Explain p94, p95, p96, p97](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=94)
+[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=92)
 
 ```java
 /**
- * This class represents a disjoint-set data structure, also known as a union-find data structure.
- * It provides operations for union and find, and is used to determine and manipulate 
- * the connected components of a graph.
+ * Prim's algorithm is a greedy algorithm that finds a minimum spanning tree for a connected weighted undirected graph.
+ * It finds a subset of the edges that forms a tree that includes every vertex, where the total weight of all the edges in the tree is minimized.
+ * This function implements Prim's algorithm.
+ *
+ * @param src The source vertex from where the algorithm starts.
+ * @param graph The graph represented as a list of vertices.
  */
-public class DisjointSet {
-    // The parent array represents the parent node of each element in the set
-    int[] pars;
-    // The size array keeps track of the size of each set
-    int[] size;
-    
-    public DisjointSet(int cap) {
-        this.pars = new int[cap];
-        this.size = new int[cap];
-        for (int i = 0; i < cap; i++) {
-            // Each element is initially in its own set
-            pars[i] = i;
-            // The size of each set is initially 0
-            size[i] = 0;
-        }
+private static void prim(Vertex src, List<Vertex> graph) {
+    src.dist = 0;
+    PriorityQueue<Vertex> heap = new PriorityQueue<>(Comparator.comparingInt((v) -> v.dist));
+    for (Vertex vtx : graph) {
+        heap.offer(vtx);
     }
     
-    /**
-     * Find the root of the set that i belongs to
-     */
-    public int findRoot(int i) {
-        // If the parent of i is not i, then i is not the root of its set
-        if (pars[i] != i) {
-            // Find the root of the set that i belongs to
-            pars[i] = findRoot(pars[i]);
+    while (!heap.isEmpty()) {
+        Vertex cur = heap.poll();
+        for (Edge edge : cur.edges) {
+            Vertex nbr = edge.linked;
+            // If nbr is still in heap and the edge weight is smaller than nbr.dist
+            if (heap.contains(nbr) && edge.wt < nbr.dist) {
+                heap.remove(nbr);
+                nbr.dist = edge.wt;
+                nbr.prev = cur;
+                heap.offer(nbr);
+            }
         }
-        return pars[i];
     }
-    
-    /**
-     * Merge the sets that i and j belong to
-     */
-    public void union(int i, int j) {
-        // Find the root of the set that i belongs to
-        int iRoot = findRoot(i);
-        int jRoot = findRoot(j);
-        
-        // If i and j are already in the same set, then do nothing
-        if (iRoot == jRoot) {
-            return;
+}
+```
+
+# Prim (S2)
+
+[Explain 01:40:28](https://www.bilibili.com/video/BV13g41157hK?spm_id_from=333.788.videopod.episodes&vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=9)
+
+Prim 相比 Krusal 更简单，不需要 DisjointSet 辅助，只需要一个 HashMap 即可实现。Krusal 是从所有的边中选一条最小的边加入到结果集中，这就可能出现两个集合相交的场景，所以需要 DisjointSet 判断是否有相交。Prim 是每次加入一个点后，就会解锁该点附近的边，然后从这些解锁的边中加入一条最小的边到结果集中，每次只会塞入一个条边，一个点，并不会出现 Krusal 那种出现两块集合点情况。
+
+```java
+public static Set<Edge> prim(Graph graph) {
+    PriorityQueue<Edge> minHeap = new PriorityQueue<>(new EdgeComparator());
+    Set<Node> visisted = new HashSet<>();
+    Set<Edge> result = new HashSet<>();
+    for (Node node : graph.nodes.values()) {
+        minHeap.addAll(node.edges);
+        while (!minHeap.isEmpty()) {
+            Edge edge = minHeap.poll();
+            Node tar = edge.tar;
+            if (!visisted.contains(tar)) {
+                minHeap.addAll(tar.edges);
+                visisted.add(tar);
+                result.add(edge);
+            }
         }
-        
-        // If i and j are not in the same set, then merge the two sets
-        if (size[iRoot] < size[jRoot]) {
-            // Make the smaller set's representative point to the larger set's
-            pars[iRoot] = jRoot;
-            // Update the size of the new set
-            size[jRoot] += size[iRoot];
-        } else {
-            pars[jRoot] = iRoot;
-            size[iRoot] += size[jRoot];
+    }
+    return result;
+}
+```
+
+# Dijkstra (S1)
+
+[Explain](https://www.bilibili.com/video/BV1rv4y1H7o6/?p=84&spm_id_from=pageDriver&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
+
+```java
+/**
+ * This method implements Dijkstra's algorithm which is a shortest path algorithm for a graph with non-negative edge path costs.
+ * The algorithm works by maintaining a priority queue of vertices, ordered by their distance from the source vertex.
+ * It repeatedly selects the vertex with the smallest distance and relaxes all of its outgoing edges.
+ *
+ * @param src  The source vertex from where we start the algorithm.
+ * @param graph The graph represented as a list of vertices.
+ */
+private static void dijkstra(Vertex src, List<Vertex> graph) {
+    // Initialize a priority queue to hold the vertices, which are prioritized by their distance values.
+    PriorityQueue<Vertex> heap = new PriorityQueue<>(Comparator.comparingInt(v -> v.dist));
+    
+    // Set the distance of the source vertex to 0.
+    src.dist = 0;
+    heap.offer(src);
+
+    // Process the vertices in the queue until it's empty.
+    while (!heap.isEmpty()) {
+        // Get the vertex with the smallest distance
+        Vertex cur = heap.poll();
+        // Mark the current vertex as visited
+        cur.isVisited = true;
+        // Iterate over each edge of the current vertex.
+        for (Edge edge : cur.edges) {
+            // Get the neighbor vertex at the other end of the edge.
+            Vertex nbr = edge.linked;
+            // If the new calculated distance is less than the neighbor's current distance, update it
+            if (!nbr.isVisited && nbr.dist > cur.dist + edge.wt) {
+                nbr.dist = cur.dist + edge.wt;
+                // Set the current vertex as the predecessor of the neighbor vertex
+                nbr.prev = cur;
+                // Add the neighbor vertex back to the queue to adjust its position according to the new distance
+                heap.add(nbr);
+            }
         }
     }
 
-    @Override
-    public String toString() {
-        return Arrays.toString(parent);
+    // Print the shortest path from the source to each vertex
+    for (Vertex v : graph) {
+        System.out.println((v.prev != null ? v.prev.name : "null") + " -> " + v.name + ": " + v.dist);
     }
+}
+```
 
-    public static void main(String[] args) {
-        DisjointSet set = new DisjointSet(5);
-        set.union(1, 2);
-        set.union(3, 4);
-        set.union(1, 3);
-        System.out.println(set);
-        
-        set.union(1, 0);
-        System.out.println(set);
+# Dijkstra (S2)
+
+[Explain 01:59:20](https://www.bilibili.com/video/BV13g41157hK?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=9&spm_id_from=333.788.player.switch)
+
+```java
+public static Map<Node, Integer> dijkstra(Node node) {
+    Map<Node, Integer> distMap = new HashMap<>();
+    distMap.put(node, 0);
+    Set<Node> visited = new HashSet<>();
+    Node cur = getNearestUnvisitedNode(distMap, visited);
+    while (cur != null) {
+        Integer curDist = distMap.get(cur);
+        for (Edge edge : cur.edges) {
+            Node tar = edge.tar;
+            Integer tarDist = distMap.get(tar);
+            if (tarDist == null) {
+                tarDist = curDist + edge.weight;
+                distMap.put(tar, tarDist);
+            } else {
+                tarDist = Math.min(tarDist, curDist + edge.weight);
+                distMap.put(tar, tarDist);
+            }
+        }
+        visited.add(node);
+        cur = getNearestUnvisitedNode(distMap, visited);
     }
+    return distMap;
 }
 ```
