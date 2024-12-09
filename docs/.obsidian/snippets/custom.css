@@ -6,7 +6,7 @@
 }
 
 body {
-    --line-height-normal: 1.7;
+    --line-height-normal: 1.8;
 }
 
 /* cursor */
@@ -50,7 +50,7 @@ h6, .markdown-rendered h6, .HyperMD-header-6, .HyperMD-list-line .cm-header-6 {
 .markdown-source-view.mod-cm6 .cm-preview-code-block pre.dataview-error,
 .mod-cm6 .cm-editor .HyperMD-codeblock.cm-line {
     line-height: 1.5 !important;
-    font-size: 0.85rem !important;
+    font-size: 0.9rem !important;
     background-color: var(--code-background) !important;
 }
 

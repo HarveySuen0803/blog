@@ -257,15 +257,42 @@ getline(cin, line);  // 正常读取一整行
 cout << "Number: " << number << ", Line: " << line << endl;
 ```
 
-### 左值表达式
+### 左值
 
-左值表达式（lvalue expression） 是指在程序执行过程中有特定的内存地址，可以被明确引用的值。左值表示一个可寻址的实体，通常是变量、数组元素或某些返回引用的表达式。
+左值是在程序运行期间有具体存储地址的对象，表示一个可寻址的实体。通常是变量、数组元素或某些返回引用的表达式。
 
 - 左值表达式有明确的存储位置，可以通过地址访问。
 - 左值可以被赋值，因此它可以出现在赋值操作的左侧（但不是所有左值都能修改，如 const 左值）。
 - 左值通常是变量或数组元素，生命周期至少持续到其所在作用域结束。
 
 ```cpp
+int x = 10;   // x 是左值，表示内存中的某个地址
+x = 20;       // 左值可以出现在赋值操作符的左侧
+
+int y = 30;   // y 是左值
+int& ref = x; // ref 是一个左值引用
+
+cout << x << endl;
+cout << ref << endl; // ref 是左值，绑定到 x
+```
+
+左值表达式是产生左值的表达式。这些表达式可以表示一个明确的对象或存储位置，可以出现在赋值操作符的左侧。
+
+### 右值
+
+右值是在程序运行时没有存储地址的临时值。右值通常是表达式的计算结果或字面值。
+
+- 右值表示一个临时对象，不与内存地址绑定。
+- 右值只能出现在赋值表达式的右侧（C++11 引入右值引用后，可绑定到 T&&）。
+- 右值的生命周期较短，通常只存在于当前表达式中。
+
+```cpp
+int x = 10 + 20; // 10 和 20 是右值，表达式 10 + 20 的结果也是右值
+cout << x << endl;
+
+// 右值可以直接赋值给变量
+int y = 42; // 42 是右值
+cout << y << endl;
 ```
 
 ### 自动推导类型
@@ -366,6 +393,171 @@ char c2 = 20;
 short s1 = 100;
 auto res = c1 + c2 + s1;
 std::cout << "type: " << typeid(res).name() << std::endl; // 'i' 表示 int
+```
+
+### size_t
+
+size_t 是一种无符号整数类型，因此不会出现负值，专门用于表示 对象的大小 或 数组的索引。
+
+它是标准库定义的类型别名，通常通过 typedef 或 using 定义。。定义在头文件 stddef.h（C） 和 cstddef（C++）中。
+
+- 在 32 位系统中，size_t 通常是 unsigned int，占 4 字节。
+- 在 64 位系统中，size_t 通常是 unsigned long 或 unsigned long long，占 8 字节。
+
+```cpp
+typedef unsigned int size_t;  // 这是常见的定义之一
+```
+
+在内存中，size_t 用于表示对象的大小。函数 sizeof 返回值的类型就是 size_t。
+
+```cpp
+int arr[10];
+
+size_t arrSize = sizeof(arr);
+```
+
+由于数组的最大大小受系统限制，size_t 是表示索引的合适类型。
+
+```cpp
+std::vector<int> numbers = {1, 2, 3, 4, 5};
+
+for (size_t i = 0; i < numbers.size(); ++i) {
+    std::cout << "Index: " << i << ", Value: " << numbers[i] << std::endl;
+}
+```
+
+许多标准库函数（如 malloc, strlen, vector::size）的返回值或参数类型是 size_t。
+
+```cpp
+size_t size = 10;
+int* arr = (int*)malloc(size * sizeof(int)); // malloc 的参数类型是 size_t
+
+if (arr) {
+    std::cout << "Memory allocated successfully." << std::endl;
+    free(arr);
+} else {
+    std::cout << "Memory allocation failed." << std::endl;
+}
+```
+
+```cpp
+const char* str = "Hello, world!";
+size_t length = strlen(str); // strlen 返回 size_t
+
+std::cout << "Length of the string: " << length << std::endl;
+```
+
+### typedef
+
+typedef 用于为现有类型创建一个新的 类型别名。它通过为复杂的类型定义一个简洁的名字，提升代码的可读性和可维护性。
+
+```cpp
+typedef existing_type new_type_name;
+```
+
+```cpp
+typedef unsigned int uint;
+
+int main() {
+    uint x = 100; // uint 是 unsigned int 的别名
+    std::cout << "x: " << x << std::endl;
+    return 0;
+}
+```
+
+```cpp
+typedef int* IntPtr; // 为指针定义别名
+
+int main() {
+    int a = 10;
+    IntPtr p = &a; // p 是一个指向 int 的指针
+
+    std::cout << "Value of a: " << *p << std::endl;
+    return 0;
+}
+```
+
+```cpp
+typedef int IntArray[5]; // 定义一个数组类型别名
+
+int main() {
+    IntArray arr = {1, 2, 3, 4, 5}; // 使用别名创建数组
+
+    for (int i = 0; i < 5; ++i) {
+        std::cout << arr[i] << " ";
+    }
+    std::cout << std::endl;
+
+    return 0;
+}
+```
+
+```cpp
+typedef int (*Operation)(int, int); // 定义函数指针类型
+
+int add(int a, int b) {
+    return a + b;
+}
+
+int multiply(int a, int b) {
+    return a * b;
+}
+
+int main() {
+    Operation op = add; // op 是一个函数指针
+    std::cout << "Addition: " << op(3, 4) << std::endl;
+
+    op = multiply;
+    std::cout << "Multiplication: " << op(3, 4) << std::endl;
+
+    return 0;
+}
+```
+
+```cpp
+// 使用 typedef 为结构体定义别名
+typedef struct {
+    int id;
+    char name[50];
+} Student;
+
+int main() {
+    Student s = {1, "John"};
+    std::cout << "ID: " << s.id << ", Name: " << s.name << std::endl;
+    return 0;
+}
+```
+
+### using
+
+在 C++11 中，引入了 using 关键字，它可以替代 typedef，并且在定义复杂模板类型别名时更加简洁。
+
+```cpp
+// 使用 typedef 定义类型别名
+typedef unsigned int uint1;
+
+// 使用 using 定义类型别名
+using uint2 = unsigned int;
+```
+
+在定义模板类型别名时，using 比 typedef 更加直观。
+
+```cpp
+// 使用 typedef 定义模板别名
+typedef std::vector<int> IntVector;
+
+// 使用 using 定义模板别名
+using IntList = std::vector<int>;
+
+int main() {
+    IntVector vec1 = {1, 2, 3};
+    IntList vec2 = {4, 5, 6};
+
+    std::cout << "First vector size: " << vec1.size() << std::endl;
+    std::cout << "Second vector size: " << vec2.size() << std::endl;
+
+    return 0;
+}
 ```
 
 ### 类型转换
@@ -1543,6 +1735,141 @@ for (int i = 0; i < 3; i++) {
 
 - fruits 是一个指针数组，每个元素指向一个字符串常量。
 - 使用 fruits[i] 获取字符串地址。
+
+### 函数指针
+
+函数指针是一个可以存储 函数地址 的指针，允许通过指针调用函数。函数指针提供了一种动态调用函数的机制，使得程序更加灵活，常用于回调机制、动态函数选择等场景。
+
+```cpp
+// 定义一个普通函数
+int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    // 定义函数指针
+    int (*func_ptr)(int, int);
+
+    // 将函数地址赋值给指针
+    func_ptr = add;
+
+    // 使用函数指针调用函数
+    int result = func_ptr(3, 4);
+
+    std::cout << "Result: " << result << std::endl;
+
+    return 0;
+}
+```
+
+函数指针可以存储在数组中，用于调用多个具有相同签名的函数。
+
+```cpp
+// 定义三个操作函数
+int add(int a, int b) { return a + b; }
+int subtract(int a, int b) { return a - b; }
+int multiply(int a, int b) { return a * b; }
+
+int main() {
+    // 定义函数指针数组
+    int (*operations[])(int, int) = {add, subtract, multiply};
+
+    // 调用每个函数
+    int x = 6, y = 2;
+    std::cout << "Add: " << operations[0](x, y) << std::endl;
+    std::cout << "Subtract: " << operations[1](x, y) << std::endl;
+    std::cout << "Multiply: " << operations[2](x, y) << std::endl;
+
+    return 0;
+}
+```
+
+函数指针可以作为参数传递给其他函数，用于实现回调机制。
+
+```cpp
+// 回调函数
+void performOperation(int a, int b, int (*operation)(int, int)) {
+    std::cout << "Result: " << operation(a, b) << std::endl;
+}
+
+// 操作函数
+int add(int a, int b) { return a + b; }
+int multiply(int a, int b) { return a * b; }
+
+int main() {
+    // 使用回调机制
+    performOperation(3, 4, add);       // 调用 add 函数
+    performOperation(3, 4, multiply);  // 调用 multiply 函数
+
+    return 0;
+}
+```
+
+函数指针与动态分派。
+
+```cpp
+
+// 操作函数
+int add(int a, int b) { return a + b; }
+int subtract(int a, int b) { return a - b; }
+int multiply(int a, int b) { return a * b; }
+
+int main() {
+    std::string op_name;
+    int (*operation)(int, int) = nullptr;
+
+    // 根据用户输入动态选择操作
+    std::cout << "Enter operation (add, subtract, multiply): ";
+    std::cin >> op_name;
+
+    if (op_name == "add") {
+        operation = add;
+    } else if (op_name == "subtract") {
+        operation = subtract;
+    } else if (op_name == "multiply") {
+        operation = multiply;
+    }
+
+    if (operation) {
+        std::cout << "Result: " << operation(10, 5) << std::endl;
+    } else {
+        std::cout << "Invalid operation!" << std::endl;
+    }
+
+    return 0;
+}
+```
+
+函数指针作为类的成员。
+
+```cpp
+class Calculator {
+public:
+    // 成员函数指针
+    int (*operation)(int, int);
+
+    Calculator(int (*op)(int, int)) : operation(op) {}
+
+    int calculate(int a, int b) {
+        return operation(a, b);
+    }
+};
+
+// 操作函数
+int add(int a, int b) { return a + b; }
+int multiply(int a, int b) { return a * b; }
+
+int main() {
+    // 创建对象时指定函数指针
+    Calculator calc(add);
+    std::cout << "Add: " << calc.calculate(10, 5) << std::endl;
+
+    calc.operation = multiply; // 动态更改函数指针
+    std::cout << "Multiply: " << calc.calculate(10, 5) << std::endl;
+
+    return 0;
+}
+```
 
 ### 引用
 

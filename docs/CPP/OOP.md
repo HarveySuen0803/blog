@@ -1207,3 +1207,815 @@ int main() {
 - decltype(a * b) 明确返回值类型是 a * b 的类型。
 - 这种写法在复杂模板函数中非常有用，尤其是当返回值类型依赖于参数间的操作结果时。
 
+普通函数在调用时支持隐式类型转换。如果函数的参数类型与实参类型不完全匹配，但可以通过隐式类型转换兼容，则调用会成功。
+
+模板函数不支持隐式类型转换。模板参数的类型必须与实参类型完全匹配，否则编译器会尝试进行模板实例化失败。
+
+当一个调用既满足普通函数的参数类型，也满足模板函数的推导规则时，普通函数的优先级高于模板函数。原因是普通函数的匹配规则更严格，更具体，而模板函数是泛型的。
+
+```cpp
+// 普通函数
+void func(int x) {
+    cout << "Ordinary function: " << x << endl;
+}
+
+// 模板函数
+template <typename T>
+void func(T x) {
+    cout << "Template function: " << x << endl;
+}
+
+int main() {
+    func(42);        // 满足普通函数和模板函数，优先调用普通函数
+    func(3.14);      // 普通函数不匹配，调用模板函数
+    func('A');       // 普通函数不匹配，调用模板函数
+    func(static_cast<int>(3.14)); // 显式转换后，调用普通函数
+
+    return 0;
+}
+```
+
+### 模版函数重载
+
+函数模板可以像普通函数一样被重载。函数模板的重载指的是为不同的参数类型或参数组合定义多个模板版本。此外，普通函数也可以与模板函数一起重载，编译器会根据调用时的匹配规则来选择最适合的版本。
+
+```cpp
+// 模板函数 1
+template <typename T>
+void print(T value) {
+    cout << "Template function: " << value << endl;
+}
+
+// 模板函数 2（重载）
+template <typename T, typename U>
+void print(T value1, U value2) {
+    cout << "Template function (overloaded): " << value1 << " and " << value2 << endl;
+}
+
+int main() {
+    print(42);             // 调用模板函数 1
+    print(3.14, "Hello");  // 调用模板函数 2
+    return 0;
+}
+```
+
+下面这里直接使用模版函数对 Animal 进行比较会报错：
+
+```cpp
+template <typename T>
+bool compare(T& t1, T& t2) {
+    return t1 > t2;
+}
+
+int main() {
+    Animal animal1 = Animal("harvey", 18);
+    Animal animal2 = Animal("bruce", 20);
+    bool flag = compare(animal1, animal2); // 报错，因为 Animal 不支持直接进行 >  和 < 的比较
+    return 0;
+}
+```
+
+可以重载 Animal 的比较运算符，解决这个问题：
+
+```cpp
+bool operator>(const Animal& a1, const Animal& a2) {
+    return a1.getAge() > a2.getAge();
+}
+
+bool operator<(const Animal& a1, const Animal& a2) {
+    return a1.getAge() < a2.getAge();
+}
+
+template <typename T>
+bool compare(T& t1, T& t2) {
+    return t1 > t2;
+}
+
+int main() {
+    Animal animal1 = Animal("harvey", 18);
+    Animal animal2 = Animal("bruce", 20);
+    bool flag = compare(animal1, animal2);
+    return 0;
+}
+```
+
+可以重载模版函数解决这个问题（推荐）：
+
+```cpp
+template <typename T>
+bool compare(T& t1, T& t2) {
+    return t1 > t2;
+}
+
+template <>
+bool compare<Animal>(Animal& animal1, Animal& animal2) {
+    return animal1.getAge() > animal2.getAge();
+}
+
+int main() {
+    Animal animal1 = Animal("harvey", 18);
+    Animal animal2 = Animal("bruce", 20);
+    bool flag = compare(animal1, animal2); // 调用重载后的 compare
+    return 0;
+}
+```
+
+### 模版类
+
+模板类是中一种泛型编程技术，允许在类的设计阶段定义类型参数，而在实例化阶段通过指定实际类型来生成特定的类。
+
+```cpp
+template <typename T1, typename T2>
+class Pair {
+private:
+    T1 first;
+    T2 second;
+
+public:
+    Pair(T1 f, T2 s) : first(f), second(s) {}
+
+    T1 getFirst() const {
+        return first;
+    }
+
+    T2 getSecond() const {
+        return second;
+    }
+};
+
+int main() {
+    Pair<int, double> p1(42, 3.14);  // 存储 int 和 double
+    Pair<string, int> p2("Alice", 25); // 存储 string 和 int
+
+    cout << "p1: (" << p1.getFirst() << ", " << p1.getSecond() << ")" << endl;
+    cout << "p2: (" << p2.getFirst() << ", " << p2.getSecond() << ")" << endl;
+
+    return 0;
+}
+```
+
+### 模板类特化
+
+完全特化是针对特定类型为模板类提供专用实现。
+
+```cpp
+// 通用模板类
+template <typename T>
+class Box {
+private:
+    T value;
+
+public:
+    Box(T v) : value(v) {}
+
+    T getValue() const {
+        return value;
+    }
+};
+
+// 完全特化：针对 const char*
+template <>
+class Box<const char*> {
+private:
+    string value; // 使用 string 存储 const char*
+
+public:
+    Box(const char* v) : value(v) {}
+
+    string getValue() const {
+        return value;
+    }
+};
+
+int main() {
+    Box<int> intBox(42);
+    Box<const char*> strBox("Hello, world!");
+
+    cout << "intBox: " << intBox.getValue() << endl;
+    cout << "strBox: " << strBox.getValue() << endl;
+
+    return 0;
+}
+```
+
+偏特化是为模板的一部分参数提供特化实现。偏特化只能用于类模板，不能用于函数模板。
+
+```cpp
+// 通用模板
+template <typename T1, typename T2>
+class Pair {
+private:
+    T1 first;
+    T2 second;
+
+public:
+    Pair(T1 f, T2 s) : first(f), second(s) {}
+
+    void display() const {
+        cout << first << ", " << second << endl;
+    }
+};
+
+// 偏特化：当两个类型相同时
+template <typename T>
+class Pair<T, T> {
+private:
+    T first;
+    T second;
+
+public:
+    Pair(T f, T s) : first(f), second(s) {}
+
+    void display() const {
+        cout << "Same types: " << first << ", " << second << endl;
+    }
+};
+
+int main() {
+    Pair<int, double> p1(42, 3.14);
+    Pair<int, int> p2(10, 20);
+
+    p1.display();
+    p2.display();
+
+    return 0;
+}
+```
+
+在类外实现模版函数：
+
+```cpp
+
+template <typename T>
+class Box {
+private:
+    T value;
+
+public:
+    Box(T v);         // 构造函数声明
+    void setValue(T); // 成员函数声明
+    T getValue();     // 成员函数声明
+};
+
+// 类外实现构造函数
+template <typename T>
+Box<T>::Box(T v) : value(v) {}
+
+// 类外实现 setValue
+template <typename T>
+void Box<T>::setValue(T v) {
+    value = v;
+}
+
+// 类外实现 getValue
+template <typename T>
+T Box<T>::getValue() {
+    return value;
+}
+
+int main() {
+    Box<int> intBox(10);  // 实例化 Box<int>
+    intBox.setValue(20);  // 调用成员函数
+    cout << intBox.getValue() << endl;
+
+    Box<string> strBox("Hello");  // 实例化 Box<string>
+    cout << strBox.getValue() << endl;
+
+    return 0;
+}
+```
+
+### 模版类继承
+
+```cpp
+template <typename T>
+class Base {
+protected:
+    T value;
+
+public:
+    Base(T v) : value(v) {}
+
+    void showValue() const {
+        cout << "Value: " << value << endl;
+    }
+};
+
+template <typename T>
+class Derived : public Base<T> {
+public:
+    Derived(T v) : Base<T>(v) {}
+
+    void doubleValue() {
+        this->value *= 2;
+    }
+};
+
+int main() {
+    Derived<int> obj(10);
+    obj.showValue(); // 调用基类函数
+    obj.doubleValue();
+    obj.showValue();
+
+    return 0;
+}
+```
+
+### 延迟编译
+
+模板函数（以及模板类的成员函数）采用了延迟编译，只有在被实际调用或使用时，才会由编译器为特定的模板参数类型生成具体的机器代码。
+
+- 模板本身并不是完整的机器代码，而是一个通用的模式。
+- 当模板被实例化为某个具体类型（如 int、double 等）时，编译器会根据模板生成该类型的具体机器代码。
+- 未被调用的模板函数不会生成机器代码，从而优化了编译效率和二进制文件大小。
+
+```cpp
+template <typename T>
+class Box {
+private:
+    T value;
+
+public:
+    Box(T v) : value(v) {}
+
+    T getValue() const {
+        cout << "getValue() called" << endl;
+        return value;
+    }
+
+    void setValue(T v) {
+        cout << "setValue() called" << endl;
+        value = v;
+    }
+
+    void unusedFunction() {
+        cout << "This function is not used!" << endl;
+    }
+};
+
+int main() {
+    Box<int> intBox(10);         // 实例化 Box<int>
+    cout << intBox.getValue() << endl; // 调用 getValue()，生成 getValue<int>
+    intBox.setValue(20);         // 调用 setValue()，生成 setValue<int>
+    // intBox.unusedFunction();  // 未调用，unusedFunction<int> 不会被实例化
+
+    return 0;
+}
+```
+
+如果模板函数中包含错误代码，但未被调用，则编译器不会报错。
+
+```cpp
+template <typename T>
+class Box {
+public:
+    void validFunction() {
+        cout << "validFunction called" << endl;
+    }
+
+    void invalidFunction() {
+        T* ptr = nullptr;
+        *ptr = 10; // 如果 T 是 int，会报错，但未调用不会报错
+    }
+};
+
+int main() {
+    Box<int> intBox;
+    intBox.validFunction(); // validFunction<int> 被实例化
+    // intBox.invalidFunction(); // 若调用，将触发编译错误
+    return 0;
+}
+```
+
+有时，为了优化编译或避免潜在问题，可能希望强制实例化模板类的某些成员函数。可以通过显式实例化来实现。
+
+```cpp
+template <typename T>
+class Box {
+public:
+    void funcA() {
+        cout << "funcA called" << endl;
+    }
+
+    void funcB() {
+        cout << "funcB called" << endl;
+    }
+};
+
+// 显式实例化
+template void Box<int>::funcA(); // 仅实例化 funcA<int>
+
+int main() {
+    Box<int> intBox;
+    intBox.funcA(); // funcA<int> 已实例化
+    // intBox.funcB(); // funcB<int> 未实例化，若调用，会实例化
+    return 0;
+}
+```
+
+```cpp
+template <typename T>
+class Person {
+private:
+    T pet;
+public:
+    Person(const T& pet) 
+        :pet(pet) {}
+
+    void play() {
+        pet.bark(); // Dog 有 bark()，Cat 没有 bark()，这里在编译时不会报错
+    }
+};
+
+int main() {
+    Dog dog = Dog("Pluto", 3, "yellow");
+    Person p1 = Person<Dog>(dog);
+    p1.play();
+    
+    Cat cat = Cat("tom", 2, "blue");
+    Person p2 = Person<Cat>(cat); // 这里不会报错
+    // p2.play(); // 执行到这里，才会去编译 Person<Cat> 的 play() ，发现 Cat 没有 bark() 而报错
+    
+    return 0;
+}
+```
+
+### 普通类拆分
+
+普通类的拆分非常常见，头文件 (.h) 用于声明类的接口，源文件 (.cpp) 用于实现类的功能。以下是完整的例子和步骤。
+
+```cpp
+project/
+|-- include/
+|   |-- MyClass.h
+|-- src/
+|   |-- MyClass.cpp
+|-- main.cpp
+```
+
+```cpp
+#ifndef MYCLASS_H
+#define MYCLASS_H
+
+#include <string>
+
+class MyClass {
+private:
+    int id;
+    std::string name;
+
+public:
+    MyClass(int id, const std::string& name); // 构造函数
+    void setId(int id);                       // 设置 ID
+    int getId() const;                        // 获取 ID
+    void setName(const std::string& name);    // 设置 Name
+    std::string getName() const;              // 获取 Name
+};
+
+#endif // MYCLASS_H
+```
+
+```cpp
+#include "MyClass.h"
+
+// 构造函数
+MyClass::MyClass(int id, const std::string& name) : id(id), name(name) {}
+
+// 设置 ID
+void MyClass::setId(int id) {
+    this->id = id;
+}
+
+// 获取 ID
+int MyClass::getId() const {
+    return id;
+}
+
+// 设置 Name
+void MyClass::setName(const std::string& name) {
+    this->name = name;
+}
+
+// 获取 Name
+std::string MyClass::getName() const {
+    return name;
+}
+```
+
+```cpp
+#include <iostream>
+#include "MyClass.h"
+
+int main() {
+    MyClass obj(1, "Alice");
+    std::cout << "ID: " << obj.getId() << ", Name: " << obj.getName() << std::endl;
+
+    obj.setId(2);
+    obj.setName("Bob");
+    std::cout << "ID: " << obj.getId() << ", Name: " << obj.getName() << std::endl;
+
+    return 0;
+}
+```
+
+普通类的实现通常放在 .cpp 文件中，编译器在编译 .cpp 文件时会将实现转化为机器代码 .o 目标文件。头文件只提供声明，编译器在编译使用普通类的代码时，只需要知道类的接口，而不需要实现细节。
+
+编译 MyClass.cpp 生成 MyClass.o 目标文件，其中包含了所有实现函数的机器代码。编译 main.cpp 生成 main.o 目标文件，其中包含了对 setId, setName, getId, getName 等函数的符号引用。
+
+链接阶段，链接器将所有的符号引用解析成 MyClass.cpp 中的实现地址，完成链接。
+
+### 模版类拆分
+
+模板类的拆分略有不同，因为模板的实例化发生在编译阶段，编译器需要看到模板的完整实现。以下是模板类拆分头文件和实现文件的示例。
+
+```
+project/
+|-- include/
+|   |-- Box.h
+|-- src/
+|   |-- Box.tpp
+|-- main.cpp
+```
+
+```cpp
+#ifndef BOX_H
+#define BOX_H
+
+template <typename T>
+class Box {
+private:
+    T value;
+
+public:
+    Box(T v);              // 构造函数
+    void setValue(T v);    // 设置值
+    T getValue() const;    // 获取值
+};
+
+// 包含实现文件
+#include "Box.tpp"
+
+#endif // BOX_H
+```
+
+```cpp
+template <typename T>
+Box<T>::Box(T v) : value(v) {}
+
+template <typename T>
+void Box<T>::setValue(T v) {
+    value = v;
+}
+
+template <typename T>
+T Box<T>::getValue() const {
+    return value;
+}
+```
+
+```cpp
+#include <iostream>
+#include "Box.h"
+
+int main() {
+    Box<int> intBox(42);
+    Box<std::string> strBox("Hello");
+
+    std::cout << "intBox value: " << intBox.getValue() << std::endl;
+    strBox.setValue("World");
+    std::cout << "strBox value: " << strBox.getValue() << std::endl;
+
+    return 0;
+}
+```
+
+模板代码本身只是一个“模式”，在实例化之前没有具体的实现代码。编译器在编译时根据模板参数实例化出具体的代码，而不是依赖链接器。
+
+模板代码的实现不会被单独编译为 .o 文件，因为它不是一个具体的实现。只有当模板被实例化时（即被使用时），编译器才会生成具体的目标代码。
+
+编译器遇到 Box\<int\> 的实例化点，在编译 main.cpp 时根据模板代码生成 Box\<int\> 的具体实现机器代码，并没有链接的过程，所以我们在使用模版类的时候，不能只有声明，还需要有具体的实现。
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412081419544.png)
+
+### 仿函数
+
+函数对象是一个重载了 operator() 的类或结构体对象。它表现得像一个函数，可以被调用，但它是一个类的实例，能同时携带数据和方法。
+
+- 可以通过成员变量在调用中保存额外信息。
+- 可用作算法的参数（如 std::sort 的比较器）。
+- 通常比普通函数灵活，也可以在编译时内联，提高性能。
+
+```cpp
+class Multiply {
+public:
+    int operator()(int a, int b) {
+        return a * b;
+    }
+};
+
+int main() {
+    Multiply multiply;
+
+    // 使用函数对象调用 operator()
+    int result = multiply(3, 4);
+    std::cout << "3 * 4 = " << result << std::endl;
+
+    return 0;
+}
+```
+
+```cpp
+struct Multiply {
+    int operator()(int a, int b) {
+        return a * b;
+    }
+};
+
+int main() {
+    Multiply multiply;
+
+    // 使用函数对象调用 operator()
+    int result = multiply(3, 4);
+    std::cout << "3 * 4 = " << result << std::endl;
+
+    return 0;
+}
+```
+
+函数对象可用作 std::map 或 std::set 的自定义比较器。
+
+```cpp
+struct StringLengthComparator {
+    bool operator()(const std::string& a, const std::string& b) const {
+        return a.size() < b.size(); // 按字符串长度比较
+    }
+};
+
+int main() {
+    std::map<std::string, int, StringLengthComparator> myMap;
+
+    myMap["short"] = 1;
+    myMap["longer"] = 2;
+    myMap["longest"] = 3;
+
+    for (const auto& pair : myMap) {
+        std::cout << pair.first << ": " << pair.second << std::endl;
+    }
+
+    return 0;
+}
+```
+
+### 内置仿函数
+
+STL 提供了一些 内置仿函数，主要分为以下几类：
+
+- 算术运算仿函数
+- 关系运算仿函数
+- 逻辑运算仿函数
+
+```cpp
+std::plus<int> add;                 // 加法
+std::minus<int> subtract;           // 减法
+std::multiplies<int> multiply;      // 乘法
+std::divides<int> divide;           // 除法
+std::modulus<int> mod;              // 取模
+std::negate<int> negate;            // 取负
+
+std::cout << "3 + 4 = " << add(3, 4) << std::endl;
+std::cout << "10 - 7 = " << subtract(10, 7) << std::endl;
+std::cout << "2 * 6 = " << multiply(2, 6) << std::endl;
+std::cout << "8 / 2 = " << divide(8, 2) << std::endl;
+std::cout << "10 % 3 = " << mod(10, 3) << std::endl;
+std::cout << "-5 = " << negate(5) << std::endl;
+```
+
+```cpp
+std::equal_to<int> eq;          // 相等
+std::not_equal_to<int> neq;    // 不相等
+std::greater<int> gt;          // 大于
+std::less<int> lt;             // 小于
+std::greater_equal<int> ge;    // 大于等于
+std::less_equal<int> le;       // 小于等于
+
+std::cout << "5 == 5: " << eq(5, 5) << std::endl;
+std::cout << "5 != 3: " << neq(5, 3) << std::endl;
+std::cout << "5 > 3: " << gt(5, 3) << std::endl;
+std::cout << "5 < 7: " << lt(5, 7) << std::endl;
+std::cout << "5 >= 5: " << ge(5, 5) << std::endl;
+std::cout << "5 <= 7: " << le(5, 7) << std::endl;
+```
+
+```cpp
+std::logical_and<bool> logicalAnd;  // 逻辑与
+std::logical_or<bool> logicalOr;    // 逻辑或
+std::logical_not<bool> logicalNot;  // 逻辑非
+
+std::cout << "true && false: " << logicalAnd(true, false) << std::endl;
+std::cout << "true || false: " << logicalOr(true, false) << std::endl;
+std::cout << "!true: " << logicalNot(true) << std::endl;
+```
+
+在 std::sort 中使用仿函数：
+
+```cpp
+std::vector<int> numbers = {5, 2, 8, 1, 3};
+
+// 使用 std::greater 仿函数实现降序排序
+std::sort(numbers.begin(), numbers.end(), std::greater<int>());
+
+for (int n : numbers) {
+    std::cout << n << " ";
+}
+std::cout << std::endl;
+```
+
+在 std::remove_if 中使用仿函数：
+
+```cpp
+std::vector<int> numbers = {1, 2, 3, 4, 5};
+
+// 使用 std::modulus 结合 std::bind2nd 移除偶数
+auto it = std::remove_if(numbers.begin(), numbers.end(), [](int n) { return n % 2 == 0; });
+
+numbers.erase(it, numbers.end());
+
+for (int n : numbers) {
+    std::cout << n << " ";
+}
+std::cout << std::endl;
+```
+
+### 谓语
+
+谓语（Predicate） 是指返回 true 或 false 的函数、函数对象或 Lambda 表达式，通常用于判断条件。谓语被广泛应用于 STL 算法中，例如 std::find_if、std::sort 和 std::remove_if 等。
+
+使用函数作为谓语：
+
+```cpp
+bool isEven(int value) {
+    return value % 2 == 0;
+}
+
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+
+    // 使用 find_if 找到第一个偶数
+    auto it = std::find_if(numbers.begin(), numbers.end(), isEven);
+
+    if (it != numbers.end()) {
+        std::cout << "First even number: " << *it << std::endl;
+    } else {
+        std::cout << "No even number found." << std::endl;
+    }
+
+    return 0;
+}
+```
+
+使用函数对象作为谓语：
+
+```cpp
+struct IsPositive {
+    bool operator()(int value) const {
+        return value > 0;
+    }
+};
+
+int main() {
+    std::vector<int> numbers = {-1, -2, 3, 4, -5};
+
+    // 使用 find_if 找到第一个正数
+    auto it = std::find_if(numbers.begin(), numbers.end(), IsPositive());
+
+    if (it != numbers.end()) {
+        std::cout << "First positive number: " << *it << std::endl;
+    } else {
+        std::cout << "No positive number found." << std::endl;
+    }
+
+    return 0;
+}
+```
+
+使用 Lambda 表达式作为谓语：
+
+```cpp
+int main() {
+    std::vector<int> numbers = {1, 2, 3, 4, 5};
+
+    // 使用 Lambda 表达式作为谓语
+    auto it = std::find_if(numbers.begin(), numbers.end(), [](int value) {
+        return value > 3; // 判断是否大于 3
+    });
+
+    if (it != numbers.end()) {
+        std::cout << "First number greater than 3: " << *it << std::endl;
+    } else {
+        std::cout << "No number greater than 3 found." << std::endl;
+    }
+
+    return 0;
+}
+```
+
