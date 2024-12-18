@@ -278,6 +278,22 @@ cout << ref << endl; // ref 是左值，绑定到 x
 
 左值表达式是产生左值的表达式。这些表达式可以表示一个明确的对象或存储位置，可以出现在赋值操作符的左侧。
 
+int& 是左值引用，左值引用只能绑定到左值，而不能绑定到右值（如字面值 30 或表达式的结果），这是因为左值引用表示对变量的可修改访问，而右值（如 10）是临时的，不能被修改。
+
+```cpp
+int x = 30;
+int& ref1 = x; // success
+int& ref2 = 30; // failure
+```
+
+const int& 是一个常量左值引用，可以绑定到右值，编译器在这种情况下会创建一个临时变量，将右值 30 存储在其中，并将该临时变量的地址绑定到 const int& 引用上。
+
+```cpp
+const int& ref3 = 30; // success
+```
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412151209277.png)
+
 ### 右值
 
 右值是在程序运行时没有存储地址的临时值。右值通常是表达式的计算结果或字面值。
@@ -293,6 +309,180 @@ cout << x << endl;
 // 右值可以直接赋值给变量
 int y = 42; // 42 是右值
 cout << y << endl;
+```
+
+int&& 是右值引用，右值引用只能绑定到右值（如临时对象），可以通过右值引用直接操作右值，避免资源的浪费，右值引用可以延长右值的生命周期。
+
+```cpp
+int&& r = 10;      // r 是右值引用，绑定到右值 10
+std::cout << r;    // 输出 10
+```
+
+右值引用无法直接绑定左值。如果需要绑定左值，需要显式使用 std::move 将左值转换为右值。
+
+```cpp
+int x = 10;
+// int&& r1 = x;       // 错误：右值引用不能直接绑定左值
+int&& r2 = std::move(x); // 正确：std::move 将 x 转为右值
+```
+
+右值通常会在表达式求值后销毁，但通过右值引用可以延长其生命周期。
+
+```cpp
+const std::string&& temp = "Hello, World!";
+std::cout << temp; // 输出 "Hello, World!"，临时对象未销毁
+```
+
+右值引用的最重要用途是实现 移动语义，避免不必要的深拷贝。
+
+```cpp
+class MyVector {
+public:
+    std::vector<int> data;
+
+    // 普通构造函数
+    MyVector(size_t size) : data(size) {
+        std::cout << "Constructed" << std::endl;
+    }
+
+    // 拷贝构造函数
+    MyVector(const MyVector& other) : data(other.data) {
+        std::cout << "Copied" << std::endl;
+    }
+
+    // 移动构造函数
+    MyVector(MyVector&& other) noexcept : data(std::move(other.data)) {
+        std::cout << "Moved" << std::endl;
+    }
+};
+
+int main() {
+    MyVector v1(10);       // 调用普通构造函数
+    MyVector v2 = v1;      // 调用拷贝构造函数
+    MyVector v3 = std::move(v1); // 调用移动构造函数
+    return 0;
+}
+```
+
+- 当 v2 = v1 时，调用拷贝构造函数，拷贝了 v1 的数据。
+- 当 v3 = std::move(v1) 时，调用移动构造函数，转移了 v1 的数据，而不是拷贝，性能更高。
+
+右值引用在标准容器中用于高效插入临时对象，避免不必要的对象构造。
+
+```cpp
+std::vector<std::string> vec;
+
+std::string temp = "Hello";
+vec.push_back(temp);                // 调用拷贝构造
+vec.push_back(std::move(temp));     // 调用移动构造
+
+std::cout << "vec[0]: " << vec[0] << std::endl;
+std::cout << "vec[1]: " << vec[1] << std::endl;
+```
+
+- push_back(temp) 拷贝了 temp 的内容。
+- push_back(std::move(temp)) 直接转移了 temp 的资源到容器中，temp 的内容被“移动”。
+
+右值引用可以用来显式地转移资源的所有权（如 FILE* 或操作系统资源句柄）从一个对象转移到另一个对象，避免不必要的资源拷贝和释放。
+
+```cpp
+class File {
+public:
+    // 默认构造函数
+    File() : handle_(nullptr) {}
+
+    // 打开文件的构造函数
+    explicit File(const char* filename, const char* mode) {
+        handle_ = std::fopen(filename, mode);
+        if (handle_) {
+            std::cout << "File opened: " << filename << std::endl;
+        } else {
+            std::cerr << "Failed to open file: " << filename << std::endl;
+        }
+    }
+
+    // 禁用拷贝构造函数和拷贝赋值
+    File(const File&) = delete;
+    File& operator=(const File&) = delete;
+
+    // 移动构造函数
+    File(File&& other) noexcept : handle_(other.handle_) {
+        other.handle_ = nullptr; // 清空原对象的句柄，转移所有权
+        std::cout << "File moved" << std::endl;
+    }
+
+    // 移动赋值运算符
+    File& operator=(File&& other) noexcept {
+        if (this != &other) {
+            close();              // 释放当前对象的资源
+            handle_ = other.handle_;
+            other.handle_ = nullptr; // 清空原对象的句柄，转移所有权
+            std::cout << "File move-assigned" << std::endl;
+        }
+        return *this;
+    }
+
+    // 文件关闭函数
+    void close() {
+        if (handle_) {
+            std::fclose(handle_);
+            handle_ = nullptr;
+            std::cout << "File closed" << std::endl;
+        }
+    }
+
+    // 析构函数
+    ~File() {
+        close(); // 确保资源释放
+    }
+
+    // 检查文件句柄是否有效
+    bool is_open() const { return handle_ != nullptr; }
+
+private:
+    FILE* handle_; // 文件句柄
+};
+
+int main() {
+    // 创建并打开文件
+    File f1("example.txt", "w");
+    if (f1.is_open()) {
+        std::cout << "File f1 is open" << std::endl;
+    }
+
+    // 转移文件句柄的所有权到 f2
+    File f2 = std::move(f1); // 调用移动构造函数
+    if (!f1.is_open()) {
+        std::cout << "File f1 is no longer open after move" << std::endl;
+    }
+    if (f2.is_open()) {
+        std::cout << "File f2 is now open" << std::endl;
+    }
+
+    // 转移文件句柄的所有权到 f3
+    File f3;
+    f3 = std::move(f2); // 调用移动赋值运算符
+    if (!f2.is_open()) {
+        std::cout << "File f2 is no longer open after move" << std::endl;
+    }
+    if (f3.is_open()) {
+        std::cout << "File f3 is now open" << std::endl;
+    }
+
+    return 0;
+}
+```
+
+```
+File opened: example.txt
+File f1 is open
+File moved
+File f1 is no longer open after move
+File f2 is now open
+File move-assigned
+File f2 is no longer open after move
+File f3 is now open
+File closed
 ```
 
 ### 自动推导类型
@@ -560,9 +750,7 @@ int main() {
 }
 ```
 
-### 类型转换
-
-类型转换分为 自动类型转换 和 强制类型转换。类型转换用于将一个数据类型转换为另一个数据类型，以解决类型不匹配的问题。
+### 自动类型转换
 
 自动类型转换是由编译器完成的，当不涉及潜在的数据丢失或行为问题时，编译器会自动将一种类型转换为另一种兼容类型。
 
@@ -580,7 +768,11 @@ int ascii = c;  // 'A' 的 ASCII 值为 65
 cout << "ASCII of 'A': " << ascii << endl;  // 输出：65
 ```
 
+### 强制类型转换
+
 强制类型转换是由程序员显式指定的类型转换，用于解决类型不兼容或编译器无法自动处理的情况。
+
+通过 () 实现强制类型转换：
 
 ```cpp
 double pi = 3.14159;
@@ -589,11 +781,31 @@ double pi = 3.14159;
 int truncatedPi = (int) pi;
 ```
 
+通过 static_cast 实现强制类型转换：
+
 ```cpp
 double pi = 3.14159;
 
 // 强制类型转换：使用 static_cast
 int truncatedPi = static_cast<int>(pi);
+```
+
+通过 reinterpret_casti 实现强制类型转换：
+
+- 与 static_cast 相比，reinterpret_cast 提供了更底层、更直接的类型转换功能，但使用不当可能导致未定义行为，因此需要谨慎使用。
+
+```cpp
+int number = 42;
+int* int_ptr = &number;
+
+// 将 int* 转换为 void*
+void* void_ptr = reinterpret_cast<void*>(int_ptr);
+
+// 再将 void* 转换回 int*
+int* new_int_ptr = reinterpret_cast<int*>(void_ptr);
+
+// 解引用指针
+cout << "Value: " << *new_int_ptr << endl;  // 输出：42
 ```
 
 ### 命名空间
@@ -2276,3 +2488,94 @@ delete[] arr;
 
 - 动态分配内存时，先为行分配指针数组，再为每行分配列数组。
 - 动态分配的二维数组需要手动释放内存。
+
+### 代码块
+
+花括号 {} 会创建一个新的作用域（scope）。在这个作用域内定义的变量或对象，作用范围仅限于这个块，超出块后就会被销毁。
+
+```cpp
+int main() {
+    {
+        int x = 10; // 变量 x 的作用域仅在这个块内
+        std::cout << "Inside block: x = " << x << std::endl;
+    }
+    // x 超出了作用域，下面的代码会报错
+    // std::cout << "Outside block: x = " << x << std::endl;
+
+    return 0;
+}
+```
+
+通过显式地使用 {}，可以控制某些对象的销毁时机。例如，智能指针或临时文件句柄在离开块时会被自动销毁。
+
+```cpp
+int main() {
+    {
+        std::ofstream file("example.txt");
+        if (file.is_open()) {
+            file << "Hello, World!" << std::endl;
+            std::cout << "File written and closed within this block." << std::endl;
+        }
+    } // 离开块时，file 自动关闭
+
+    std::cout << "Out of block, file is already closed." << std::endl;
+
+    return 0;
+}
+```
+
+在多线程编程中，使用 {} 可以更精确地控制互斥锁（std::mutex）的加锁和解锁范围。
+
+```cpp
+std::mutex mtx;
+
+void thread_function() {
+    {
+        std::lock_guard<std::mutex> lock(mtx); // 锁的范围仅限于这个块
+        std::cout << "Thread " << std::this_thread::get_id() << " is working." << std::endl;
+    } // 离开块时，自动释放锁
+
+    // 其他不需要锁的工作
+    std::cout << "Thread " << std::this_thread::get_id() << " finished." << std::endl;
+}
+
+int main() {
+    std::thread t1(thread_function);
+    std::thread t2(thread_function);
+
+    t1.join();
+    t2.join();
+
+    return 0;
+}
+```
+
+在块内定义的 static 变量，其生命周期是整个程序运行期间，但作用域仅限于块内。
+
+```cpp
+void increment_counter() {
+    static int counter = 0; // 静态变量只会初始化一次
+    ++counter;
+    std::cout << "Counter: " << counter << std::endl;
+}
+
+int main() {
+    {
+        increment_counter();
+        increment_counter();
+    }
+
+    {
+        increment_counter(); // 共享同一个静态变量
+    }
+
+    return 0;
+}
+```
+
+```
+Counter: 1
+Counter: 2
+Counter: 3
+```
+

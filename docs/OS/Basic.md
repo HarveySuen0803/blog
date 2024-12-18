@@ -51,6 +51,18 @@ close() 释放文件描述符在文件描述符表中的位置。
 close(fd);
 ```
 
+### Mode
+
+为了避免 User App 破坏 Kernel, 需要分离 User 和 Kernel, 就分为了 User Space 和 Kernel Space. User Space 只能执行 Ring3, 不能直接调用系统资源, 需要通过 Kernel 提供的 System Call Interface 访问. Kernel Space 可以执行 Ring0, 调用一切系统资源
+
+进程运行时, 既要执行 Ring3, 也要执行 Ring0, 所以需要频繁切换 User Mode 和 Kernel Mode
+
+User 想要读取数据, 发送请求给 System Call Interface, 等待 Kernel 查询数据 (eg: 从 Disk 或 Network 中查询数据), 找到数据后, 先存储到 Kernel Space 的 Buffer 中, 再拷贝到 User Space 的 Buffer 中, 完成一次读取操作
+
+User 想要写入数据时, 也需要先写入到 User Space 的 Buffer 中, 再复制到 Kernel Space 的 Buffer 中, Kernel 再从 Buffer 中读取数据, 写入到 Disk, 完成一次写入操作
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139646.png)
+
 ### 回刷机制
 
 操作系统的回刷机制（Write-Back Mechanism），也称为写回机制，是指将内存中的脏数据（Dirty Data）同步到磁盘的过程。这一机制主要目的是在提高系统 I/O 性能的同时保证数据持久化的可靠性。通过写回机制，操作系统可以延迟数据写入磁盘的时间，将数据写入内存后立即返回，减少频繁的磁盘 I/O 操作。

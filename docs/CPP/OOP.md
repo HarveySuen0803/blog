@@ -663,6 +663,86 @@ int main() {
 }
 ```
 
+### 移动构造
+
+移动构造函数 是 C++11 引入的一种特殊的构造函数，用于将一个对象的资源从一个对象“移动”到另一个对象，而不是进行传统的深拷贝。它通常与右值引用（T&&）配合使用，用于实现 移动语义，提高性能。
+
+大多数情况下，一个类需要同时实现拷贝构造和移动构造，以适应不同的场景。
+
+```cpp
+#include <iostream>
+#include <cstring>
+
+class MyString {
+public:
+    // 构造函数
+    MyString(const char* str) {
+        size_ = std::strlen(str) + 1;
+        data_ = new char[size_];
+        std::strcpy(data_, str);
+        std::cout << "Constructed: " << data_ << std::endl;
+    }
+
+    // 拷贝构造函数（深拷贝）
+    MyString(const MyString& other) {
+        size_ = other.size_;
+        data_ = new char[size_];
+        std::strcpy(data_, other.data_);
+        std::cout << "Copied: " << data_ << std::endl;
+    }
+
+    // 移动构造函数
+    MyString(MyString&& other) noexcept
+        : data_(other.data_), size_(other.size_) {
+        other.data_ = nullptr; // 转移资源后清空原对象的数据指针
+        other.size_ = 0;
+        std::cout << "Moved: " << data_ << std::endl;
+    }
+
+    // 析构函数
+    ~MyString() {
+        delete[] data_;
+        std::cout << "Destroyed: " << (data_ ? data_ : "null") << std::endl;
+    }
+
+private:
+    char* data_;
+    size_t size_;
+};
+
+int main() {
+    MyVector v1(10);       // 调用默认构造函数
+    MyVector v2 = v1;      // 调用拷贝构造函数
+    MyVector v3 = std::move(v1); // 调用移动构造函数
+    return 0;
+}
+```
+
+```
+Constructed
+Copied
+Moved
+Destroyed
+Destroyed
+Destroyed
+```
+
+C++ 标准库的容器（如 std::vector 和 std::string）广泛使用移动构造函数，优化性能。
+
+```cpp
+std::vector<std::string> vec;
+
+std::string temp = "Hello";
+vec.push_back(temp);           // 拷贝 temp
+vec.push_back(std::move(temp)); // 移动 temp
+
+std::cout << "vec[0]: " << vec[0] << std::endl;
+std::cout << "vec[1]: " << vec[1] << std::endl;
+```
+
+- push_back(temp) 调用了拷贝构造，temp 被复制到容器中。
+- push_back(std::move(temp)) 调用了移动构造，temp 的内容直接转移到容器中，无需额外的内存分配。
+
 ### 访问成员
 
 ```cpp

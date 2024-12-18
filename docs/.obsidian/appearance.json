@@ -7,11 +7,11 @@
     "custom"
   ],
   "baseFontSizeAction": false,
-  "baseFontSize": 15,
+  "baseFontSize": 14,
   "interfaceFontFamily": "",
   "textFontFamily": "",
   "monospaceFontFamily": "",
-  "theme": "moonstone",
+  "theme": "system",
   "nativeMenus": true,
   "showViewHeader": false,
   "translucency": false

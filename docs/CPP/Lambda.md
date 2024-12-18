@@ -12,6 +12,16 @@ auto add = [](int a, int b) -> int {
 std::cout << "3 + 5 = " << add(3, 5) << std::endl;
 ```
 
+如果 参数列表 () 为空，则可以 省略参数列表。
+
+```cpp
+auto lambda1 = [] { return ready; };  // 省略参数列表
+auto lambda2 = []() { return ready; }; // 显式指定空参数列表
+
+std::cout << "Lambda1: " << lambda1() << std::endl;
+std::cout << "Lambda2: " << lambda2() << std::endl;
+```
+
 ### 捕获变量
 
 Lambda 表达式可以捕获外部作用域中的变量，通过值捕获或引用捕获来使用。
