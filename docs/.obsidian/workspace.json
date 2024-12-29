@@ -4,37 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "0149423d994e194b",
+        "id": "4f1d093c4794b9ee",
         "type": "tabs",
         "children": [
           {
-            "id": "970868b747b40231",
+            "id": "26342e914b7ce2c6",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Vue/Basic.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "Basic"
-            }
-          },
-          {
-            "id": "d61d8f4b1fe80641",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "CPP/Basic.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Basic"
+              "title": "New tab"
             }
           }
         ]
@@ -99,11 +79,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "Vue/Basic.md"
-              },
+              "state": {},
               "icon": "lucide-list",
-              "title": "Outline of Basic"
+              "title": "Outline"
             }
           }
         ]
@@ -120,24 +98,44 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "970868b747b40231",
+  "active": "26342e914b7ce2c6",
   "lastOpenFiles": [
-    "OS/Basic.md",
-    "CPP/Basic.md",
-    "Draft/Graduation.md",
-    "Draft/Warmup Cache.md",
-    "Java/NIO.md",
-    "Untitled.md",
-    "MySQL/Basic.md",
-    "Redis/Basic.md",
-    "Docker/Network.md",
-    "Draft/CP.md",
-    "Vue/Basic.md",
-    "Distributed/LoadBalancer.md",
-    "Vue/Vue3.md",
-    "TypeScript/Basic.md",
-    "Docker/Basic.md",
-    "Draft/ML.md",
+    "zookeeper/Basic.md",
+    "zookeeper",
+    "xxljob/Basic.md",
+    "xxljob",
+    "webpack/Webpack.md",
+    "webpack",
+    "web/OpenApi.md",
+    "web/JavaScript.md",
+    "web/Monaco Editor.md",
+    "web/MobileWeb.md",
+    "web/JQuery.md",
+    "web/HTML.md",
+    "web/CSS.md",
+    "web/Axios.md",
+    "web/Bytemd.md",
+    "web",
+    "vue/Vue3.md",
+    "vue/Vue2.md",
+    "vue/Style.md",
+    "vue/Slot.md",
+    "vue/Router.md",
+    "vue/Reactive.md",
+    "vue/Pinia.md",
+    "vue/Exercise.md",
+    "vue/Element.md",
+    "vue/Component.md",
+    "vue/Communication.md",
+    "vue/Basic.md",
+    "vue/Arco.md",
+    "vue/Animation.md",
+    "vue",
+    "uniapp",
+    "typescript",
+    "tomcat",
+    "spring",
+    "spark",
     "Draft/image/Pasted image 20241225143721.png",
     "Draft/image/Pasted image 20241225142337.png",
     "Draft/image/Pasted image 20241225142310.png",
@@ -148,26 +146,6 @@
     "Draft/image/Pasted image 20241225142101.png",
     "Draft/image/Pasted image 20241225141936.png",
     "Draft/image/Pasted image 20241225141919.png",
-    "image/Pasted.md",
-    "image",
-    "Draft/image",
-    "CPP/Principle.md",
-    "Network/IO.md",
-    "Draft/Temp.md",
-    "Distributed/Gateway.md",
-    "Environment/VsCode.md",
-    "Draft",
-    "CPP/Lambda.md",
-    "CPP/OOP.md",
-    "Network/TCP.md",
-    "JVM/GC.md",
-    "CPP/image",
-    "CPP/image",
-    "CPP",
-    "ClickHouse",
-    "Distributed/image",
-    "Storage",
-    "Rocksdb",
     "test.canvas"
   ]
 }

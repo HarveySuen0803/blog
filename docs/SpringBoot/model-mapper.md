@@ -8,7 +8,7 @@ In order to use ModelMapper, we start by adding the dependency to our pom.xml:
 <dependency> 
     <groupId>org.modelmapper</groupId>
     <artifactId>modelmapper</artifactId>
-    <version>3.2.0</version>
+  <version>3.2.0</version>
 </dependency>
 ```
 

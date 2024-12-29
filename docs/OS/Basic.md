@@ -913,3 +913,157 @@ int main() {
 - 互斥：只允许一个进程或线程在同一时刻访问临界资源，确保数据一致性，避免并发修改引发冲突。
 - 进程间推进：系统应确保进程能够继续推进，不能因缺乏进程协调机制而无限等待，避免长时间阻塞或饿死问题。
 - 有限等待：每个进程在尝试进入临界区时，必须在有限时间内成功进入。防止出现饥饿现象（某些进程被长期阻止而无法访问资源）。
+- 让权等待：如果一个进程无法进入临界区，它应立即释放 CPU，让其他进程执行，避免无意义的忙等（Busy Waiting）。
+
+# 信号量
+
+信号量（Semaphore）是一种用于解决多进程或多线程间同步与互斥问题的重要机制。它是一个整型计数器，能够用来控制对共享资源的访问，并防止数据竞争。
+
+- P 操作（Wait 操作）检查信号量值是否大于 0。如果大于 0，则减 1；否则，阻塞当前进程或线程。常用于线程请求资源时减少信号量。
+- V 操作（Signal 操作）增加信号量值。如果有线程因信号量为 0 而阻塞，则唤醒一个线程。常用于释放资源时增加信号量。
+
+信号量的类型：
+
+- 二值信号量（Binary Semaphore）：信号量的值只能是 0 或 1，类似于互斥锁，用于实现互斥访问。
+- 计数信号量（Counting Semaphore）：信号量的值可以是任意非负整数，用于管理多个资源的分配。
+
+```c
+sem_t resources;  // 资源信号量
+
+void *worker(void *arg) {
+    sem_wait(&resources);  // 请求资源
+    printf("Thread %ld acquired a resource.\n", pthread_self());
+    sleep(2);  // 模拟资源使用
+    printf("Thread %ld released a resource.\n", pthread_self());
+    sem_post(&resources);  // 释放资源
+    return NULL;
+}
+
+int main() {
+    pthread_t threads[5];
+    sem_init(&resources, 0, 3);  // 初始化信号量，表示有 3 个资源
+
+    for (int i = 0; i < 5; i++) {
+        pthread_create(&threads[i], NULL, worker, NULL);
+    }
+
+    for (int i = 0; i < 5; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    sem_destroy(&resources);
+    return 0;
+}
+```
+
+```
+Thread 140071122351872 acquired a resource.
+Thread 140071113959168 acquired a resource.
+Thread 140071105566464 acquired a resource.
+Thread 140071122351872 released a resource.
+Thread 140071097173760 acquired a resource.
+...
+```
+
+- 信号量初值为 3，表示可以同时分配 3 个资源。
+- 每个线程获取资源时信号量减 1，释放资源时信号量加 1。
+- 超过 3 个线程的请求会阻塞，直到资源释放。
+
+# 管程
+
+管程（Monitor）是一种高级同步机制，用于解决进程或线程间的同步与互斥问题。它将共享资源和对共享资源的操作封装在一个模块中，通过条件变量和互斥锁控制对共享资源的访问。
+
+管程将共享资源和操作封装在一个模块内，外部线程只能通过管程提供的接口访问资源。保护了数据的完整性，简化了并发程序的设计。
+
+管程使用条件变量实现线程之间的同步协调，同一时刻，只有一个线程能够进入管程，其他线程必须等待。
+
+```c
+#define BUFFER_SIZE 5
+
+typedef struct {
+    int buffer[BUFFER_SIZE];
+    int count;
+    pthread_mutex_t mutex;
+    pthread_cond_t not_empty;
+    pthread_cond_t not_full;
+} Monitor;
+
+Monitor monitor = {
+    .count = 0,
+    .mutex = PTHREAD_MUTEX_INITIALIZER,
+    .not_empty = PTHREAD_COND_INITIALIZER,
+    .not_full = PTHREAD_COND_INITIALIZER
+};
+
+// 生产数据
+void produce(int item) {
+    pthread_mutex_lock(&monitor.mutex);
+
+    while (monitor.count == BUFFER_SIZE) {
+        // 缓冲区已满，等待 not_full 条件
+        pthread_cond_wait(&monitor.not_full, &monitor.mutex);
+    }
+
+    // 添加数据到缓冲区
+    monitor.buffer[monitor.count++] = item;
+    printf("Produced: %d\n", item);
+
+    // 通知消费者缓冲区不为空
+    pthread_cond_signal(&monitor.not_empty);
+
+    pthread_mutex_unlock(&monitor.mutex);
+}
+
+// 消费数据
+int consume() {
+    pthread_mutex_lock(&monitor.mutex);
+
+    while (monitor.count == 0) {
+        // 缓冲区为空，等待 not_empty 条件
+        pthread_cond_wait(&monitor.not_empty, &monitor.mutex);
+    }
+
+    // 从缓冲区读取数据
+    int item = monitor.buffer[--monitor.count];
+    printf("Consumed: %d\n", item);
+
+    // 通知生产者缓冲区不满
+    pthread_cond_signal(&monitor.not_full);
+
+    pthread_mutex_unlock(&monitor.mutex);
+    return item;
+}
+
+void *producer_thread(void *arg) {
+    for (int i = 1; i <= 10; i++) {
+        produce(i);
+        sleep(1);  // 模拟生产时间
+    }
+    return NULL;
+}
+
+void *consumer_thread(void *arg) {
+    for (int i = 1; i <= 10; i++) {
+        consume();
+        sleep(2);  // 模拟消费时间
+    }
+    return NULL;
+}
+
+int main() {
+    pthread_t producer, consumer;
+
+    pthread_create(&producer, NULL, producer_thread, NULL);
+    pthread_create(&consumer, NULL, consumer_thread, NULL);
+
+    pthread_join(producer, NULL);
+    pthread_join(consumer, NULL);
+
+    return 0;
+}
+```
+
+- pthread_mutex_lock 确保对缓冲区的访问是互斥的。
+- 使用条件变量 pthread_cond_wait 和 pthread_cond_signal 实现生产者和消费者的同步。
+  - 当缓冲区为空时，消费者等待 not_empty 条件。
+  - 当缓冲区已满时，生产者等待 not_full 条件。
