@@ -11,10 +11,15 @@
             "id": "26342e914b7ce2c6",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "springboot/docker.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "docker"
             }
           }
         ]
@@ -58,16 +63,6 @@
               "icon": "lucide-search",
               "title": "Search"
             }
-          },
-          {
-            "id": "e182fac98cd1025e",
-            "type": "leaf",
-            "state": {
-              "type": "bookmarks",
-              "state": {},
-              "icon": "lucide-bookmark",
-              "title": "Bookmarks"
-            }
           }
         ]
       }
@@ -89,53 +84,11 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {},
+              "state": {
+                "file": "springboot/docker.md"
+              },
               "icon": "lucide-list",
-              "title": "Outline"
-            }
-          },
-          {
-            "id": "19517bbea80da1f3",
-            "type": "leaf",
-            "state": {
-              "type": "backlink",
-              "state": {
-                "collapseAll": false,
-                "extraContext": false,
-                "sortOrder": "alphabetical",
-                "showSearch": false,
-                "searchQuery": "",
-                "backlinkCollapsed": false,
-                "unlinkedCollapsed": true
-              },
-              "icon": "links-coming-in",
-              "title": "Backlinks"
-            }
-          },
-          {
-            "id": "8a00001d6394aaa1",
-            "type": "leaf",
-            "state": {
-              "type": "outgoing-link",
-              "state": {
-                "linksCollapsed": false,
-                "unlinkedCollapsed": true
-              },
-              "icon": "links-going-out",
-              "title": "Outgoing links"
-            }
-          },
-          {
-            "id": "0ffb316f5579b2aa",
-            "type": "leaf",
-            "state": {
-              "type": "tag",
-              "state": {
-                "sortOrder": "frequency",
-                "useHierarchy": true
-              },
-              "icon": "lucide-tags",
-              "title": "Tags"
+              "title": "Outline of docker"
             }
           }
         ]
@@ -146,42 +99,40 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "canvas:Create new canvas": false,
-      "daily-notes:Open today's daily note": false,
-      "templates:Insert template": false,
       "switcher:Open quick switcher": false,
       "command-palette:Open command palette": false,
-      "graph:Open graph view": false
+      "graph:Open graph view": false,
+      "workspaces:Manage workspace layouts": false
     }
   },
   "active": "26342e914b7ce2c6",
   "lastOpenFiles": [
-    "network/Websocket0.md",
-    "os/Basic0.md",
-    "network/UDP0.md",
-    "network/TCP0.md",
-    "network/OSI0.md",
-    "network/Model0.md",
-    "network/IO0.md",
-    "network/IP0.md",
-    "network/Encryption0.md",
-    "network/HTTP0.md",
-    "network/DNS0.md",
-    "network/Connection0.md",
-    "network/Basic0.md",
-    "network/Cookie0.md",
-    "node/Basic0.md",
-    "node/Node0.md",
-    "nginx/Basic0.md",
-    "mysql/Window Function0.md",
-    "mysql/Storage Engine0.md",
-    "mysql/Transaction0.md",
-    "mysql/Stored Procedure0.md",
-    "mysql/Sharding0.md",
-    "mysql/Replication0.md",
-    "mysql/Profile0.md",
-    "mysql/Primary Key0.md",
-    "mysql/Permission0.md",
+    "design-pattern/visitor-pattern.md",
+    "design-pattern/type-object-pattern.md",
+    "design-pattern/template-pattern.md",
+    "design-pattern/strategy-pattern.md",
+    "design-pattern/state-pattern.md",
+    "design-pattern/singleton-pattern.md",
+    "design-pattern/responsibility-pattern.md",
+    "design-pattern/proxy-pattern.md",
+    "design-pattern/prototype-pattern.md",
+    "design-pattern/principle.md",
+    "design-pattern/observer-pattern.md",
+    "design-pattern/memento-pattern.md",
+    "design-pattern/mediator-pattern.md",
+    "design-pattern/iterator-pattern.md",
+    "design-pattern/interpret-pattern.md",
+    "design-pattern/fly-weight-pattern.md",
+    "design-pattern/factory-pattern.md",
+    "design-pattern/facade-pattern.md",
+    "design-pattern/decorator-pattern.md",
+    "design-pattern/composite-pattern.md",
+    "design-pattern/command-pattern.md",
+    "design-pattern/builder-pattern.md",
+    "design-pattern/bridge-pattern.md",
+    "design-pattern/adapter-pattern.md",
+    "elasticsearch/mapping.md",
+    "elasticsearch/dsl.md",
     "java/lambda.html",
     "zookeeper",
     "xxljob",
