@@ -4,22 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "4f1d093c4794b9ee",
+        "id": "49f85db14c3679f7",
         "type": "tabs",
         "children": [
           {
-            "id": "26342e914b7ce2c6",
+            "id": "e280ebf20d822e18",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "java/spi.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "spi"
+              "title": "New tab"
             }
           }
         ]
@@ -94,11 +89,9 @@
             "type": "leaf",
             "state": {
               "type": "outline",
-              "state": {
-                "file": "java/spi.md"
-              },
+              "state": {},
               "icon": "lucide-list",
-              "title": "Outline of spi"
+              "title": "Outline"
             }
           },
           {
@@ -159,8 +152,19 @@
       "graph:Open graph view": false
     }
   },
-  "active": "26342e914b7ce2c6",
+  "active": "e280ebf20d822e18",
   "lastOpenFiles": [
+    "vue/basic.md",
+    "java/spi.md",
+    "web/open-api.md",
+    "web/monaco-editor.md",
+    "web/mobile-web.md",
+    "web/jquery.md",
+    "web/javascript.md",
+    "web/html.md",
+    "web/css.md",
+    "web/bytemd.md",
+    "web/axios.md",
     "rabbitmq/Exchange.md",
     "rabbitmq/Basic.md",
     "rabbitmq/Delayed Message.md",
@@ -176,17 +180,6 @@
     "other/Windows.md",
     "other/Watch Dog.md",
     "other/UML.md",
-    "other/Information.md",
-    "network/OSI.md",
-    "network/Model.md",
-    "network/IP.md",
-    "network/Encryption.md",
-    "network/IO.md",
-    "network/HTTP.md",
-    "network/DNS.md",
-    "network/Cookie.md",
-    "network/Connection.md",
-    "netty/Protocol.md",
     "java/lambda.html",
     "zookeeper",
     "xxljob",
