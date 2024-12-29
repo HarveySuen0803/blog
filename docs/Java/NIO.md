@@ -1,4 +1,4 @@
-### BIO 介绍
+# BIO 介绍
 
 BIO（Blocking I/O）是一种传统的 I/O 模型，它在处理数据时会阻塞线程，直到操作完成。BIO 主要通过流（Stream）来进行数据传输，通常每个客户端连接都会对应一个独立的线程。
 
@@ -77,7 +77,7 @@ public class Server {
 }
 ```
 
-### NIO 介绍
+# NIO 介绍
 
 NIO（New I/O），通常也被理解为 Non-blocking I/O，但它不仅仅包括非阻塞 I/O，还引入了很多新特性和组件，比如缓冲区（Buffer）、通道（Channel）、选择器（Selector）等。这些特性使得 Java NIO 与传统的 Java I/O 有很大的不同。
 
@@ -151,7 +151,7 @@ public class Client {
 }
 ```
 
-### AIO 介绍
+# AIO 介绍
 
 AIO (Asynchronous IO)，也称为 NIO.2，是在 JDK7 中引入的一种新的 IO 模型。它是对 NIO 的扩展，引入了异步通道的概念，使得 IO 操作可以完全异步执行，从而提高了大规模 IO 处理的性能和可伸缩性。
 
@@ -191,12 +191,12 @@ try (AsynchronousFileChannel channel = AsynchronousFileChannel.open(Paths.get("t
 System.in.read();
 ```
 
-### NIO 和 BIO 在数据传输上的区别
+# NIO 和 BIO 在数据传输上的区别
 
 - BIO 是基于流的操作，数据是以字节流的形式进行传输的。每次读取或写入操作都是逐字节进行的，数据按照顺序一个字节一个字节地传输。
 - NIO 是基于缓冲区（Buffer）和通道（Channel）的操作。数据首先被读入缓冲区，然后从缓冲区中进行处理。缓冲区是一块内存区域，数据可以在其中进行读写操作。
 
-### NIO 多路复用模型
+# NIO 多路复用模型
 
 如果每建立一个 Socket 连接，就开启一个线程去处理 Socket，资源消耗非常多，上下文切换成本也非常高，只适合连接数较少的情况。
 
@@ -210,7 +210,7 @@ NIO 通过 Select + Channel 实现了多路复用 IO 的效果。Selector 可以
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201016077.png)
 
-### ByteBuffer 介绍
+# ByteBuffer 介绍
 
 ByteBuffer 是 Java NIO 中的一个核心类，用于在通道（Channel）和缓冲区（Buffer）之间传输数据。ByteBuffer 提供了一种高效的方式来处理字节数据，允许直接操作底层的字节数组，并提供了一系列方法来方便地进行数据的读写操作。
 
@@ -294,7 +294,7 @@ try (FileChannel channel = new FileInputStream("test.txt").getChannel()) {
 }
 ```
 
-### ByteBuffer 结构
+# ByteBuffer 结构
 
 `ByteBuffer` 由 `pos`、`lim`、`cap` 三个关键部分组成，实现读写操作。
 
@@ -318,7 +318,7 @@ try (FileChannel channel = new FileInputStream("test.txt").getChannel()) {
 
 ![Compact Operation](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119793.png)
 
-### ByteBuffer 转换
+# ByteBuffer 转换
 
 通过 `StandardCharsets` 的 `encode()` 和 `decode()` 实现 `String` 和 `ByteBuffer` 之间的转换。
 
@@ -354,7 +354,7 @@ buffer.flip();
 String str = StandardCharsets.UTF_8.decode(buffer).toString(); // hello
 ```
 
-### ByteBuffer 分散读
+# ByteBuffer 分散读
 
 将一个文件的数据分散读取到多个缓冲区中。
 
@@ -380,7 +380,7 @@ try (FileChannel channel = new RandomAccessFile("test.txt", "r").getChannel()) {
 
 在这个示例中，我们通过 `FileChannel` 将文件 `test.txt` 的内容分散读取到三个 `ByteBuffer` 中，并分别输出它们的内容。
 
-### ByteBuffer 聚集写
+# ByteBuffer 聚集写
 
 将多个 Buffer 的数据集中写入到一个 File 中
 
@@ -397,7 +397,7 @@ try (FileChannel channel = new RandomAccessFile("test.txt", "rw").getChannel()) 
 
 以上代码展示了如何将多个 `ByteBuffer` 的数据写入到一个文件中。使用 `FileChannel` 可以高效地进行文件操作。
 
-### ByteBuffer 粘包问题，半包问题
+# ByteBuffer 粘包问题，半包问题
 
 粘包（Sticky Packet）现象发生在接收数据时，多个数据包粘合在一起作为一个数据包进行处理。这是因为 TCP 为了效率，可能会将多个小的数据包合并为一个大的数据包进行发送，或者接收方在读取数据时，一次读取操作读到了多个数据包的数据。
 
@@ -471,7 +471,7 @@ position: [10], limit: [10]
 +--------+-------------------------------------------------+----------------+
 ```
 
-### FileChannel 介绍
+# FileChannel 介绍
 
 `FileChannel` 是 Java NIO 中用于文件 I/O 操作的通道类，提供了比传统基于流的 I/O 更高效的文件操作方式。`FileChannel` 支持文件的读写、映射、锁定等操作，并且支持随机访问文件。
 
@@ -530,7 +530,7 @@ Path path = Paths.get("example.txt");
 FileChannel fileChannel = FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE);
 ```
 
-### FileChannel 复制文件示例
+# FileChannel 复制文件示例
 
 下面是一个使用 `FileChannel` 实现的文件复制示例，展示了如何使用 `FileChannel` 和 `ByteBuffer` 进行高效的文件读写操作。
 
@@ -566,11 +566,11 @@ public class NioFileCopy {
 }
 ```
 
-### Files 介绍
+# Files 介绍
 
 Files 是 Java NIO (New I/O) 包中的一个实用类，提供了大量静态方法，用于文件和目录的操作，如创建、删除、复制、移动、读取和写入文件等。Files 类极大地简化了文件系统操作，并提高了操作的灵活性和效率。
 
-### Files 统计目录和文件示例
+# Files 统计目录和文件示例
 
 以下示例代码展示了如何使用 `Files.walkFileTree()` 统计目录和文件的数量：
 
@@ -608,7 +608,7 @@ public class DirectoryTraversal {
 }
 ```
 
-### Files 统计特定类型文件示例
+# Files 统计特定类型文件示例
 
 以下示例代码展示了如何统计特定类型的文件（如 `.txt` 文件）：
 
@@ -639,7 +639,7 @@ public class CountTxtFiles {
 }
 ```
 
-### Files 删除目录及其内容示例
+# Files 删除目录及其内容示例
 
 以下示例代码展示了如何删除一个包含文件的目录：
 
@@ -685,7 +685,7 @@ Deleting directory: /Users/HarveySuen/Downloads/temp/test2
 Deleting directory: /Users/HarveySuen/Downloads/temp
 ```
 
-### Files 拷贝多级目录示例
+# Files 拷贝多级目录示例
 
 以下示例代码展示了如何使用 `Files.walk()` 拷贝一个多级目录：
 
@@ -715,7 +715,7 @@ public class CopyDirectory {
 }
 ```
 
-### NIO Selector 监听事件
+# NIO Selector 监听事件
 
 NIO 提供的 Selector 允许单个线程处理多个 Channel 的 IO 事件，类似于 Multiplexing IO，如果 Channel 有就绪的 IO 事件，就会将事件封装成 SelectionKey 存储到 Set 中，后续只需要遍历该 Set 处理事件即可。每个 IO 操作都采用非阻塞的方式进行处理，当没有可读或可写的数据时，会立即返回，不会一直阻塞。[Explain](https://www.bilibili.com/video/BV1py4y1E7oA?p=27&vd_source=2b0f5d4521fd544614edfc30d4ab38e1)
 
@@ -736,7 +736,7 @@ while (true) {
 }
 ```
 
-### NIO 应用示例
+# NIO 应用示例
 
 ```java
 public class Server {
@@ -849,7 +849,7 @@ public class Server {
 }
 ```
 
-### OP_ACCEPT 事件
+# OP_ACCEPT 事件
 
 OP_ACCEPT 事件在 ServerSocketChannel 处于非阻塞模式并准备好接受新的客户端连接时触发。这意味着如果有客户端尝试建立连接，Selector 会识别到 ServerSocketChannel 上的 OP_ACCEPT 事件。
 
@@ -879,7 +879,7 @@ while (true) {
 }
 ```
 
-### OP_CONNECT 事件
+# OP_CONNECT 事件
 
 OP_CONNECT 事件在 SocketChannel 以非阻塞模式成功连接到服务器时触发。这通常发生在客户端尝试连接服务器并完成连接过程时。
 
@@ -912,7 +912,7 @@ while (true) {
 
 在非阻塞模式下，`sc.connect()` 可能在连接尚未完成时就返回。因此，需要调用 `finishConnect()` 方法来完成连接过程。
 
-### OP_READ 事件
+# OP_READ 事件
 
 SocketChannel 中有新数据可读时，即数据已经从远程端点发送过来并到达本地缓冲区，OP_READ 事件会被触发。此时，应用程序可以从 Channel 读取数据而不会阻塞。
 
@@ -982,7 +982,7 @@ if (key.isReadable()) {
 
 在上述代码中，确保在读取数据时正确处理可能的异常情况，避免因客户端异常断开导致服务端崩溃。
 
-### OP_WRITE 事件
+# OP_WRITE 事件
 
 OP_WRITE 事件表示 SocketChannel 准备好接受新数据写入，即其内部缓冲区有足够空间进行非阻塞写操作。
 
@@ -1023,7 +1023,7 @@ while (true) {
 }
 ```
 
-### Attachment 优化写入
+# Attachment 优化写入
 
 如果服务器要发送大量数据给客户端，服务端需要循环调用 SocketChannel 的 `write()` 方法向网络通道写入数据。这可能会导致网络通道被写满，写满后服务器将无法继续写入，即后续多次写入的长度可能都是 0。这个循环写入 0 的操作非常浪费资源，需要进行优化。
 
@@ -1136,7 +1136,7 @@ if (key.isAcceptable()) {
 1022776
 ```
 
-### SelectorProvider 介绍
+# SelectorProvider 介绍
 
 SelectorProvider 是 Java NIO 的一个抽象类，用于创建与底层平台相关的 Selector、ServerSocketChannel、SocketChannel、DatagramChannel 等通道及选择器的工厂。它提供了一种机制，使得 Java NIO 可以在不同的平台上拥有不同的实例，以便更好地利用平台特性。
 
@@ -1169,7 +1169,7 @@ public abstract class Selector implements Closeable {
 }
 ```
 
-### 多线程优化
+# 多线程优化
 
 NIO 采用多路复用 IO 的方式处理事件。在单线程环境下，NIO 只能处理耗时短的任务，无法处理耗时较长的任务，也无法充分利用 CPU 的多核优势，因此需要进行优化。
 
@@ -1276,51 +1276,3 @@ public class Server {
     }
 }
 ```
-
-### 零拷贝
-
-传统的 IO 操作在读取本地文件并传输给客户端时，涉及四次数据拷贝和三次状态切换，步骤非常繁琐。
-
-1. 调用 `read()`，从用户空间切换到内核空间，从磁盘读取数据到内核缓冲区。
-   - Java 本身不具备 IO 读写能力，因此需要从 Java 程序的用户空间切换到内核空间，调用内核的 IO 函数实现 IO。
-   - 此过程可以利用 DMA (Direct Memory Access) 进行数据传输，不需要 CPU 参与，非常适合数据传输。
-2. 从内核缓冲区拷贝数据到用户缓冲区，从内核空间切换到用户空间。
-   - 此过程无法利用 DMA，需要 CPU 参与。
-3. 调用 `write()`，从用户缓冲区拷贝数据到 Socket 缓冲区。
-   - 此过程无法利用 DMA，需要 CPU 参与。
-4. 从内核空间切换到用户空间，从 Socket 缓冲区拷贝数据到 NIC。
-   - 此过程可以利用 DMA 进行数据传输，不需要 CPU 参与，非常适合数据传输。
-
-```java
-RandomAccessFile raf = new RandomAccessFile(new File("test.txt"), "r");
-byte[] buf = new byte[16];
-raf.read(buf);
-socket.getOutputStream().write(buf);
-```
-
-![传统 IO 数据传输](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119803.png)
-
-通过 DirectByteBuffer 可以优化上述过程。Java NIO 的 `ByteBuffer.allocateDirect()` 使用的是操作系统内存，不同于 `ByteBuffer.allocate()` 使用的是 Java 堆内存，总共涉及三次数据拷贝和三次状态切换。
-
-- DirectByteBuffer 将堆外内存映射到 JVM 内存中直接访问使用，这块内存不受 JVM 垃圾回收的影响，内存地址固定，有助于 IO 操作。
-- DirectByteBuffer 对象只维护内存的虚引用，垃圾回收时，DirectByteBuffer 对象被回收，虚引用加入引用队列，通过专门线程访问引用队列，根据虚引用释放堆外内存。
-
-![DirectByteBuffer 优化](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119804.png)
-
-Linux v2.1 提供了 `sendFile()` 进一步优化，实现了 Zero Copy。Java 对 `sendFile()` 进行封装得到 `transferTo()` 和 `transferFrom()`，方便使用，总共涉及三次数据拷贝和一次状态切换，效率非常高。
-
-1. 调用 `transferTo()`，从用户空间切换到内核空间，使用 DMA 从磁盘读取数据到内核缓冲区。
-2. 使用 CPU 从内核缓冲区拷贝数据到 Socket 缓冲区。
-3. 使用 DMA 从 Socket 缓冲区拷贝数据到 NIC。
-
-![sendFile 优化](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119805.png)
-
-Linux v2.4 对 `sendFile()` 进一步优化，对于 Java 的 `transferTo()` 和 `transferFrom()`，总共涉及两次数据拷贝和一次状态切换，效率更高。
-
-1. 调用 `transferTo()`，从用户空间切换到内核空间，使用 DMA 从磁盘读取数据到内核缓冲区。
-2. 使用 DMA 从内核缓冲区拷贝一些偏移量和长度到 Socket 缓冲区，此过程几乎没有损耗。
-3. 使用 DMA 从内核缓冲区拷贝数据到 NIC。
-
-![Linux v2.4 优化](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202403201119806.png)
-
-Zero Copy 并不是真正无拷贝，而是不重复拷贝数据到 JVM 内存中，适合小文件传输。通过 DMA 减少 CPU 压力，降低 CPU 缓存伪共享。

@@ -1,13 +1,4 @@
 {
-  "command-palette:open": [
-    {
-      "modifiers": [
-        "Mod",
-        "Shift"
-      ],
-      "key": "P"
-    }
-  ],
   "switcher:open": [
     {
       "modifiers": [
@@ -16,14 +7,7 @@
       "key": "P"
     }
   ],
-  "obsidian-editor-shortcuts:selectLine": [
-    {
-      "modifiers": [
-        "Mod"
-      ],
-      "key": "I"
-    }
-  ],
+  "obsidian-editor-shortcuts:selectLine": [],
   "obsidian-editor-shortcuts:selectWordOrNextOccurrence": [],
   "obsidian-editor-shortcuts:selectAllOccurrences": [],
   "editor:open-link-in-new-leaf": [],
@@ -41,8 +25,22 @@
     }
   ],
   "editor:delete-paragraph": [],
-  "editor:toggle-bold": [],
-  "editor:toggle-italics": [],
+  "editor:toggle-bold": [
+    {
+      "modifiers": [
+        "Mod"
+      ],
+      "key": "B"
+    }
+  ],
+  "editor:toggle-italics": [
+    {
+      "modifiers": [
+        "Mod"
+      ],
+      "key": "I"
+    }
+  ],
   "obsidian-quiet-outline:quiet-outline": [
     {
       "modifiers": [
@@ -178,6 +176,15 @@
         "Mod"
       ],
       "key": "0"
+    }
+  ],
+  "command-palette:open": [
+    {
+      "modifiers": [
+        "Mod",
+        "Shift"
+      ],
+      "key": "P"
     }
   ]
 }

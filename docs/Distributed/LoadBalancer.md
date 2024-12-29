@@ -1,4 +1,4 @@
-# LoadBalancer
+# 负载均衡
 
 Micro Service 同一个模块可能有多个实例, 就需要通过 Load Balancing 选取一个模块进行通信, 最新的 RestTemplate 和 OpenFeign 都可以通过 LoadBalancer 实现 Load Balancing
 
@@ -28,7 +28,7 @@ public RestTemplate restTemplate(){
 User user = restTemplate.getForObject("http://user-service/user/1", User.class)
 ```
 
-# Load Balancing Policy
+# 负载均衡策略
 
 常见的 Load Balancing Policy
 

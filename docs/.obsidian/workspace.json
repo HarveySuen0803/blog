@@ -4,76 +4,16 @@
     "type": "split",
     "children": [
       {
-        "id": "aec24107531d26a4",
+        "id": "0149423d994e194b",
         "type": "tabs",
         "children": [
           {
-            "id": "a28a72fd8e9916b5",
+            "id": "970868b747b40231",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "CPP/Concurrent.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Concurrent"
-            }
-          },
-          {
-            "id": "a4290b96d4f01788",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Network/IO.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "IO"
-            }
-          },
-          {
-            "id": "308cafb1e9d9a66b",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Hadoop/HDFS.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "HDFS"
-            }
-          },
-          {
-            "id": "ab73bd310af6123a",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Network/TCP.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "TCP"
-            }
-          },
-          {
-            "id": "4d19b7630b1fa06b",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "OS/Basic.md",
+                "file": "Vue/Basic.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
@@ -83,37 +23,21 @@
             }
           },
           {
-            "id": "d81718f4eaa411d0",
+            "id": "d61d8f4b1fe80641",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "CPP/OOP.md",
+                "file": "CPP/Basic.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "OOP"
-            }
-          },
-          {
-            "id": "59ec9443bf178107",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "CPP/Lambda.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Lambda"
+              "title": "Basic"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "vertical"
@@ -144,7 +68,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "拥塞",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -155,8 +79,7 @@
               "title": "Search"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
@@ -177,10 +100,10 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Hadoop/HDFS.md"
+                "file": "Vue/Basic.md"
               },
               "icon": "lucide-list",
-              "title": "Outline of HDFS"
+              "title": "Outline of Basic"
             }
           }
         ]
@@ -197,54 +120,54 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "308cafb1e9d9a66b",
+  "active": "970868b747b40231",
   "lastOpenFiles": [
-    "Network/IO.md",
-    "Hadoop/MapReduce.md",
-    "Hadoop/Basic.md",
-    "Network/TCP.md",
-    "CPP/Network.md",
     "OS/Basic.md",
     "CPP/Basic.md",
-    "CPP/Concurrent.md",
-    "CPP/OOP.md",
-    "CPP/Lambda.md",
-    "Java/Lambda.md",
-    "SpringBoot/MyBatis.md",
-    "Mysql/Backup.md",
-    "CPP/IO.md",
-    "Network/UDP.md",
+    "Draft/Graduation.md",
     "Draft/Warmup Cache.md",
-    "CPP/Other.md",
-    "Network/HTTP.md",
-    "Network/IP.md",
-    "CPP/Function.md",
-    "Netty/Packet Problem.md",
-    "Network/DNS.md",
-    "Network/Model.md",
-    "Data Structure/Merge Tree.md",
-    "Network/Encryption.md",
-    "Network/Basic.md",
-    "CPP/image/Pasted image 20241204154703.png",
-    "CPP/image",
-    "Draft/image/Pasted image 20241207170826.png",
+    "Java/NIO.md",
+    "Untitled.md",
+    "MySQL/Basic.md",
+    "Redis/Basic.md",
+    "Docker/Network.md",
+    "Draft/CP.md",
+    "Vue/Basic.md",
+    "Distributed/LoadBalancer.md",
+    "Vue/Vue3.md",
+    "TypeScript/Basic.md",
+    "Docker/Basic.md",
+    "Draft/ML.md",
+    "Draft/image/Pasted image 20241225143721.png",
+    "Draft/image/Pasted image 20241225142337.png",
+    "Draft/image/Pasted image 20241225142310.png",
+    "Draft/image/Pasted image 20241225142256.png",
+    "Draft/image/Pasted image 20241225142236.png",
+    "Draft/image/Pasted image 20241225142159.png",
+    "Draft/image/Pasted image 20241225142117.png",
+    "Draft/image/Pasted image 20241225142101.png",
+    "Draft/image/Pasted image 20241225141936.png",
+    "Draft/image/Pasted image 20241225141919.png",
+    "image/Pasted.md",
+    "image",
     "Draft/image",
+    "CPP/Principle.md",
+    "Network/IO.md",
+    "Draft/Temp.md",
+    "Distributed/Gateway.md",
+    "Environment/VsCode.md",
+    "Draft",
+    "CPP/Lambda.md",
+    "CPP/OOP.md",
+    "Network/TCP.md",
+    "JVM/GC.md",
+    "CPP/image",
     "CPP/image",
     "CPP",
     "ClickHouse",
-    "Distributed/image/Pasted image 20241117151014.png",
     "Distributed/image",
     "Storage",
     "Rocksdb",
-    "Redis/image/Pasted image 20241114124425.png",
-    "Redis/image",
-    "Redis/image/Pasted image 20241113211551.png",
-    "Redisson",
-    "Meituan/Cache/image/Pasted image 20240921130427.png",
-    "Draft/image/Pasted image 20240908142244.png",
-    "Draft/image/Pasted image 20240908142236.png",
-    "Draft/image/Pasted image 20240908142111.png",
-    "Draft/image/Pasted image 20240908142015.png",
     "test.canvas"
   ]
 }

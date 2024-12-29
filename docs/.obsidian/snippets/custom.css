@@ -1,12 +1,12 @@
 * {
     /* font-family: var(--font-monospace); */
-    font-family: "FiraCode NF";
+    font-family: "FiraMono Nerd Font Mono";
     font-variant-ligatures:  none;
     -webkit-font-smoothing: antialiased;
 }
 
 body {
-    --line-height-normal: 1.8;
+    --line-height-normal: 1.6;
 }
 
 /* cursor */
@@ -103,7 +103,6 @@ thead {
 .cm-s-obsidian span.cm-formatting-link.cm-url, .cm-s-obsidian span.cm-url {
     color: var(--text-normal);
 }
-
 .markdown-source-view.mod-cm6 .cm-link .cm-underline, .markdown-source-view.mod-cm6 .cm-url .cm-underline {
     color: var(--text-normal);
 }
@@ -124,5 +123,14 @@ thead {
 
 /* code inline */
 .cm-s-obsidian span.cm-inline-code {
-    font-family: "FiraCode NF";
+    font-family: "FiraMono Nerd Font Mono";
+}
+
+/* list */
+.cm-formatting-list-ul, .cm-formatting-list-ol {
+    padding-inline-start: 0em;
+}
+.cm-formatting-list-ul {
+}
+.cm-formatting-list-ol {
 }

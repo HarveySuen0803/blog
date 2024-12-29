@@ -2579,3 +2579,43 @@ Counter: 2
 Counter: 3
 ```
 
+# 管道
+
+管道是一种最常见的进程间通信（IPC）方式，用于父子进程或具有共同祖先的进程之间传递数据。管道由内核创建，提供一个缓冲区，用于进程间以字节流形式交换数据。
+
+管道的特点：
+
+- 单向通信：数据只能从管道的一端（写端）流向另一端（读端）。如果需要双向通信，需要创建两个管道。
+- 进程相关性：管道通常由父进程创建，子进程通过继承使用。
+- 内核管理：管道的缓冲区由内核维护，进程无法直接访问管道缓冲区。
+- 同步机制：如果管道满，写操作会阻塞；如果管道为空，读操作会阻塞。
+
+```c
+int pipefd[2];  // 管道文件描述符
+pipe(pipefd);   // 创建管道
+
+pid_t pid = fork();  // 创建子进程
+
+if (pid == 0) {
+    // 子进程：读取数据
+    close(pipefd[1]);  // 关闭写端
+    char buffer[100];
+    read(pipefd[0], buffer, sizeof(buffer));  // 从管道读数据
+    printf("Child process received: %s\n", buffer);
+    close(pipefd[0]);  // 关闭读端
+} else if (pid > 0) {
+    // 父进程：写入数据
+    close(pipefd[0]);  // 关闭读端
+    char message[] = "Hello from parent process!";
+    write(pipefd[1], message, sizeof(message));  // 写数据到管道
+    close(pipefd[1]);  // 关闭写端
+}
+```
+
+```
+Child process received: Hello from parent process!
+```
+
+- 父进程通过管道的写端发送消息，子进程通过读端接收消息。
+- 不需要的管道端在两个进程中都被关闭，以确保通信单向性。
+

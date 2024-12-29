@@ -49,7 +49,11 @@ Multiplexing IO 中, User 想要读取数据, 会先调用 epoll(), 将所有 So
 
 #### select()
 
-select() 将所有的 FD 存储到 fds_bits 中, 这是一个 1024b 的数组, 调用 select() 后, 需要先将 fds_bits 从 User Space 复制到 Kernel Space, 等 select() 执行完, 还需要将 fds_bits 从 Kernel Space 复制到 User Space. User 无法直接确定是哪个 FD 就绪了, 还需要再遍历 fds_bits 寻找就绪的 FD. fds_bits 的大小固定为了 1024b, 这个数量放在如今已经完全不够用了
+select() 会将所有的文件描述符（FD）存储在 fds_bits 中，这是一个固定大小为 1024 字节的数组。在调用 select() 时，fds_bits 需要先从用户空间复制到内核空间；当 select() 执行完后，fds_bits 又需要从内核空间复制回用户空间。由于用户无法直接知道哪个文件描述符就绪，必须遍历 fds_bits 来查找。当前，1024 字节的 fds_bits 大小已远远不能满足需求，尤其是在文件描述符较多的情况下。
+
+内核态中的每一个 Socket 都有一个进程等待队列和数据接收队列，当客户端发送的数据到达服务端的网卡时，会
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412211657928.png)
 
 #### poll()
 

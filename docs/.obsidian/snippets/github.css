@@ -105,5 +105,7 @@ body {
     --code-string: var(--color-red);
     --code-tag: var(--color-green);
     --code-value: var(--color-purple);
+    /* hr */
+    --hr-thickness: 1px;
 }
 

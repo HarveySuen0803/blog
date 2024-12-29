@@ -1,4 +1,4 @@
-s# Install Vue
+# Install Vue
 
 Build project with Vite
 
