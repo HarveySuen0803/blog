@@ -68,7 +68,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "09a176cbda932313",
@@ -104,7 +105,7 @@
       "workspaces:Manage workspace layouts": false
     }
   },
-  "active": "6e1c1ced07a7bd34",
+  "active": "26342e914b7ce2c6",
   "lastOpenFiles": [
     "design-pattern/visitor-pattern.md",
     "design-pattern/type-object-pattern.md",

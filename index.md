@@ -20,19 +20,19 @@ hero:
 features:
   - icon:
       src: java.png
-    link: /docs/Java/Basic
+    link: /docs/java/basic
     details: A rookie learning Java for two and a half years
   - icon:
       src: javascript.png
-    link: /docs/Vue/Basic
+    link: /docs/vue/basic
     details: A rookie learning Web for two and a half years
   - icon:
       src: linux.png
-    link: docs/Linux/Basic
+    link: docs/linux/basic
     details: A rookie learning Linux for two and a half years
   - icon:
       src: twitter.png
-    link: /docs/Algorithm/Sort
+    link: /docs/algorithm/sort
     details: A rookie learning Algorithm for two and a half years
 ---
 
