@@ -421,7 +421,9 @@ Java Nio 的 DirectByteBuffer 就是 mmap 的具体实现。Java NIO 的 `ByteBu
 
 - NIC（网卡）通过 DMA 直接从映射区域读取数据并发送给客户端。
 
-# 进程控制块
+# 进程
+
+进程是操作系统中资源分配和调度的基本单位，是一个正在执行的程序的实例，每个进程都有自己独立的地址空间、全局变量、文件描述符表、堆和栈。
 
 进程控制块（PCB）是操作系统内核为每个进程创建的数据结构，用来存储与该进程相关的所有关键信息。它是操作系统管理和调度进程的核心部分。
 
@@ -487,8 +489,6 @@ struct mm_struct {
     unsigned long start_stack; // 栈的起始地址
 };
 ```
-
-# 进程控制块的组织结构
 
 操作系统需要高效管理和调度进程，因此必须设计合适的数据结构来存储和组织每个进程的 PCB，PCB 的组织方式直接影响进程的创建、调度、状态切换以及资源回收的效率。
 
@@ -784,7 +784,391 @@ Running   →   Terminated   →   Zombie   →   Removed
 
 父子进程之间的通信是操作系统进程管理中的重要内容。由于父子进程通常共享资源，但运行在不同的地址空间中，它们需要通过特定的机制进行数据交换和协作。常见的通信方式包括：管道（Pipe）、共享内存（Shared Memory）、信号（Signal）、消息队列（Message Queue）、套接字（Socket）。
 
-# 同步机制
+# 管道通信
+
+管道允许一个进程将数据写入管道的输出端，另一个进程从输入端读取数据，从而实现通信。管道是基于字节流的通信方式，通常由操作系统提供支持。
+
+管道的特点：
+
+- 单向通信：数据流只能在一个方向上传输。如果需要双向通信，需要创建两个管道。
+- 半双工：一个管道可以用来传输数据，但不能同时进行读写操作。
+- 父子进程关系：管道通常用于父子进程或兄弟进程之间的通信。
+- 内核支持：管道在内存中由操作系统维护，数据不需要经过磁盘，通信效率较高。
+
+管道的类型：
+
+- 匿名管道：通过 pipe() 创建，只能在有亲缘关系的进程间使用（如父子进程）。
+- 命名管道：通过 mkfifo() 创建，先进先出队列，可用于无亲缘关系的进程之间通信。
+
+---
+
+**示例：使用匿名管道通信**
+
+父进程向子进程发送消息，子进程读取消息并输出。
+
+```c
+int main() {
+    int pipe_fd[2]; // 用于存储管道的读端和写端文件描述符
+    pid_t pid;
+    char write_msg[] = "Hello from parent!";
+    char read_msg[100];
+
+    // 创建管道
+    if (pipe(pipe_fd) == -1) {
+        perror("pipe");
+        exit(EXIT_FAILURE);
+    }
+
+    // 创建子进程
+    pid = fork();
+    if (pid < 0) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid > 0) { // 父进程
+        close(pipe_fd[0]); // 关闭管道读端
+        write(pipe_fd[1], write_msg, strlen(write_msg) + 1); // 写入数据
+        close(pipe_fd[1]); // 关闭管道写端
+    } else { // 子进程
+        close(pipe_fd[1]); // 关闭管道写端
+        read(pipe_fd[0], read_msg, sizeof(read_msg)); // 读取数据
+        printf("Child process received: %s\n", read_msg);
+        close(pipe_fd[0]); // 关闭管道读端
+    }
+
+    return 0;
+}
+```
+
+```
+Child process received: Hello from parent!
+```
+
+---
+
+**示例：使用命名管道通信**
+
+一个进程向命名管道写入消息，另一个进程从命名管道读取消息。
+
+1. 进程 1 写入数据
+
+```c
+#define FIFO_NAME "/tmp/my_fifo"
+
+int main() {
+    int fifo_fd;
+    char message[] = "Hello from writer!";
+
+    // 创建命名管道
+    if (mkfifo(FIFO_NAME, 0666) == -1) {
+        perror("mkfifo");
+    }
+
+    // 打开管道写端
+    fifo_fd = open(FIFO_NAME, O_WRONLY);
+    if (fifo_fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    // 写入数据
+    write(fifo_fd, message, strlen(message) + 1);
+    printf("Message sent: %s\n", message);
+
+    // 关闭管道
+    close(fifo_fd);
+    return 0;
+}
+```
+
+2. 进程 2 读取数据
+
+```c
+#define FIFO_NAME "/tmp/my_fifo"
+
+int main() {
+    int fifo_fd;
+    char buffer[100];
+
+    // 打开管道读端
+    fifo_fd = open(FIFO_NAME, O_RDONLY);
+    if (fifo_fd == -1) {
+        perror("open");
+        exit(EXIT_FAILURE);
+    }
+
+    // 读取数据
+    read(fifo_fd, buffer, sizeof(buffer));
+    printf("Message received: %s\n", buffer);
+
+    // 关闭管道
+    close(fifo_fd);
+
+    // 删除管道文件
+    unlink(FIFO_NAME);
+    return 0;
+}
+```
+
+3. 输出结果
+
+```
+Message sent: Hello from writer!
+Message received: Hello from writer!
+```
+
+---
+
+**示例：全双工通信**
+
+通过管道实现全双工通信，即进程之间能够同时进行双向数据传输，通常需要创建两个独立的管道：一个管道用于一个方向的数据传输，另一个管道用于反方向的数据传输。
+
+```c
+int main() {
+    int pipe1[2]; // 管道1：父进程到子进程
+    int pipe2[2]; // 管道2：子进程到父进程
+    pid_t pid;
+
+    // 创建管道1
+    if (pipe(pipe1) == -1) {
+        perror("pipe1");
+        exit(EXIT_FAILURE);
+    }
+
+    // 创建管道2
+    if (pipe(pipe2) == -1) {
+        perror("pipe2");
+        exit(EXIT_FAILURE);
+    }
+
+    // 创建子进程
+    pid = fork();
+    if (pid < 0) {
+        perror("fork");
+        exit(EXIT_FAILURE);
+    }
+
+    if (pid > 0) { // 父进程
+        char parent_msg[] = "Hello from parent!";
+        char child_msg[100];
+
+        // 关闭不需要的管道端
+        close(pipe1[0]); // 关闭管道1读端
+        close(pipe2[1]); // 关闭管道2写端
+
+        // 向子进程发送消息
+        write(pipe1[1], parent_msg, strlen(parent_msg) + 1);
+        printf("Parent sent: %s\n", parent_msg);
+
+        // 从子进程接收消息
+        read(pipe2[0], child_msg, sizeof(child_msg));
+        printf("Parent received: %s\n", child_msg);
+
+        // 关闭管道端
+        close(pipe1[1]);
+        close(pipe2[0]);
+    } else { // 子进程
+        char child_msg[] = "Hello from child!";
+        char parent_msg[100];
+
+        // 关闭不需要的管道端
+        close(pipe1[1]); // 关闭管道1写端
+        close(pipe2[0]); // 关闭管道2读端
+
+        // 从父进程接收消息
+        read(pipe1[0], parent_msg, sizeof(parent_msg));
+        printf("Child received: %s\n", parent_msg);
+
+        // 向父进程发送消息
+        write(pipe2[1], child_msg, strlen(child_msg) + 1);
+        printf("Child sent: %s\n", child_msg);
+
+        // 关闭管道端
+        close(pipe1[0]);
+        close(pipe2[1]);
+    }
+
+    return 0;
+}
+```
+
+# 共享内存通信
+
+一个物理内存区域被多个进程映射到其各自的虚拟地址空间，从而实现内存共享。进程之间通过共享内存（Shared Memory）通信是一种高效的进程间通信（IPC）方式，无需通过内核传递数据。
+
+共享内存本身不提供同步机制，多个进程对共享内存的访问需要额外的同步工具（如信号量、互斥锁）避免竞争条件。
+
+---
+
+以下是一个使用 POSIX API 的共享内存通信示例，其中两个进程通过共享内存传递消息。
+
+1. 主进程创建共享内存并写入数据：
+
+```c
+// 创建共享内存对象
+int shm_fd = shm_open(SHARED_MEM_NAME, O_CREAT | O_RDWR, 0666);
+if (shm_fd == -1) {
+    perror("shm_open");
+    exit(EXIT_FAILURE);
+}
+
+// 设置共享内存大小
+if (ftruncate(shm_fd, SHARED_MEM_SIZE) == -1) {
+    perror("ftruncate");
+    exit(EXIT_FAILURE);
+}
+
+// 将共享内存映射到地址空间
+char *shared_mem = mmap(NULL, SHARED_MEM_SIZE, PROT_WRITE, MAP_SHARED, shm_fd, 0);
+if (shared_mem == MAP_FAILED) {
+    perror("mmap");
+    exit(EXIT_FAILURE);
+}
+
+// 写入数据
+const char *message = "Hello from shared memory!";
+strncpy(shared_mem, message, SHARED_MEM_SIZE);
+
+printf("Message written to shared memory: %s\n", message);
+
+// 保持程序运行，等待读取
+sleep(10);
+
+// 解除映射并删除共享内存
+munmap(shared_mem, SHARED_MEM_SIZE);
+shm_unlink(SHARED_MEM_NAME);
+```
+
+2. 从进程读取共享内存数据：
+
+```c
+// 打开共享内存对象
+int shm_fd = shm_open(SHARED_MEM_NAME, O_RDONLY, 0666);
+if (shm_fd == -1) {
+    perror("shm_open");
+    exit(EXIT_FAILURE);
+}
+
+// 将共享内存映射到地址空间
+char *shared_mem = mmap(NULL, SHARED_MEM_SIZE, PROT_READ, MAP_SHARED, shm_fd, 0);
+if (shared_mem == MAP_FAILED) {
+    perror("mmap");
+    exit(EXIT_FAILURE);
+}
+
+// 读取数据
+printf("Message read from shared memory: %s\n", shared_mem);
+
+// 解除映射
+munmap(shared_mem, SHARED_MEM_SIZE);
+```
+
+# 消息传递通信
+
+消息传递通信是一种通过操作系统提供的消息传递机制（如消息队列、信号或套接字）在进程之间传递数据的方法。这种方法解耦了进程的共享资源，允许进程以消息为单位传递数据，而无需直接共享内存。
+
+- 数据以消息的形式组织，具有结构化的内容，消息可以包含多个字段（如 ID、优先级、数据）。
+
+消息传递通信的实现方案：
+
+- System V 消息队列：基于操作系统内核的消息队列（msgget, msgsnd, msgrcv）。
+- POSIX 消息队列：提供面向文件的消息队列（mq_open, mq_send, mq_receive）。
+- 套接字：使用网络套接字（如 TCP/UDP）在本地或网络间发送消息。
+- 高级消息队列：使用消息中间件（如 RabbitMQ、Kafka）实现复杂的消息传递。
+
+消息传递通信的优点：
+
+- 解耦性：消息队列将发送者和接收者解耦，适用于异步通信。
+- 结构化数据：消息可以包含丰富的字段信息。
+- 可靠性：消息可以持久化，即使进程退出也不会丢失消息。
+
+---
+
+**示例：System V 消息队列**
+
+1. 发送者向消息队列中发送消息：
+
+```c
+#define QUEUE_KEY 1234
+
+// 消息结构体
+struct message {
+    long message_type;      // 消息类型
+    char message_text[100]; // 消息内容
+};
+
+int main() {
+    int msg_id;
+    struct message msg;
+
+    // 创建消息队列
+    msg_id = msgget(QUEUE_KEY, IPC_CREAT | 0666);
+    if (msg_id == -1) {
+        perror("msgget");
+        exit(EXIT_FAILURE);
+    }
+
+    // 设置消息内容
+    msg.message_type = 1; // 消息类型
+    strcpy(msg.message_text, "Hello from sender!");
+
+    // 发送消息
+    if (msgsnd(msg_id, &msg, sizeof(msg.message_text), 0) == -1) {
+        perror("msgsnd");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Message sent: %s\n", msg.message_text);
+    return 0;
+}
+```
+
+2. 接收者从消息队列接收数据
+
+```c
+#define QUEUE_KEY 1234
+
+// 消息结构体
+struct message {
+    long message_type;      // 消息类型
+    char message_text[100]; // 消息内容
+};
+
+int main() {
+    int msg_id;
+    struct message msg;
+
+    // 获取消息队列
+    msg_id = msgget(QUEUE_KEY, 0666);
+    if (msg_id == -1) {
+        perror("msgget");
+        exit(EXIT_FAILURE);
+    }
+
+    // 接收消息
+    if (msgrcv(msg_id, &msg, sizeof(msg.message_text), 1, 0) == -1) {
+        perror("msgrcv");
+        exit(EXIT_FAILURE);
+    }
+
+    printf("Message received: %s\n", msg.message_text);
+
+    // 删除消息队列
+    if (msgctl(msg_id, IPC_RMID, NULL) == -1) {
+        perror("msgctl");
+        exit(EXIT_FAILURE);
+    }
+
+    return 0;
+}
+```
+
+# 套接字通信
+
+Socket 通信是一种强大的进程间通信方式，用于本地或网络上的进程之间进行通信。Socket（套接字）是操作系统提供的抽象接口，通过网络协议实现数据传输，支持在同一台主机或不同主机之间进行通信。Socket 通信支持 TCP（可靠的面向连接通信）和 UDP（无连接的快速通信）两种主要协议。
+
+# 进程同步
 
 互斥制约和合作制约是操作系统中进程同步的重要概念，它们分别描述了进程间如何竞争资源或如何协同工作。
 
@@ -906,7 +1290,7 @@ int main() {
 }
 ```
 
-# 同步机制准则
+# 进程同步准则
 
 同步机制准则是设计多进程或多线程同步时需要遵循的一组基本原则。这些准则确保并发系统能够正确、安全地执行，避免死锁、资源竞争或数据不一致等问题。
 
@@ -1067,3 +1451,506 @@ int main() {
 - 使用条件变量 pthread_cond_wait 和 pthread_cond_signal 实现生产者和消费者的同步。
   - 当缓冲区为空时，消费者等待 not_empty 条件。
   - 当缓冲区已满时，生产者等待 not_full 条件。
+
+# 线程
+
+线程是操作系统调度的基本单位，线程是属于进程的一个执行单元，一个进程可以包含多个线程，多个线程共享同一个进程的地址空间和资源（如文件描述符、全局变量、堆内存等），但每个线程有自己独立的栈和寄存器。
+
+线程 和 进程 的对比：
+
+- 每个进程有独立的资源，创建和销毁进程的开销高。
+- 同一进程内的多个线程共享内存空间和资源，线程之间通信的代价低，创建、切换和销毁开销小。
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501011903501.png)
+
+# 内核线程
+
+KST（Kernel-Level Thread）是由操作系统内核直接管理的线程，内核负责线程的创建、调度、切换，以及与硬件资源（如 CPU）的交互，每个 KST 由内核维护相应的数据结构（如线程控制块 TCB）。
+
+KST 的调度由操作系统内核完成，内核对线程是可见的，内核可以直接调度线程，同一进程中的线程可以分配到不同的 CPU 核心上运行，实现并行。
+
+KST 的创建、切换和销毁都需要系统调用，开销较大。如果一个线程执行了阻塞操作（如 I/O 操作），内核可以将其他线程继续调度运行。
+
+---
+
+**示例：KST 的使用**
+
+在 Linux 中，POSIX 线程（pthread）是通过内核级线程实现的，每个 pthread 都是一个独立的 KST，由内核调度。
+
+```c
+void* thread_function(void* arg) {
+    printf("Thread ID: %ld, PID: %d\n", pthread_self(), getpid());
+    sleep(2); // 模拟线程的执行任务
+    return NULL;
+}
+
+int main() {
+    pthread_t thread1, thread2;
+
+    // 创建两个线程
+    pthread_create(&thread1, NULL, thread_function, NULL);
+    pthread_create(&thread2, NULL, thread_function, NULL);
+
+    // 等待线程完成
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
+
+    printf("Main thread completed.\n");
+    return 0;
+}
+```
+
+# 内核线程实现
+
+线程 涉及到 线程管理 和 调度机制 的实现。在底层，内核通过维护线程的数据结构、使用调度算法、管理线程的生命周期等实现对内核级线程的支持。
+
+- TCB（Thread Control Block，线程控制块）：每个线程都有一个独立的 TCB，存储线程的运行状态（如寄存器上下文、栈指针等）。
+- PCB（Process Control Block，进程控制块）：KST 通常与 PCB 配合实现，因为一个进程可以包含多个线程。
+
+内核调度器通过 TCB 对线程进行管理，支持线程的创建、切换和销毁。根据调度策略（如时间片轮转、优先级等）对线程进行分配和运行。
+
+在 Linux 内核中，每个线程和进程都用一个 task_struct 数据结构表示，它们的区别主要体现在 标志位（flags） 和 资源共享情况 上。
+
+```c
+struct task_struct {
+    pid_t pid;                     // 进程/线程的唯一标识
+    unsigned long state;           // 任务的当前状态（运行、阻塞等）
+    unsigned int priority;         // 线程的优先级
+    struct mm_struct *mm;          // 内存空间（线程共享，进程独立）
+    struct thread_struct thread;   // 硬件上下文（寄存器、栈指针等）
+    struct list_head tasks;        // 线程链表，用于调度器管理
+    struct files_struct *files;    // 文件描述符表（线程共享）
+};
+```
+
+Linux 使用 clone() 系统调用实现线程的创建。
+
+```c
+long do_fork(unsigned long clone_flags, unsigned long stack_start) {
+    struct task_struct *p;
+
+    // 1. 分配新的 task_struct（线程控制块）
+    p = allocate_task_struct();
+
+    // 2. 复制当前线程的上下文到新线程
+    copy_process(p, clone_flags, stack_start);
+
+    // 3. 将新线程加入调度器
+    wake_up_new_task(p);
+
+    return p->pid;
+}
+```
+
+clone() 提供了多个标志位，用于指定线程共享的资源。
+
+- CLONE_VM：共享进程的地址空间。
+- CLONE_FS：共享文件系统信息。
+- CLONE_FILES：共享文件描述符表。
+- CLONE_SIGHAND：共享信号处理器。
+- CLONE_THREAD：标识线程而非独立进程。
+
+每个线程都有独立的内核栈（Kernel Stack），用于保存线程运行时的上下文信息，如函数调用帧和中断处理。
+
+- 内核栈大小通常是固定的（Linux 默认 8KB）。
+- 在线程切换时，内核栈的内容会被保存，以便线程重新运行时恢复状态。
+
+线程切换的核心逻辑实现为 switch_to()，它负责切换线程的寄存器上下文和内核栈指针。
+
+```c
+#define switch_to(prev, next) do {
+    // 保存当前线程的上下文
+    save_context(prev);
+
+    // 加载新线程的上下文
+    load_context(next);
+} while (0)
+```
+
+调度器负责在线程之间分配 CPU 时间。Linux 使用完全公平调度器（CFS）来管理线程。
+
+- 每个线程都有一个 虚拟运行时间（vruntime），表示该线程已经运行的时间。
+- 调度器选择 vruntime 最小的线程优先运行。
+- 调度器通过定时器中断触发线程切换。
+
+```c
+void schedule() {
+    struct task_struct *prev = current;    // 当前线程
+    struct task_struct *next = pick_next_task(); // 选择下一个线程
+
+    if (prev != next) {
+        context_switch(prev, next); // 切换线程上下文
+    }
+}
+```
+
+# 用户级线程
+
+ULT 是由用户空间库（如线程库）在用户态实现的线程，操作系统内核并不知道这些线程的存在。ULT 的调度、创建、切换完全由用户态完成，不涉及系统调用，用户可以完全控制线程的行为，但实现复杂度较高。
+
+线程调度是由用户空间的线程库完成的，切换线程无需进入内核，调度速度比 KST 快，开销更小。
+
+由于内核只知道进程而不知道线程，ULT 无法将多个线程分配到多个 CPU 核心运行。如果一个 ULT 执行了阻塞系统调用（如 I/O 操作），整个进程都会被阻塞，其他线程无法继续运行。
+
+---
+
+**示例：用户级线程的使用**
+
+ULT 通过用户态的线程库（如 libco 或 ucontext）实现，内核无法感知这些线程。
+
+```c
+ucontext_t context1, context2;
+
+void function1() {
+    printf("Function 1 running\n");
+    sleep(1);
+    swapcontext(&context1, &context2); // 切换到 context2
+}
+
+void function2() {
+    printf("Function 2 running\n");
+    sleep(1);
+    swapcontext(&context2, &context1); // 切换回 context1
+}
+
+int main() {
+    char stack1[1024*128];
+    char stack2[1024*128];
+
+    // 初始化上下文 context1
+    getcontext(&context1);
+    context1.uc_stack.ss_sp = stack1;
+    context1.uc_stack.ss_size = sizeof(stack1);
+    context1.uc_link = NULL;
+    makecontext(&context1, function1, 0);
+
+    // 初始化上下文 context2
+    getcontext(&context2);
+    context2.uc_stack.ss_sp = stack2;
+    context2.uc_stack.ss_size = sizeof(stack2);
+    context2.uc_link = NULL;
+    makecontext(&context2, function2, 0);
+
+    // 切换到 context1
+    swapcontext(&context2, &context1);
+
+    return 0;
+}
+```
+
+# 用户线程实现
+
+ULT 和 KST 实现原理差不多，都需要去维护 线程控制块 和 线程调度策略，只不过这一切都是在用户态实现的。
+
+这里使用 Linux 的 ucontext 库实现一个简单的用户级线程库。
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <ucontext.h>
+
+#define STACK_SIZE 1024 * 64
+
+typedef struct thread {
+    ucontext_t context;      // 线程上下文
+    struct thread* next;     // 下一个线程
+} thread_t;
+
+thread_t* current_thread = NULL; // 当前运行的线程
+thread_t* main_thread = NULL;    // 主线程
+
+void thread_function1() {
+    printf("Thread 1: Start\n");
+    for (int i = 0; i < 5; i++) {
+        printf("Thread 1: %d\n", i);
+        swapcontext(&current_thread->context, &current_thread->next->context);
+    }
+    printf("Thread 1: End\n");
+}
+
+void thread_function2() {
+    printf("Thread 2: Start\n");
+    for (int i = 0; i < 5; i++) {
+        printf("Thread 2: %d\n", i);
+        swapcontext(&current_thread->context, &current_thread->next->context);
+    }
+    printf("Thread 2: End\n");
+}
+
+void create_thread(thread_t** thread, void (*func)()) {
+    *thread = malloc(sizeof(thread_t));
+    getcontext(&(*thread)->context);
+
+    (*thread)->context.uc_stack.ss_sp = malloc(STACK_SIZE);
+    (*thread)->context.uc_stack.ss_size = STACK_SIZE;
+    (*thread)->context.uc_link = NULL;
+
+    makecontext(&(*thread)->context, func, 0);
+}
+
+int main() {
+    // 创建线程 1 和线程 2
+    thread_t* thread1;
+    thread_t* thread2;
+    create_thread(&thread1, thread_function1);
+    create_thread(&thread2, thread_function2);
+
+    // 将线程加入循环链表
+    thread1->next = thread2;
+    thread2->next = thread1;
+
+    // 设置当前线程
+    current_thread = thread1;
+
+    // 运行线程
+    swapcontext(&main_thread->context, &current_thread->context);
+
+    // 清理资源
+    free(thread1->context.uc_stack.ss_sp);
+    free(thread1);
+    free(thread2->context.uc_stack.ss_sp);
+    free(thread2);
+
+    printf("Main thread: End\n");
+    return 0;
+}
+```
+
+- 线程上下文：
+  - 使用 ucontext_t 表示每个线程的上下文。
+  - 使用 getcontext() 和 makecontext() 初始化线程上下文。
+- 线程切换：
+  - 使用 swapcontext() 实现线程切换。
+  - 当前线程的上下文保存到 current_thread->context，切换到目标线程的上下文。
+- 线程调度：
+  - 使用循环链表管理线程，每次切换到下一个线程。
+- 线程栈：
+  - 每个线程都有独立的栈（uc_stack.ss_sp），在创建线程时分配。
+
+# 组合线程
+
+Linux 底层结合 KST（Kernel-Level Thread）和 ULT（User-Level Thread） 的方式通常是在内核级线程之上通过用户态线程库实现用户级线程。这样的设计允许系统充分利用 KST 的多核并行能力，同时通过 ULT 的高效用户态切换 提高性能。
+
+- KST 提供多核能力：在多对多模型中，多个用户级线程被调度到有限的内核级线程上，内核级线程提供多核并行的支持。
+- ULT 提供高效调度：ULT 的切换在用户态完成，速度快，用户态库可以自定义调度策略。
+- 阻塞操作的处理：阻塞调用由 KST 负责。如果某个用户线程阻塞，调度器可以切换到另一个用户线程，不影响进程的整体运行。
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501012031136.png)
+
+---
+
+**示例：一对一模型**
+
+在 Linux 中，pthread 是通过 1:1 模型实现的。以下代码展示了 pthread 如何通过 KST 提供多核支持，同时结合用户态的轻量调度。
+
+```c
+
+void* thread_function(void* arg) {
+    printf("Thread ID: %ld, PID: %d\n", pthread_self(), getpid());
+    sleep(2);
+    return NULL;
+}
+
+int main() {
+    pthread_t thread1, thread2;
+
+    // 创建两个用户线程，每个用户线程对应一个 KST
+    pthread_create(&thread1, NULL, thread_function, NULL);
+    pthread_create(&thread2, NULL, thread_function, NULL);
+
+    // 等待线程完成
+    pthread_join(thread1, NULL);
+    pthread_join(thread2, NULL);
+
+    printf("Main thread completed.\n");
+    return 0;
+}
+```
+
+- 每个用户线程通过 pthread_create 调用底层的 clone() 系统调用创建 KST。
+- 两个线程在多核 CPU 上可以并行运行，阻塞互不干扰。
+
+---
+
+**示例：多对多模型**
+
+以下示例展示了如何通过一个简单的调度器将多个 ULT 映射到少量 KST。用户线程切换在用户态完成，阻塞调用通过 KST 支持
+
+```c
+#include <pthread.h>
+#include <ucontext.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+#define STACK_SIZE 1024 * 64
+#define MAX_ULT 4
+
+typedef struct ult {
+    ucontext_t context;      // 用户线程上下文
+    struct ult* next;        // 下一个用户线程
+    int id;                  // 用户线程 ID
+} ult_t;
+
+ult_t* current_ult = NULL;   // 当前运行的用户线程
+ult_t* ult_list = NULL;      // 用户线程列表
+
+// 用户线程调度器
+void scheduler() {
+    while (current_ult) {
+        swapcontext(&current_ult->context, &current_ult->next->context);
+    }
+}
+
+// 用户线程函数
+void ult_function(int id) {
+    for (int i = 0; i < 5; i++) {
+        printf("ULT %d: %d\n", id, i);
+        swapcontext(&current_ult->context, &current_ult->next->context);
+    }
+    printf("ULT %d completed.\n", id);
+}
+
+// 创建用户线程
+void create_ult(void (*func)(int), int id) {
+    ult_t* new_ult = malloc(sizeof(ult_t));
+    getcontext(&new_ult->context);
+
+    new_ult->context.uc_stack.ss_sp = malloc(STACK_SIZE);
+    new_ult->context.uc_stack.ss_size = STACK_SIZE;
+    new_ult->context.uc_link = NULL;
+    new_ult->id = id;
+
+    makecontext(&new_ult->context, (void (*)(void))func, 1, id);
+
+    // 加入用户线程链表
+    if (!ult_list) {
+        ult_list = new_ult;
+        new_ult->next = new_ult;
+    } else {
+        new_ult->next = ult_list->next;
+        ult_list->next = new_ult;
+    }
+    current_ult = new_ult;
+}
+
+void* kst_function(void* arg) {
+    scheduler();
+    return NULL;
+}
+
+int main() {
+    // 创建 4 个用户线程
+    for (int i = 1; i <= MAX_ULT; i++) {
+        create_ult(ult_function, i);
+    }
+
+    // 创建 2 个内核级线程，每个运行一个调度器
+    pthread_t kst1, kst2;
+    pthread_create(&kst1, NULL, kst_function, NULL);
+    pthread_create(&kst2, NULL, kst_function, NULL);
+
+    pthread_join(kst1, NULL);
+    pthread_join(kst2, NULL);
+
+    printf("All threads completed.\n");
+    return 0;
+}
+```
+
+# 作业
+
+作业是用户提交给操作系统的一组任务，可能包含程序、数据以及运行指令，作业的目的是完成某种特定的计算或任务，如数据处理、科学计算、文件打印等。作业的粒度较大，一个作业可能包含多个进程（进程是作业的一个子单位）。
+
+作业控制块是操作系统为每个作业维护的一个数据结构，用于存储作业的相关信息。它是操作系统调度、管理和跟踪作业状态的核心工具。
+
+作业控制块通常包含以下信息：
+
+- 作业标识符：唯一标识作业的 ID。
+- 作业状态：如“等待调度”、“运行中”或“完成”。
+- 优先级：作业的执行优先级。
+- 资源需求：所需的 CPU、内存、I/O 设备等资源信息。
+- 运行时间信息：预计运行时间、已经运行时间。
+- 作业队列位置：作业在调度队列中的位置。
+- 作业结果存储位置：如输出文件路径或终端。
+
+# 调度算法
+
+调度算法的共同目标：
+
+- 提供高效性：最大化吞吐量和处理器利用率。
+- 提供用户满意度：降低等待时间和响应时间。
+- 提供公平性：确保所有任务都能获得合理的资源分配。
+- 提供稳定性：在各种负载下保持高效运行。
+
+---
+
+先来先服务（FCFS）：队列中第一个进程先获得 CPU。
+
+- 例子：队列中有 P1、P2、P3，P1 执行完后依次执行 P2 和 P3。
+
+最短作业优先（SJF）：CPU 选择剩余执行时间最短的进程。
+
+- 例子：队列中有 P1（执行时间 10ms）、P2（执行时间 5ms）、P3（执行时间 2ms），P3 会被最先调度。
+
+优先级调度（Priority Scheduling）：按优先级最高的任务调度，优先级低的任务可能等待。
+
+- 例子：P1（优先级 3）、P2（优先级 1）、P3（优先级 2），P2 会先执行。
+
+时间片轮转（Round Robin）：每个进程分配固定时间片，时间片耗尽后切换到下一个进程。
+
+- 例子：时间片为 4ms，队列中有 P1（10ms）、P2（6ms）、P3（4ms）。调度顺序为 P1 → P2 → P3 → P1 → P2。
+
+多级反馈队列调度：进程根据执行情况在不同优先级队列中调整。
+
+- 例子：新进程进入高优先级队列，若时间片未完成，则降到低优先级队列，长时间执行的进程可能被优先处理的新任务抢占。
+
+高响应比优先（HRRN）：计算每个作业的响应比，优先调度响应比最高的作业。
+
+- 响应比 = (作业处理时间 + 作业等待时间) / 作业处理时间
+
+# 处理机调度
+
+处理机调度（CPU scheduling）是操作系统的重要功能，用于分配 CPU 资源给各种任务。
+
+- 长程调度：控制系统中创建频率，同时运行的进程数量，以维持系统的平衡负载。
+  - 在批处理系统中，操作系统决定从输入队列中选择哪些作业进入内存，成为可执行进程。
+  - 如果有大量 IO 密集型和计算密集型任务，长程调度器会选择一部分 IO 密集型任务和一部分计算密集型任务，从而平衡系统性能。
+- 中程调度：通过挂起或恢复进程，优化 CPU 和内存的使用。
+  - 当内存不足时，中程调度器将某些低优先级的进程挂起，将它们移出内存（换页到磁盘）。
+  - 当资源充足时，挂起的进程会被恢复，并重新加载到内存中继续运行。
+- 短程调度：短程调度是核心任务，即决定哪个进程可以获得 CPU，并将其切换到运行状态。其主要依据是调度算法。
+
+# 作业调度
+
+作业调度是操作系统的重要功能，用于管理作业的生命周期，从作业提交到完成的全过程。作业调度决定了哪些作业可以进入系统并占用资源，例如 CPU、内存和 I/O 设备。
+
+- 长程调度：决定哪些作业可以加载到内存进入系统，成为可执行作业，平衡系统负载，控制进入系统的作业数量。
+- 中程调度：通过挂起和恢复作业，动态调整内存和资源的分配，优化资源使用。
+  - 在内存不足时挂起某些作业，将它们换页到磁盘。
+- 短程调度：确定哪个作业的进程可以获得 CPU。
+  - 在多任务环境中，轮流分配 CPU 给各个作业的进程。
+
+# 进程调度
+
+进程调度是操作系统的核心功能之一，用于管理在系统中运行的进程，决定哪个进程可以使用 CPU 和其他资源。以下通过详细解释和举例来说明进程调度的本质、分类和实际应用。
+
+- 长程调度：决定哪些进程可以进入就绪队列，控制系统中并发进程的数量，平衡系统负载，避免过载或资源闲置。
+- 中程调度：通过挂起或恢复进程，优化内存和 CPU 使用率。
+- 短程调度：决定哪个就绪进程可以使用 CPU，并切换到运行状态，最大化 CPU 使用率，最小化等待时间和响应时间。
+
+进程调度和处理机调度是紧密相关的概念，甚至在许多情况下可以被认为是同一过程的不同表述。然而，二者实际上有细微的差别，尤其是在描述它们的层次和目标时。
+
+- 进程调度：更广义的概念，包含所有与进程管理和资源分配相关的调度工作，包括内存、I/O 设备、CPU 等资源。
+- 处理机调度：进程调度的一个子集，专门指分配 CPU 给就绪队列中的进程的过程。
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501021413128.png)
+
+进程调度方式可以根据是否允许进程被强制中断分为 抢占式调度 和 非抢占式调度 两种。
+
+- 抢占式调度：CPU 分配给某个进程后，如果有更高优先级或更紧急的任务到达，可以强制中断当前进程并切换到新任务。
+  - 提高系统响应时间，适合实时任务，但上下文切换开销较大。
+- 非抢占式调度：一旦 CPU 被分配给某个进程，进程将一直运行到完成或进入等待状态（如等待 IO），其他进程需要等待，直到当前进程释放 CPU。
+  - 更简单，但可能导致长任务占用 CPU，导致其他任务长期等待。
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501021440756.png)

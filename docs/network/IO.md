@@ -1,4 +1,4 @@
-### IO Type
+# IO Type
 
 Blocking, NonBlocking
 
@@ -20,7 +20,7 @@ Synchronous, Asynchronous
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139648.png)
 
-### Blocking IO
+# Blocking IO
 
 Blocking IO 中, User 想要读取数据, 如果 Kernel 查找不到数据, 不会返回查找不到的信息给 User, 而是会一直等待, 直到数据就位后, 再完成后续操作, 返回结果给 User
 
@@ -28,7 +28,7 @@ Blocing IO 全程需要等待, 性能非常差
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139649.png)
 
-### Nonblocking IO
+# Nonblocking IO
 
 Nonblocking IO 中, User 想要读取数据, 如果 Kernel 查找不到数据, 会直接返回查找不到的信息给 User, User 过段时间再发送读取数据的请求, 循环往复, 直到读取到数据, 整个过程中, 只有数据拷贝会进入等待
 
@@ -37,7 +37,7 @@ Nonblocking IO 看似没有太多堵塞, 但是性能还是很差, User 读取�
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139650.png)
 
-### Multiplexing IO
+# Multiplexing IO
 
 Blocking IO 和 Non Blocing IO 都是第一时间调用 recvfrom() 获取数据, 数据不存在时, 要么等待, 要么空转, 都无法很好的利用 CPU, 还会导致其他 Socket 的等待, 非常糟糕
 
@@ -47,7 +47,7 @@ Multiplexing IO 中, User 想要读取数据, 会先调用 epoll(), 将所有 So
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139651.png)
 
-#### select()
+## select()
 
 select() 会将所有的文件描述符（FD）存储在 fds_bits 中，这是一个固定大小为 1024 字节的数组。在调用 select() 时，fds_bits 需要先从用户空间复制到内核空间；当 select() 执行完后，fds_bits 又需要从内核空间复制回用户空间。由于用户无法直接知道哪个文件描述符就绪，必须遍历 fds_bits 来查找。当前，1024 字节的 fds_bits 大小已远远不能满足需求，尤其是在文件描述符较多的情况下。
 
@@ -55,11 +55,11 @@ select() 会将所有的文件描述符（FD）存储在 fds_bits 中，这是�
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412211657928.png)
 
-#### poll()
+## poll()
 
 poll() 通过一个 LinkedList 存储 FD, 所以可以存储的 FD 就没有上限了, 但是依旧无法避免两次复制和遍历寻找就绪的 FD. 如果存储的 FD 太多, 遍历的时间会变长, 性能就会下降
 
-#### epoll()
+## epoll()
 
 select() 和 poll() 是早期用于 Multiplexing IO 的函数, 他们只会通知 User 有 FD 就绪了, 但是不确定是哪个 FD, 需要 User 遍历所有的 FD 来确定. epoll() 则会告知是哪些 FD 就绪了, 不需要 User 查找了, 非常高效
 
@@ -69,7 +69,7 @@ epoll() 通过一个 RedBlackTree 存储所有的 FD (rbr), 通过一个 LinkedL
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139653.png)
 
-#### 事件通知
+## 事件通知
 
 epoll_wait() 的事件通知有 LevelTriggered (LT, def) 和 EdgeTriggered (ET) 两种模式
 
@@ -81,7 +81,7 @@ ET 进行事件通知后, 会直接移除该 FD (eg: A 还剩 2KB 数据没有�
 
 通过 ET 处理数据, 可以开启一个异步线程, 将 FD 中的所有数据全部循环处理完即可, 不需要反复调用 epoll_wait(), 性能极强, 而且一个线程被通知处理完数据后, 其他线程直接从 User Space 中读取数据即可, 不存在惊群
 
-#### 网卡驱动程序
+## 网卡驱动程序
 
 当网卡接收到数据后，流程如下：
 
@@ -127,7 +127,7 @@ void sock_def_readable(struct sock *sk) {
 }
 ```
 
-### Signal Driven IO
+# Signal Driven IO
 
 Signal Driven IO 中, User 先调用 sigaction() 告知 Kernel 去寻找数据, Kernel 直接返回结果给 User. Kernel 发现数据就绪后, 再调用 sigio() 发送信号给 User. 这个时候 User 再调用 recvfrom() 进行数据的复制, 所以 Signal Driven IO 的流程更类似于我们理解中的 Non Blocking IO
 
@@ -135,10 +135,38 @@ Signal Driven IO 中, User 先调用 sigaction() 告知 Kernel 去寻找数据, 
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139654.png)
 
-### Asynchronous IO
+# Asynchronous IO
 
 Asynchronous IO 中, User 调用 aio_read() 通知 Kernel 去查找数据后, 就可以干别的事去啦. Kernel 查找到数据后, 直接复制数据到 User Space 中, 再通知 User 去处理数据, 整个过程不需要 User 去等待, 非常的高效
 
-Asynchronous IO 可以处理的任务数量是有限的, 不能积累太多, 尤其是在 Multi Thread Env 下, 需要做好并发访问的限流, 代码的实现难度就提高了很多, 而 Mutiplexing IO 实现的难度就要小很多, 所以 Multiplexing IO 使用的场景就更多了
-
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202401031139655.png)
+
+Multiplexing IO 和 Asynchronous IO 的主要区别在于数据就绪后，由谁来执行数据拷贝这个动作。
+
+- Multiplexing IO 中，数据就绪后，是系统通知程序数据已经就绪，需要由程序去调用 read 和 recvfrom 从内核态拷贝数据到用户态后，再处理数据。
+- Asynchronous IO 中，数据就绪后，是系统自动拷贝数据到程序所在的用户态，再通知程序去处理数据。用户态的程序压力较小，需要更长的时间去等待数据，这个数据拷贝的过程不需要切换上下文状态，不需要系统调用。
+
+Multiplexing IO 和 Asynchronous IO 的效率对比：
+
+- 拷贝效率：
+  - Multiplexing IO 需要由程序去调用 read 和 recvfrom 从内核态拷贝数据到用户态后，涉及了两次系统调用，需要从用户态切换为内核态。
+  - Asynchronous IO 整个数据拷贝过程都有系统完成，不涉及系统调用，不需要切换上下文。
+- 数据量较大时的拷贝效率：
+  - Multiplexing IO 常常需要对数据进行分块 IO，就需要多次切换用户态和内核态，状态切换的开销会被放大。
+- 并发效率：
+  - Multiplexing IO 需要额外管理大量的文件描述符和事件，每个事件都需要应用程序手动处理（包括解析、拷贝等），对 CPU 和内存的压力较大。
+  - Asynchronous IO 事件处理由操作系统管理，应用程序只处理完成的事件，避免了对大量事件的轮询和解析。在大数据场景下，这种模型可以显著减少应用程序的负担，提高吞吐量。
+
+# Reactor IO Mode
+
+Reactor 通信模型中分为两个线程组，其中 Boss 线程组处理连接事件，Worker 线程组处理 IO 事件。每一个 EventLoop 都对应一个线程，每一个 EvnetLoop 都绑定了一个 Selector 实现 IO 多路复用。
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501011558610.png)
+
+# Proactor IO Mode
+
+Reactor 通信模型采用的是 Multiplexing IO，Proactor 通信模型采用的是 Asynchronous IO 技术，这就是他俩的核心区别，在数据量较大时，Proactor 通信模型效率更高。
+
+- 详细对比可以看 Asynchronous IO 的介绍
+
+

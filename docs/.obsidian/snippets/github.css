@@ -36,9 +36,10 @@
     --color-purple: #D2A8FF;
     --color-pink: #f778ba;
 
-    --color-base-00: #0d1117;
-    --color-base-10: #161b22;
-    --color-base-20: #161b22;
+    --color-base-00: #020409;
+    --color-base-10: #0e1116;
+    /* --color-base-20: #161b22; */
+    --color-base-20: #020409;
     --color-base-25: #010409;
     --color-base-30: #30363d;
     --color-base-35: #21262d;
@@ -96,15 +97,16 @@ body {
     --code-background: var(--background-primary-alt);
     --code-normal: var(--text-normal);
     --code-comment: var(--text-faint);
-    --code-function: var(--text-normal);
+    /* --code-function: var(--text-normal); */
+    --code-function: var(--color-red);
     --code-important: var(--color-orange);
     --code-keyword: var(--color-red);
-    /* --code-keyword: var(--color-blue); */
     --code-property: var(--text-normal);
     --code-punctuation: var(--text-muted);
     --code-string: var(--color-red);
     --code-tag: var(--color-green);
     --code-value: var(--color-purple);
+
     /* hr */
     --hr-thickness: 1px;
 }
