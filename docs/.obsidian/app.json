@@ -20,5 +20,6 @@
   "autoConvertHtml": false,
   "showLineNumber": false,
   "tabSize": 2,
-  "showUnsupportedFiles": false
+  "showUnsupportedFiles": false,
+  "showRibbon": false
 }

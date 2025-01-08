@@ -688,3 +688,32 @@ public static String decodeString(String s) {
     return sb.toString();
 }
 ```
+
+# Reverse Stack
+
+给你一个栈，请你逆序这个栈，不能申请额外的数据结构，只能使用递归函数。
+
+[Arctile Explain](https://leetcode.cn/circle/discuss/8g25gg/)
+
+[Video Explain 01:32:06](https://www.bilibili.com/video/BV13g41157hK?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&spm_id_from=333.788.player.switch&p=11)
+
+```java
+public static void reverse(Stack<Integer> stk) {
+    if (stk.isEmpty()) {
+        return;
+    }
+    int last = popLast(stk);
+    reverse(stk);
+    stk.push(last);
+}
+
+public static int popLast(Stack<Integer> stk) {
+    if (stk.size() == 1) {
+        return stk.pop();
+    }
+    Integer curr = stk.pop();
+    int last = popLast(stk);
+    stk.push(curr);
+    return last;
+}
+```

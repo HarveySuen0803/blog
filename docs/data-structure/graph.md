@@ -108,7 +108,6 @@ public class Node {
         this.val = val;
     }
 }
-
 ```
 
 ```java
@@ -796,26 +795,39 @@ private static void dijkstra(Vertex src, List<Vertex> graph) {
 
 ```java
 public static Map<Node, Integer> dijkstra(Node node) {
-    Map<Node, Integer> distMap = new HashMap<>();
-    distMap.put(node, 0);
-    Set<Node> visited = new HashSet<>();
-    Node cur = getNearestUnvisitedNode(distMap, visited);
-    while (cur != null) {
-        Integer curDist = distMap.get(cur);
+    Map<Node, Integer> dists = new HashMap<>();
+    dists.put(node, 0);
+
+    PriorityQueue<Node> heap = new PriorityQueue<>((a, b) -> 
+        dists.getOrDefault(a, Integer.MAX_VALUE) - dists.getOrDefault(b, Integer.MAX_VALUE)
+    );
+    heap.offer(node);
+
+    Set<Node> visisted = new HashSet<>();
+    while (!heap.isEmpty()) {
+        Node cur = heap.poll();
+        if (visisted.contains(cur)) {
+            continue;
+        }
+
+        Integer curDist = dists.get(cur);
         for (Edge edge : cur.edges) {
+            if (visisted.contains(edge.tar)) {
+                continue;
+            }
             Node tar = edge.tar;
-            Integer tarDist = distMap.get(tar);
-            if (tarDist == null) {
-                tarDist = curDist + edge.weight;
-                distMap.put(tar, tarDist);
-            } else {
-                tarDist = Math.min(tarDist, curDist + edge.weight);
-                distMap.put(tar, tarDist);
+            Integer newTarDist = curDist + edge.weight;
+            Integer oldTarDist = dists.getOrDefault(tar, Integer.MAX_VALUE);
+
+            if (newTarDist < oldTarDist) {
+                dists.put(tar, newTarDist);
+                heap.offer(tar);
             }
         }
-        visited.add(node);
-        cur = getNearestUnvisitedNode(distMap, visited);
+
+        visisted.add(cur);
     }
-    return distMap;
+
+    return dists;
 }
 ```

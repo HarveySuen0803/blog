@@ -311,3 +311,86 @@ public static int jump(int[] nums) {
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202411191741452.png)
 
+# Cut Gold Bar
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501021705251.png)
+
+- [Video Explain 01:52:30](https://www.bilibili.com/video/BV13g41157hK/?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=10&spm_id_from=333.788.videopod.episodes)
+- [Article Explain](https://juejin.cn/post/7050107225355845668)
+
+```java
+public static int lessMoney(int[] nums) {
+    if (nums == null || nums.length == 0) {
+        return 0;
+    }
+    PriorityQueue<Integer> minQueue = new PriorityQueue<>();
+    for (int num : nums) {
+        minQueue.offer(num);
+    }
+    int res = 0;
+    while (minQueue.size() >= 2) {
+        int cur = minQueue.poll() + minQueue.poll();
+        res += cur;
+        minQueue.offer(cur);
+    }
+    return res;
+}
+```
+
+# IPO
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501021737519.png)
+
+- [Problem Description](https://leetcode.cn/problems/ipo/description/)
+- [Video Explain 02:02:45](https://www.bilibili.com/video/BV13g41157hK/?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&p=10&spm_id_from=333.788.videopod.episodes)
+- [Article Explain](https://juejin.cn/post/7050107225355845668#heading-8)
+
+```java
+public static class Node {
+    public int cost;
+    public int profit;
+
+    public Node() {
+        this.cost = 0;
+        this.profit = 0;
+    }
+
+    public Node(int cost, int profit) {
+        this.cost = cost;
+        this.profit = profit;
+    }
+}
+
+public static int findMaximizedCapital(int k, int funds, int[] profits, int[] costs) {
+    if (costs.length == 0) {
+        return funds;
+    }
+
+    PriorityQueue<Node> minHeap = new PriorityQueue<>((a, b) -> a.cost - b.cost);
+    PriorityQueue<Node> maxHeap = new PriorityQueue<>((a, b) -> b.profit - a.profit);
+    for (int i = 0; i < costs.length; i++) {
+        minHeap.offer(new Node(costs[i], profits[i]));
+    }
+    if (funds < minHeap.peek().cost) {
+        return funds;
+    }
+
+    int i = 0;
+    while (i < k && (!minHeap.isEmpty() || !maxHeap.isEmpty())) {
+        while (!minHeap.isEmpty() && funds >= minHeap.peek().cost) {
+            maxHeap.offer(minHeap.poll());
+        }
+        if (maxHeap.isEmpty()) {
+            return funds;
+        }
+        Node node = maxHeap.poll();
+        funds += node.profit;
+        i++;
+    }
+
+    return funds;
+}
+```
+
+# N Queen
+
