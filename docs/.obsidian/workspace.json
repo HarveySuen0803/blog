@@ -21,36 +21,6 @@
               "icon": "lucide-file",
               "title": "weibo"
             }
-          },
-          {
-            "id": "0c2a7506895d6a88",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "cpp/function.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "function"
-            }
-          },
-          {
-            "id": "bf96bfb9bf55e436",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "cpp/principle.md",
-                "mode": "source",
-                "backlinks": false,
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "principle"
-            }
           }
         ]
       }
@@ -136,33 +106,33 @@
   },
   "active": "0b232274d4ae0d25",
   "lastOpenFiles": [
-    "jvm/runtime-data-area.md",
-    "jvm/reference.md",
-    "jvm/optimization.md",
-    "jvm/gc.md",
-    "jvm/execution-engine.md",
-    "jvm/escape-analysis.md",
-    "jvm/class.md",
-    "jvm/utils.md",
-    "jvm/basic.md",
-    "restful/basic.md",
-    "restful/Basic.md",
+    "xxljob/basic0.md",
+    "zookeeper/basic0.md",
+    "webpack/webpack0.md",
+    "web/open-api0.md",
+    "web/mobile-web0.md",
+    "web/monaco-editor0.md",
+    "springboot/xxljob0.md",
+    "springboot/websocket0.md",
+    "springboot/web-flux0.md",
+    "springboot/lifecycle0.md",
+    "springboot/lettuce0.md",
+    "springboot/knife4j0.md",
+    "springboot/jwt0.md",
+    "springboot/junit0.md",
+    "springboot/jedis0.md",
+    "springboot/jdbc0.md",
+    "springboot/ioc0.md",
+    "springboot/hutool0.md",
+    "springboot/freemarker0.md",
+    "springboot/file-transimission0.md",
+    "springboot/event0.md",
+    "springboot/exception-handler0.md",
+    "springboot/elasticsearch0.md",
+    "springboot/docker0.md",
+    "springboot/devtools0.md",
+    "mysql/sharding0.md",
     "restful",
-    "node/node.md",
-    "node/basic.md",
-    "netty/protocol.md",
-    "netty/packet-problem.md",
-    "netty/option.md",
-    "netty/basic.md",
-    "xxljob/basic.md",
-    "webpack/webpack.md",
-    "tomcat/tomcat.md",
-    "interview/basic.md",
-    "interview/resume-01.md",
-    "interview/resume-04.md",
-    "interview/resume-02.md",
-    "git/git-refactor.md",
-    "hadoop/yarn.md",
     "cmake",
     "algorithm/image/Pasted image 20250102173733.png",
     "algorithm/image",
