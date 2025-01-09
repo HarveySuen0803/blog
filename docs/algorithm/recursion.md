@@ -813,3 +813,150 @@ public static int s(int[] nums, int l, int r) {
 }
 ```
 
+# Decode Ways
+
+[Problem Description](https://leetcode.cn/problems/decode-ways/description/)
+
+```java
+public static int numDecodings(String str) {
+    Stack<String> lv1 = new Stack<>();
+    List<String> lv2 = new ArrayList<>();
+    rec(str, 0, lv1, lv2);
+    System.out.println(lv2);
+    return lv2.size();
+}
+
+public static void rec(String str, int i, Stack<String> lv1, List<String> lv2) {
+    if (i == str.length()) {
+        cnt++;
+        lv2.add(concat(lv1));
+        return;
+    } else {
+        String num = str.substring(i, i + 1);
+        if (Objects.equals(num, "0")) {
+            return;
+        }
+
+        if (Integer.valueOf(num) <= 26) {
+            lv1.push(letter(num));
+            rec(str, i + 1, lv1, lv2);
+            lv1.pop();
+        }
+
+        if (i + 1 == str.length()) {
+            return;
+        }
+
+        num = str.substring(i, i + 2);
+        if (Integer.valueOf(num) <= 26) {
+            lv1.push(letter(num));
+            rec(str, i + 2, lv1, lv2);
+            lv1.pop();
+        }
+    }
+}
+
+public static String concat(List<String> strs) {
+    StringBuilder sb = new StringBuilder();
+    for (String str : strs) {
+        sb.append(str);
+    }
+    return sb.toString();
+}
+
+public static String letter(String str) {
+    return String.valueOf((char) (Integer.valueOf(str) + 'A' - 1));
+}
+
+public static String letter(char ch) {
+    return String.valueOf((char) ((ch - '0') + 'A' - 1));
+}
+
+public static void main(String[] args) {
+    System.out.println(numDecodings("226")); // 5, AAAA, AAK, AKA, KAA, KK
+}
+```
+
+# Decode Ways
+
+[Video Explain 01:41:00](https://www.bilibili.com/video/BV13g41157hK?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&spm_id_from=333.788.player.switch&p=11)
+
+```java
+public static int numDecodings(String str) {
+    return rec(str.toCharArray(), 0);
+}
+
+public static int rec(char[] chs, int i) {
+    int cnt = 0;
+    if (i == chs.length) {
+        cnt = 1;
+    } else if (chs[i] == '0') {
+        cnt = 0;
+    } else if (chs[i] == '1') {
+        cnt = rec(chs, i + 1);
+        if (i + 1 < chs.length) {
+            cnt += rec(chs, i + 2);
+        }
+    } else if (chs[i] == '2') {
+        cnt = rec(chs, i + 1);
+        if (i + 1 < chs.length && chs[i + 1] >= '0' && chs[i + 1] <= '6') {
+            cnt += rec(chs, i + 2);
+        }
+    } else {
+        cnt = rec(chs, i + 1);
+    }
+    return cnt;
+}
+```
+
+# Knapsack 0-1
+
+```java
+public static class Item {
+    public int idx;
+    public int val;
+    public int wt;
+
+    public Item(int idx, int wt, int val) {
+        this.idx = idx;
+        this.val = val;
+        this.wt = wt;
+    }
+}
+
+public static int select(Item[] items, int cap) {
+    return rec(items, 0, 0, cap);
+}
+
+public static int rec(Item[] items, int i, int curWt, int maxWt) {
+    if (i == items.length) {
+        return 0;
+    }
+    // 如果选择当前物品不会超重
+    if (items[i].wt + curWt <= maxWt) {
+        // 分为 选择当前物品 和 不选择当前物品 两种策略
+        return Math.max(
+            items[i].val + rec(items, i + 1, curWt + items[i].wt, maxWt),
+            rec(items, i + 1, curWt, maxWt)
+        );
+    } 
+    // 如果选择当前物品会超重
+    else {
+        // 只能 不选择当前物品
+        return rec(items, i + 1, curWt, maxWt);
+    }
+}
+
+public static void main(String[] args) {
+    Item[] items = new Item[]{
+        new Item(1, 4, 1600),
+        new Item(2, 8, 2400),
+        new Item(3, 5, 30),
+        new Item(4, 1, 10_000),
+    };
+    
+    System.out.println(select(items, 10));; // 12400
+}
+```
+
+

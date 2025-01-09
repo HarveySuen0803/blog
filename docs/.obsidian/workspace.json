@@ -4,41 +4,55 @@
     "type": "split",
     "children": [
       {
-        "id": "87b817ffc8f40f6c",
+        "id": "0541d4fb1d4fcfd0",
         "type": "tabs",
         "children": [
           {
-            "id": "0eb6126c05f80d4e",
+            "id": "0b232274d4ae0d25",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "algorithm/recursion.md",
+                "file": "system-design/weibo.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "recursion"
+              "title": "weibo"
             }
           },
           {
-            "id": "c8c8a2404110d115",
+            "id": "0c2a7506895d6a88",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "data-structure/stack.md",
+                "file": "cpp/function.md",
                 "mode": "source",
                 "backlinks": false,
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "stack"
+              "title": "function"
+            }
+          },
+          {
+            "id": "bf96bfb9bf55e436",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "cpp/principle.md",
+                "mode": "source",
+                "backlinks": false,
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "principle"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -69,7 +83,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "hano",
+                "query": "",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -79,24 +93,12 @@
               "icon": "lucide-search",
               "title": "Search"
             }
-          },
-          {
-            "id": "e182fac98cd1025e",
-            "type": "leaf",
-            "state": {
-              "type": "bookmarks",
-              "state": {},
-              "icon": "lucide-file",
-              "title": "Plugin no longer active"
-            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "09a176cbda932313",
@@ -112,10 +114,10 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "data-structure/stack.md"
+                "file": "system-design/weibo.md"
               },
               "icon": "lucide-list",
-              "title": "Outline of stack"
+              "title": "Outline of weibo"
             }
           }
         ]
@@ -132,36 +134,37 @@
       "graph:Open graph view": false
     }
   },
-  "active": "c8c8a2404110d115",
+  "active": "0b232274d4ae0d25",
   "lastOpenFiles": [
-    "algorithm/recursion.md",
-    "data-structure/stack.md",
-    "data-structure/string.md",
-    "os/basic.md",
-    "algorithm/backtracking.md",
-    "algorithm/greedy.md",
-    "java/string.md",
-    "data-structure/graph.md",
-    "gredd.md",
-    "distributed/raft.md",
+    "interview/basic.md",
+    "interview/resume-01.md",
+    "interview/resume-04.md",
+    "interview/resume-02.md",
+    "git/git-refactor.md",
+    "hadoop/yarn.md",
+    "hadoop/mapreduce.md",
+    "hadoop/hdfs.md",
+    "hadoop/Basic.md",
+    "hadoop/basic.md",
+    "git/git.md",
+    "geek/basic.md",
+    "etcd/basic.md",
     "architecture/availability.md",
-    "springboot/ioc.md",
-    "data-structure/trie-tree.md",
-    "data-structure/huffman-tree.md",
+    "system-design/weibo.md",
+    "cpp/basic.md",
+    "cpp/function.md",
+    "cpp/principle.md",
+    "rabbitmq/reliability.md",
+    "rabbitmq/exchange.md",
+    "rabbitmq/delayed-message.md",
+    "rabbitmq/cluster.md",
+    "rabbitmq/basic.md",
+    "python/module.md",
+    "python/odule.md",
+    "python/io.md",
+    "cmake",
     "algorithm/image/Pasted image 20250102173733.png",
     "algorithm/image",
-    "network/IO.md",
-    "distributed/consistency.md",
-    "interview/resume-01.md",
-    "distributed/waro.md",
-    "distributed/ZAB.md",
-    "distributed/zab.md",
-    "distributed/transaction.md",
-    "distributed/Transaction.md",
-    "distributed/skywalking.md",
-    "distributed/sentinel.md",
-    "distributed/seata.md",
-    "distributed/rest-template.md",
     "system-design/image/Pasted image 20241230170144.png",
     "system-design/image",
     "java/lambda.html",
@@ -171,7 +174,6 @@
     "web",
     "vue",
     "uniapp",
-    "typescript",
     "Draft/image/Pasted image 20241225143721.png",
     "Draft/image/Pasted image 20241225142337.png",
     "Draft/image/Pasted image 20241225142310.png",

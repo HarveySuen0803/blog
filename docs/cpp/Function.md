@@ -449,3 +449,173 @@ if (is_subset) {
     std::cout << "set2 is not a subset of set1." << std::endl;
 }
 ```
+
+# std::unique_ptr
+
+std::unique_ptr 是一个独占所有权的智能指针，确保某块内存只有一个指针拥有，生命周期由这个指针控制。
+
+- 不可复制，但可以转移所有权，自动释放资源。
+
+```cpp
+class MyClass {
+public:
+    MyClass() { std::cout << "MyClass Constructor" << std::endl; }
+    ~MyClass() { std::cout << "MyClass Destructor" << std::endl; }
+    void sayHello() { std::cout << "Hello from MyClass!" << std::endl; }
+};
+
+int main() {
+    std::unique_ptr<MyClass> ptr1 = std::make_unique<MyClass>(); // 创建智能指针
+    ptr1->sayHello();
+
+    // std::unique_ptr<MyClass> ptr2 = ptr1; // 错误：unique_ptr 不支持复制
+
+    std::unique_ptr<MyClass> ptr2 = std::move(ptr1); // 转移所有权
+    if (!ptr1) {
+        std::cout << "ptr1 is now nullptr" << std::endl;
+    }
+    ptr2->sayHello();
+
+    return 0; // 离开作用域时，ptr2 自动释放内存
+}
+```
+
+# std::shared_ptr
+
+std::shared_ptr 是一种共享所有权的智能指针，可以被多个指针共享同一块内存。
+
+- 内部使用引用计数（reference count）管理资源，当最后一个 shared_ptr 被销毁时，释放内存。
+
+```cpp
+class MyClass {
+public:
+    MyClass() { std::cout << "MyClass Constructor" << std::endl; }
+    ~MyClass() { std::cout << "MyClass Destructor" << std::endl; }
+};
+
+int main() {
+    std::shared_ptr<MyClass> ptr1 = std::make_shared<MyClass>(); // 创建 shared_ptr
+    std::shared_ptr<MyClass> ptr2 = ptr1; // 共享所有权
+
+    std::cout << "Use count: " << ptr1.use_count() << std::endl; // 引用计数为 2
+
+    ptr1.reset(); // ptr1 放弃所有权
+    std::cout << "Use count after ptr1.reset(): " << ptr2.use_count() << std::endl;
+
+    return 0; // 离开作用域时，ptr2 释放内存
+}
+```
+
+---
+
+**示例：数据结构中共享节点**
+
+std::shared_ptr 常用于图或链表等数据结构中，多个节点可能共享相同的子节点。
+
+```cpp
+class Node {
+public:
+    int value;
+    std::vector<std::shared_ptr<Node>> children;
+
+    Node(int val) : value(val) { std::cout << "Node created: " << val << "\n"; }
+    ~Node() { std::cout << "Node destroyed: " << value << "\n"; }
+};
+
+int main() {
+    auto root = std::make_shared<Node>(1);
+    auto child1 = std::make_shared<Node>(2);
+    auto child2 = std::make_shared<Node>(3);
+
+    root->children.push_back(child1);
+    root->children.push_back(child2);
+
+    // child1 和 child2 也可以单独使用
+    std::cout << "Root's children count: " << root->children.size() << "\n";
+    return 0; // 所有节点在这里被释放
+}
+```
+
+---
+
+**示例：工厂模式和多模块共享**
+
+当对象由一个工厂函数创建，并在多个模块中共享时，std::shared_ptr 是理想选择。
+
+```cpp
+class Resource {
+public:
+    Resource() { std::cout << "Resource acquired\n"; }
+    ~Resource() { std::cout << "Resource released\n"; }
+};
+
+std::shared_ptr<Resource> createResource() {
+    return std::make_shared<Resource>();
+}
+
+int main() {
+    auto resource1 = createResource();
+    auto resource2 = resource1; // 共享同一资源
+
+    std::cout << "Use count: " << resource1.use_count() << "\n"; // 引用计数
+    return 0;
+}
+```
+
+# std::weak_ptr
+
+std::weak_ptr 是一种弱引用指针，它不增加引用计数，通常用来解决 shared_ptr 循环引用 的问题。
+
+- 不管理资源，只能通过 lock() 方法获取 shared_ptr，常用于观察者模式或打破循环引用。
+
+```cpp
+class Node {
+public:
+    std::shared_ptr<Node> next; // 循环引用
+    std::weak_ptr<Node> prev;   // 弱引用，避免循环引用
+
+    ~Node() { std::cout << "Node Destructor" << std::endl; }
+};
+
+int main() {
+    std::shared_ptr<Node> node1 = std::make_shared<Node>();
+    std::shared_ptr<Node> node2 = std::make_shared<Node>();
+
+    node1->next = node2;       // node1 指向 node2
+    node2->prev = node1;       // node2 弱引用 node1
+
+    return 0; // 离开作用域时，内存正常释放
+}
+```
+
+---
+
+**示例：解决循环引用问题**
+
+```cpp
+class A;
+class B;
+
+class A {
+public:
+    std::shared_ptr<B> b_ptr; // 循环引用
+    ~A() { std::cout << "A Destructor" << std::endl; }
+};
+
+class B {
+public:
+    std::shared_ptr<A> a_ptr; // 循环引用
+    ~B() { std::cout << "B Destructor" << std::endl; }
+};
+
+int main() {
+    std::shared_ptr<A> a = std::make_shared<A>();
+    std::shared_ptr<B> b = std::make_shared<B>();
+
+    a->b_ptr = b;
+    b->a_ptr = a;
+
+    return 0; // 循环引用导致内存泄漏，将 A 或 B 其中一个引用换成 std::weak_ptr 即可解决问题
+}
+```
+

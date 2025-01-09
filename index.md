@@ -12,10 +12,10 @@ hero:
   actions:
     - theme: brand
       text: Backend
-      link: /docs/SpringBoot/Basic
+      link: /docs/springboot/basic
     - theme: alt
       text: Frontend
-      link: /docs/Vue/Basic
+      link: /docs/vue/basic
 
 features:
   - icon:

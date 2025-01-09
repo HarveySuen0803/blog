@@ -51,14 +51,13 @@ export default withMermaid({
     logo: '/vitepress-logo-mini.svg',
     nav: [
       {text: 'Home', link: '/'},
-      {text: 'Java', link: '/docs/Java/Basic'},
-      {text: 'JVM', link: '/docs/JVM/Basic'},
-      {text: 'JUC', link: '/docs/JUC/Basic'},
-      {text: 'SpringBoot', link: '/docs/SpringBoot/Basic'},
-      {text: 'Distributed', link: '/docs/Distributed/Basic'},
-      {text: 'MySQL', link: '/docs/MySQL/Basic'},
-      {text: 'Redis', link: '/docs/Redis/Basic'},
-      {text: 'RabbitMQ', link: '/docs/RabbitMQ/Basic'}
+      {text: 'Java', link: '/docs/java/basic'},
+      {text: 'JVM', link: '/docs/jvm/basic'},
+      {text: 'JUC', link: '/docs/juc/basic'},
+      {text: 'SpringBoot', link: '/docs/springboot/basic'},
+      {text: 'Distributed', link: '/docs/distributed/basic'},
+      {text: 'MySQL', link: '/docs/mysql/basic'},
+      {text: 'Redis', link: '/docs/redis/basic'}
     ],
     sidebar: getAllSidebar(),
     socialLinks: [
