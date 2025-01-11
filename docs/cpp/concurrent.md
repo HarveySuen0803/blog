@@ -42,6 +42,33 @@ int main() {
 }
 ```
 
+detach() 是 std::thread 的一个成员函数，用于将线程与当前的 std::thread 对象分离，转为后台线程运行，它的生命周期由操作系统管理，而不再由 std::thread 对象管理，即便 std::thread 已经提前效果，也不会影响到分离后到线程。线程会在后台继续运行，直到任务完成后，其资源会被系统自动回收。
+
+```cpp
+void print_numbers() {
+    for (int i = 1; i <= 5; ++i) {
+        std::cout << "Number: " << i << std::endl;
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+}
+
+int main() {
+    // 创建线程
+    std::thread t(print_numbers);
+
+    // 将线程分离
+    t.detach();
+
+    // 主线程继续执行
+    std::cout << "Main thread continues..." << std::endl;
+
+    // 等待一段时间以观察后台线程输出
+    std::this_thread::sleep_for(std::chrono::seconds(6));
+
+    return 0;
+}
+```
+
 ### std::mutex
 
 在多线程中，多个线程可能会访问共享数据，导致数据竞争。为了解决这些问题，可以使用互斥锁（std::mutex）。
@@ -137,6 +164,33 @@ int main() {
     return 0;
 }
 ```
+
+std::unique_lock 可以基于 C++ 的 RAII（Resource Acquisition Is Initialization）机制自动管理锁的生命周期，从而实现锁的自动释放。
+
+```cpp
+std::mutex mtx;
+
+void critical_section(int thread_id) {
+    std::unique_lock<std::mutex> lock(mtx);  // 加锁
+    // 临界区代码
+    std::cout << "Thread " << thread_id << " is in the critical section.\n";
+    // 不需要显式调用 lock.unlock()，作用域结束时会自动释放锁
+}
+
+int main() {
+    std::thread t1(critical_section, 1);
+    std::thread t2(critical_section, 2);
+
+    t1.join();
+    t2.join();
+
+    return 0;
+}
+```
+
+- 每个线程进入 critical_section 函数时，创建一个 std::unique_lock 对象并加锁。
+- 在函数结束时，std::unique_lock 对象析构，自动释放锁。
+- 不同线程依次进入临界区，避免数据竞争。
 
 std::unique_lock 可以转移锁的所有权。
 

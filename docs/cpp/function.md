@@ -619,3 +619,147 @@ int main() {
 }
 ```
 
+# std::bind
+
+std::bind 用于创建一个绑定的函数对象，它可以将函数的部分参数固定，生成一个新的可调用对象。这种技术称为“绑定”或“部分应用”。
+
+使用 std::bind 绑定普通函数：
+
+```cpp
+void print_sum(int a, int b) {
+    std::cout << "Sum: " << a + b << std::endl;
+}
+
+int main() {
+    // 使用 std::bind 绑定第一个参数为 10，std::placeholders::_1 表示第一个参数
+    auto bound_function = std::bind(print_sum, 10, std::placeholders::_1);
+
+    // 调用时只需要提供第二个参数
+    bound_function(20); // 输出: Sum: 30
+
+    return 0;
+}
+```
+
+使用 std::bind 绑定成员函数：
+
+```cpp
+class Printer {
+public:
+    void print_message(const std::string& message) const {
+        std::cout << "Message: " << message << std::endl;
+    }
+};
+
+int main() {
+    Printer printer;
+
+    // 绑定成员函数，实例对象作为第一个参数
+    auto bound_function = std::bind(&Printer::print_message, &printer, std::placeholders::_1);
+
+    // 调用时传入剩余参数
+    bound_function("Hello, World!"); // 输出: Message: Hello, World!
+
+    return 0;
+}
+```
+
+使用 std::placeholders 改变函数参数顺序：
+
+```cpp
+void print_order(int x, int y) {
+    std::cout << "x: " << x << ", y: " << y << std::endl;
+}
+
+int main() {
+    // 交换参数顺序
+    auto bound_function = std::bind(print_order, std::placeholders::_2, std::placeholders::_1);
+
+    // 调用时顺序被调整
+    bound_function(10, 20); // 输出: x: 20, y: 10
+
+    return 0;
+}
+```
+
+# std::function
+
+std::function 是一个泛型函数封装器，可以用来存储、传递和调用任意可调用对象（如普通函数、lambda 表达式、函数指针或仿函数）。
+
+使用 std::function 接收普通函数：
+
+```cpp
+void greet(const std::string& name) {
+    std::cout << "Hello, " << name << "!" << std::endl;
+}
+
+int main() {
+    // 定义一个 std::function 存储普通函数
+    std::function<void(const std::string&)> func = greet;
+
+    // 调用 std::function
+    func("World"); // 输出: Hello, World!
+
+    return 0;
+}
+```
+
+使用 std::function 接收成员函数：
+
+```cpp
+class Printer {
+public:
+    void print(const std::string& message) const {
+        std::cout << "Message: " << message << std::endl;
+    }
+};
+
+int main() {
+    Printer printer;
+
+    // 使用 std::bind 将成员函数绑定到 std::function
+    std::function<void(const std::string&)> func = std::bind(&Printer::print, &printer, std::placeholders::_1);
+
+    // 调用 std::function
+    func("Hello, World!"); // 输出: Message: Hello, World!
+
+    return 0;
+}
+```
+
+使用 std::function 接收 lambda 表达式：
+
+```cpp
+int main() {
+    // 定义一个 std::function 存储 lambda 表达式
+    std::function<int(int, int)> func = [](int a, int b) {
+        return a + b;
+    };
+
+    // 调用 std::function
+    std::cout << "Result: " << func(10, 20) << std::endl; // 输出: Result: 30
+
+    return 0;
+}
+```
+
+使用 std::function 接收函数对象：
+
+```cpp
+struct Multiply {
+    int operator()(int a, int b) const {
+        return a * b;
+    }
+};
+
+int main() {
+    // 定义一个 std::function 存储函数对象
+    std::function<int(int, int)> func = Multiply();
+
+    // 调用 std::function
+    std::cout << "Result: " << func(10, 20) << std::endl; // 输出: Result: 200
+
+    return 0;
+}
+```
+

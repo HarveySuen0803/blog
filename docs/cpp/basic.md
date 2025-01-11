@@ -1,4 +1,4 @@
-### 输入流
+# 输入流
 
 cin 在读取数据时默认会忽略空白字符（如空格、换行符和制表符）作为分隔符，并在遇到空格或换行符时停止读取。这适用于基本的输入操作，如读取整数、浮点数和字符串。
 
@@ -13,11 +13,11 @@ cout << "You entered: " << word << endl;
 ```
 
 ```
-### Input ###
+# Input ###
 
 Hello World!
 
-### Output ###
+# Output ###
 
 Enter a word: Hello
 You entered: Hello
@@ -33,17 +33,17 @@ cout << "You entered: " << sentence << endl;
 ```
 
 ```
-### Input ###
+# Input ###
 
 Hello World!
 
-### Output ###
+# Output ###
 
 Enter a sentence: Hello World!
 You entered: Hello World!
 ```
 
-### 输入流状态
+# 输入流状态
 
 输入流有四种主要状态：
 
@@ -88,7 +88,7 @@ cout << "Total sum: " << sum << endl;
 ```
 
 ```
-### Input ###
+# Input ###
 
 Enter integers to sum them up. Type 'Ctrl+D' (Linux/macOS) or 'Ctrl+Z' (Windows) to finish.
 Enter a number: 10
@@ -98,7 +98,7 @@ Invalid input. Please enter a valid integer.
 Enter a number: 30
 Enter a number: (Ctrl+D or Ctrl+Z)
 
-### Output ###
+# Output ###
 
 Enter integers to sum them up. Type 'Ctrl+D' (Linux/macOS) or 'Ctrl+Z' (Windows) to finish.
 Enter a number: 10
@@ -110,7 +110,7 @@ Enter a number: End of input detected. Exiting...
 Total sum: 60
 ```
 
-### 缓冲区
+# 缓冲区
 
 缓冲区是一个中间存储区域，用来临时存储从输入设备读取的数据或即将输出到输出设备的数据。它的主要作用是提高性能，因为与硬件设备直接交互的操作相对耗时。
 
@@ -125,7 +125,7 @@ Total sum: 60
 - 如果程序正常结束（例如 return 0），缓冲区也会被自动刷新。
 - 也可以手动调用 std::flush 来强制刷新输出缓冲区。
 
-### 缓冲区的工作流程
+# 缓冲区的工作流程
 
 ```cpp
 char c1, c2;
@@ -139,7 +139,7 @@ cout << "First: " << c1 << ", Second: " << c2 << endl;
 - cin >> c1 读取第一个字符 A，cin >> c2 读取第二个字符 B。
 - 缓冲区在读取后清空。
 
-### 手动刷新缓冲区
+# 手动刷新缓冲区
 
 延迟输出：
 
@@ -166,11 +166,11 @@ cout << "World!" << endl;
 Hello, （等待 2 秒后）World!
 ```
 
-### 缓冲区的残留问题
+# 缓冲区的残留问题
 
 缓冲区残留问题指的是，当你从标准输入（如键盘）中读取数据时，输入缓冲区可能会保留未处理的字符（如换行符 \n、空格等），这些残留字符可能会导致后续的输入操作行为异常。
 
-#### cin 和 getline() 混用时的缓冲区残留
+## cin 和 getline() 混用时的缓冲区残留
 
 ```cpp
 int number;
@@ -186,12 +186,12 @@ cout << "Number: " << number << ", Line: " << line << endl;
 ```
 
 ```
-### Input ###
+# Input ###
 
 42
 Hello, World!
 
-### Output ###
+# Output ###
 
 Enter a number: 42
 Enter a line: Number: 42, Line:
@@ -201,7 +201,7 @@ Enter a line: Number: 42, Line:
 - 换行符 \n 仍然留在输入缓冲区中。
 - 当 getline(cin, line) 被调用时，它会直接读取缓冲区中的换行符，认为用户输入了一整行空行，结果 line 为空。
 
-#### 连续使用 cin 读取字符或字符串
+## 连续使用 cin 读取字符或字符串
 
 ```cpp
 char c1, c2;
@@ -216,12 +216,12 @@ cout << "First: " << c1 << ", Second: " << c2 << endl;
 ```
 
 ```
-### Input ###
+# Input ###
 
 A
 B
 
-### Output ###
+# Output ###
 
 Enter the first character: A
 Enter the second character: B
@@ -232,7 +232,7 @@ First: A, Second: B
 - 第二次调用 cin >> c2 时，它会跳过换行符，等待用户输入新的字符。
 - 这可能会给用户带来困惑，因为程序没有明显提示换行符的作用。
 
-#### 使用 cin.ignore() 丢弃残留字符
+## 使用 cin.ignore() 丢弃残留字符
 
 ```cpp
 cin.ignore(1000, '\n');  // 丢弃缓冲区中最多 1000 个字符，直到遇到换行符
@@ -257,7 +257,7 @@ getline(cin, line);  // 正常读取一整行
 cout << "Number: " << number << ", Line: " << line << endl;
 ```
 
-### 左值
+# 左值
 
 左值是在程序运行期间有具体存储地址的对象，表示一个可寻址的实体。通常是变量、数组元素或某些返回引用的表达式。
 
@@ -294,7 +294,7 @@ const int& ref3 = 30; // success
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412151209277.png)
 
-### 右值
+# 右值
 
 右值是在程序运行时没有存储地址的临时值。右值通常是表达式的计算结果或字面值。
 
@@ -323,7 +323,7 @@ std::cout << r;    // 输出 10
 ```cpp
 int x = 10;
 // int&& r1 = x;       // 错误：右值引用不能直接绑定左值
-int&& r2 = std::move(x); // 正确：std::move 将 x 转为右值
+int&& r2 = std::move(x); // 正确：std::move 将左值 x 转为右值
 ```
 
 右值通常会在表达式求值后销毁，但通过右值引用可以延长其生命周期。
@@ -485,7 +485,7 @@ File f3 is now open
 File closed
 ```
 
-### 自动推导类型
+# 自动推导类型
 
 auto 用于自动推导变量的类型。它让编译器根据变量的初始化表达式，自动推断变量的类型，简化代码编写。
 
@@ -570,7 +570,7 @@ cout << "y: " << y << endl;
 - decltype(x) 推导出 const int，所以 a 是一个 const 类型变量，不能修改。
 - decltype((y)) 推导出 int&（引用），因为 y 是通过括号传递的，decltype 会推导为引用类型。
 
-### 整数类型提升
+# 整数类型提升
 
 当执行表达式计算时，所有小于 int 大小的整型类型（如 char, unsigned char, short, unsigned short）都会被提升为至少 int 或 unsigned int 类型，这种行为可以确保计算的类型有足够的范围和精度。
 
@@ -585,7 +585,7 @@ auto res = c1 + c2 + s1;
 std::cout << "type: " << typeid(res).name() << std::endl; // 'i' 表示 int
 ```
 
-### size_t
+# size_t
 
 size_t 是一种无符号整数类型，因此不会出现负值，专门用于表示 对象的大小 或 数组的索引。
 
@@ -637,7 +637,7 @@ size_t length = strlen(str); // strlen 返回 size_t
 std::cout << "Length of the string: " << length << std::endl;
 ```
 
-### typedef
+# typedef
 
 typedef 用于为现有类型创建一个新的 类型别名。它通过为复杂的类型定义一个简洁的名字，提升代码的可读性和可维护性。
 
@@ -718,7 +718,7 @@ int main() {
 }
 ```
 
-### using
+# using
 
 在 C++11 中，引入了 using 关键字，它可以替代 typedef，并且在定义复杂模板类型别名时更加简洁。
 
@@ -750,7 +750,7 @@ int main() {
 }
 ```
 
-### 自动类型转换
+# 自动类型转换
 
 自动类型转换是由编译器完成的，当不涉及潜在的数据丢失或行为问题时，编译器会自动将一种类型转换为另一种兼容类型。
 
@@ -768,11 +768,11 @@ int ascii = c;  // 'A' 的 ASCII 值为 65
 cout << "ASCII of 'A': " << ascii << endl;  // 输出：65
 ```
 
-### 强制类型转换
+# 强制类型转换
 
 强制类型转换是由程序员显式指定的类型转换，用于解决类型不兼容或编译器无法自动处理的情况。
 
-通过 () 实现强制类型转换：
+1. C 风格的强制类型转换：
 
 ```cpp
 double pi = 3.14159;
@@ -781,7 +781,9 @@ double pi = 3.14159;
 int truncatedPi = (int) pi;
 ```
 
-通过 static_cast 实现强制类型转换：
+2. C++ 风格的强制类型转换：
+
+- 使用 static_cast, dynamic_cast, const_cast, reinterpret_cast 进行类型转换。
 
 ```cpp
 double pi = 3.14159;
@@ -790,9 +792,118 @@ double pi = 3.14159;
 int truncatedPi = static_cast<int>(pi);
 ```
 
-通过 reinterpret_casti 实现强制类型转换：
+# static_cast
 
-- 与 static_cast 相比，reinterpret_cast 提供了更底层、更直接的类型转换功能，但使用不当可能导致未定义行为，因此需要谨慎使用。
+static_cast 会在编译时验证源类型和目标类型之间是否可以合法地进行转换（例如：是否兼容或是否可以隐式转换），一旦通过编译，static_cast 在运行时不会进行任何额外的类型检查，转换操作直接执行。
+
+```cpp
+class Base {};
+class Derived : public Base {};
+
+int main() {
+    Base* base = new Base();
+    Derived* derived = static_cast<Derived*>(base); // 编译通过，源类型与目标类型兼容
+    return 0;
+}
+```
+
+```cpp
+int main() {
+    Unrelated* unrelated = nullptr;
+    int* intPtr = static_cast<int*>(unrelated); // 编译错误：类型不兼容
+    return 0;
+}
+```
+
+static_cast 不会验证指针在运行时的实际类型，只根据编译时的信息进行类型转换。这意味着，如果使用 static_cast 将基类指针转换为派生类指针，但指针实际并不指向派生类对象，可能导致 未定义行为。
+
+```cpp
+class Base {
+public:
+    virtual ~Base() = default;
+};
+
+class Derived : public Base {};
+
+int main() {
+    Base* base = new Base(); // 基类指针指向基类对象
+    Derived* derived = static_cast<Derived*>(base); // 编译通过，但运行时不安全
+
+    // 未定义行为：尝试使用 derived
+    return 0;
+}
+```
+
+- 编译器只验证 Base* 和 Derived* 之间的转换是否合理，而不会检查 base 是否指向一个 Derived 对象。
+- 运行时 base 实际指向 Base 对象，强制转换为 Derived* 后访问派生类特有成员会导致未定义行为。
+
+# dynamic_cast
+
+dynamic_cast 适用于基类与派生类之间的多态类型转换，不仅仅会在编译时检查，也会在运行时检查。
+
+- 编译时检查：
+  - 源类型和目标类型之间必须存在继承关系。
+  - 源类型必须是指针或引用类型。
+  - 源类型的基类必须包含虚函数表（即 RTTI 支持）。
+- 运行时检查：
+  - 如果转换失败，并且是指针类型，则会返回 nullptr。
+  - 如果转换失败，并且是引用类型，则会抛出 std::bad_cast 异常。
+
+```cpp
+class Base {
+public:
+    virtual ~Base() = default; // 必须有虚函数，支持运行时类型信息（RTTI）
+};
+
+class Derived : public Base {};
+
+int main() {
+    Base* base = new Base(); // 基类指针指向基类对象
+    Derived* derived = dynamic_cast<Derived*>(base); // 运行时检查
+
+    if (derived == nullptr) {
+        std::cout << "Conversion failed: base is not a Derived." << std::endl;
+    }
+
+    delete base;
+    return 0;
+}
+```
+
+- 编译器会报错，因为 Base 没有虚函数，无法支持运行时类型信息（RTTI）。
+
+# const_cast
+
+const_cast 用于去除对象的 const 限定符（如调用接受非常量参数的函数），添加或去除 volatile 限定符。
+
+- 只能用于指针或引用类型。
+- 不能用于修改常量对象的值，否则行为未定义。
+- 运行时没有额外开销。
+
+```cpp
+void modify(int& x) {
+    x = 42; // 修改 x 的值
+}
+
+int main() {
+    const int value = 10;
+    const int* constPtr = &value;
+
+    // 去除 const 限定符
+    int* nonConstPtr = const_cast<int*>(constPtr);
+    *nonConstPtr = 20; // 行为未定义，试图修改常量对象
+
+    int nonConstValue = 30;
+    modify(const_cast<int&>(nonConstValue)); // 合法，修改非常量对象
+    std::cout << "nonConstValue: " << nonConstValue << std::endl;
+
+    return 0;
+}
+```
+
+# reinterpret_cast
+
+reinterpret_cast 提供了更底层、更直接的类型转换功能，不进行类型检查，主要用于底层系统编程或操作硬件地址，使用不当可能导致未定义行为，因此需要谨慎使用。
 
 ```cpp
 int number = 42;
@@ -808,7 +919,7 @@ int* new_int_ptr = reinterpret_cast<int*>(void_ptr);
 cout << "Value: " << *new_int_ptr << endl;  // 输出：42
 ```
 
-### 命名空间
+# 命名空间
 
 命名空间（Namespace）是 C++ 中的一种用来组织代码和避免命名冲突的机制。它的主要作用是将名字（变量名、函数名、类名等）划分到不同的“空间”中，从而使得多个名字可以共存而不会冲突。
 
@@ -874,7 +985,7 @@ int main() {
 }
 ```
 
-### 宏定义
+# 宏定义
 
 宏定义是 C++ 中的一个预处理指令，用于定义一个标识符或表达式。这些宏在程序编译前会由预处理器替换为指定的值或代码片段。宏定义类似于文本替换，编译器并不会检查宏定义的语法正确性。
 
@@ -923,7 +1034,7 @@ int main() {
 - 全局作用域，容易冲突
 - 展开后代码难以调试
 
-### 预处理指令
+# 预处理指令
 
 C++ 中的预处理指令（Preprocessor Directives）是以 # 开头的特殊指令，主要用于在代码被编译之前进行预处理。
 
@@ -1026,7 +1137,7 @@ int main() {
 ```
 
 ```
-### Compilation Period Output ###
+# Compilation Period Output ###
 
 Compiling this file...
 ```
@@ -1035,11 +1146,11 @@ Compiling this file...
 
 `#warning` 生成编译警告（某些编译器支持）。
 
-### constexpr
+# constexpr
 
 constexpr 是 C++11 引入的一种关键字，用于表示一个表达式或函数的值可以在编译时计算，它可以用来定义常量、函数或构造函数，使程序更加高效，同时提供编译时的类型检查。
 
-#### 编译期常量
+## 编译期常量
 
 ```cpp
 constexpr double PI = 3.14159;  // 定义一个常量
@@ -1056,7 +1167,7 @@ int main() {
 - PI 是一个 constexpr 常量，它的值在编译期已确定。
 - 编译器会直接将 area 的值计算为 78.5398，提高了运行时效率。
 
-#### 编译期函数
+## 编译期函数
 
 ```cpp
 // 定义一个 constexpr 函数
@@ -1094,7 +1205,7 @@ constexpr int result = square(10);  // 编译期计算
 int runtimeResult = square(runtimeValue);  // 运行时计算
 ```
 
-#### 编译期对象
+## 编译期对象
 
 ```cpp
 class Circle {
@@ -1124,11 +1235,11 @@ int main() {
 - 当 Circle 对象在编译时创建时，相关计算也会在编译期完成。
 - 同一个 constexpr 函数在运行时仍然可以使用。
 
-#### 编译器优化
+## 编译器优化
 
 constexpr 提供编译期计算能力，但编译器可能对非 constexpr 的代码也进行类似的优化。即使不用 constexpr，只要程序中出现常量表达式，编译器也可能在编译时优化。
 
-### inline
+# inline
 
 inline 用于建议编译器将函数的调用替换为函数体的代码，它的作用是减少函数调用的开销，特别是在频繁调用的小函数中。
 
@@ -1153,7 +1264,7 @@ inline 是一个建议，编译器可能会忽略内联请求：
 
 inline 内联函数的定义需要出现在调用点之前，否则会导致链接错误，通常内联函数的实现放在头文件中。
 
-### 头文件函数
+# 头文件函数
 
 ```cpp
 // main.cpp
@@ -1193,7 +1304,7 @@ void sayHello(std::string name) {
 }
 ```
 
-### 头文件保护
+# 头文件保护
 
 在声明头文件时，一般都会采用 `#ifndef` 和 `#define` 的组合，确保头文件的内容只会被编译一次。
 
@@ -1216,7 +1327,7 @@ void sayHello();
 "main.cpp" include "a.cpp", "b.cpp" // main.cpp 重复导入了 common.h，报错提示 multiple definition of `sayHello`
 ```
 
-### 内存分区
+# 内存分区
 
 C++ 的内存分区是指程序运行时内存的组织方式，通常分为以下几个主要区域：
 
@@ -1244,7 +1355,7 @@ C++ 的内存分区是指程序运行时内存的组织方式，通常分为以�
 +--------------------+
 ```
 
-#### 代码区
+## 代码区
 
 代码区是程序运行时内存的一部分，用于存储程序编译后的可执行机器指令。它是只读的，主要为了：
 
@@ -1372,7 +1483,7 @@ Hello from process 12346
 
 函数的机器指令会始终留在代码区中。调用函数时，程序通过跳转指令（例如 call 或 jmp）去执行代码区中对应的机器指令。
 
-#### 全局区
+## 全局区
 
 全局区是内存分区中的一部分，用于存储全局变量、静态变量和常量等数据。它贯穿程序的整个运行周期，由操作系统在程序启动时分配，并在程序结束时释放。
 
@@ -1412,7 +1523,7 @@ Address of globalConst: 0x60104C
 - 默认值：未初始化的全局和静态变量默认初始化为零。
 - 线程安全：全局变量通常不是线程安全的，需注意多线程程序中的数据访问问题。
 
-#### 堆区
+## 堆区
 
 堆区是 C++ 中用来存储动态分配内存的区域，程序运行时由程序员显式分配和释放内存（如 new 和 delete）。堆区内存的大小和生命周期由程序员控制，适用于需要灵活管理内存的数据结构，如动态数组、链表和对象。
 
@@ -1461,7 +1572,7 @@ void heapExample() {
 }
 ```
 
-#### 栈区
+## 栈区
 
 栈区是程序运行时用于存储临时数据的一部分内存区域。它由编译器自动管理，主要用于存储局部变量、函数参数、返回地址以及部分中间计算结果。
 
@@ -1501,7 +1612,7 @@ int main() {
 - 输出值可能是随机值或程序崩溃。
 - 应该使用堆区分配内存返回数据，或返回值而非指针。
 
-### 静态变量
+# 静态变量
 
 局部静态变量 和 全局静态变量 都是用 static 关键字修饰的，但它们在存储位置、作用域和使用场景上有所不同。
 
@@ -1545,7 +1656,7 @@ int main() {
 - globalCounter 是全局静态变量，存储在全局区，生命周期贯穿整个程序。
 - 它的作用域仅限于当前文件（不可在其他文件中访问）。
 
-### 函数调用过程
+# 函数调用过程
 
 1. 准备调用
 
@@ -1570,7 +1681,7 @@ int main() {
 - 清理栈帧，恢复调用者的状态。
 - 跳转到调用者的下一条指令（返回地址存储在栈中）。
 
-### 地址
+# 地址
 
 低地址：靠近内存的起始地址，通常用于存储代码和全局变量。
 
@@ -1581,7 +1692,7 @@ int main() {
 - 堆区：从低地址向高地址增长。
 - 栈区：从高地址向低地址增长。
 
-### 内存数据残留问题
+# 内存数据残留问题
 
 内存数据残留是指，当程序释放或覆盖内存区域时，内存中原有的数据仍可能存在，直到被其他数据覆盖。这种问题可能导致安全隐患（如数据泄露）或意外行为（如使用未初始化变量或未正确清空的内存）。
 
@@ -1589,7 +1700,7 @@ int main() {
 
 通过初始化变量、合理管理内存和使用工具检测，可以有效减少内存数据残留问题的风险。
 
-#### 未初始化变量
+## 未初始化变量
 
 未初始化变量，栈区或堆区分配的变量在初始化前可能包含随机数据。
 
@@ -1600,7 +1711,7 @@ void uninitializedVariable() {
 }
 ```
 
-#### 悬垂指针
+## 悬垂指针
 
 释放后访问的内存（悬垂指针），动态分配的内存被释放后，原内存内容未被清理，可能被意外访问。
 
@@ -1622,7 +1733,7 @@ delete p;
 p = nullptr;
 ```
 
-#### 数组越界
+## 数组越界
 
 数组或缓冲区越界访问，在数组或缓冲区范围外读取内存，可能获取到残留数据。
 
@@ -1643,7 +1754,7 @@ std::vector<int> vec = {1, 2, 3};
 std::cout << vec.at(5) << std::endl; // 抛出异常
 ```
 
-#### 未清理敏感数据
+## 未清理敏感数据
 
 未清理的敏感数据，如密码或密钥在使用后未清理，可能被恶意程序利用。
 
@@ -1664,7 +1775,7 @@ std::cout << "Data after use: " << password << std::endl;
 std::memset(password, 0, sizeof(password));
 ```
 
-#### 数据恢复技术
+## 数据恢复技术
 
 数据恢复技术与内存数据残留密切相关。数据恢复的基本原理之一就是利用存储介质（内存、磁盘等）中数据未被完全清除的特点，从中提取原本认为已经被删除或覆盖的内容。
 
@@ -1672,7 +1783,7 @@ std::memset(password, 0, sizeof(password));
 
 磁盘、固态硬盘等存储设备在删除文件时，通常只是标记数据区域为空闲，并未立即清除实际数据。恢复工具通过扫描这些标记为空的数据区域，可以提取残留的内容。
 
-### 指针
+# 指针
 
 指针是一个变量，它存储另一个变量的内存地址，允许开发者直接操作内存，提供强大的灵活性和高效性。
 
@@ -1725,7 +1836,7 @@ int* ptr;
 std::cout << *ptr << std::endl; // 未定义行为
 ```
 
-### 空指针
+# 空指针
 
 nullptr 和 NULL 都用于表示空指针，但它们之间存在显著区别，特别是在现代 C++（C++11 及更高版本）中。以下是两者的详细对比：
 
@@ -1749,7 +1860,7 @@ int main() {
 }
 ```
 
-### 野指针
+# 野指针
 
 野指针是指没有被初始化或指向无效内存区域的指针。使用野指针会导致未定义行为，如程序崩溃或意外输出。野指针是 C++ 编程中常见的错误之一，尤其在指针操作频繁的场景。
 
@@ -1776,7 +1887,7 @@ void danglingPointer() {
 - ptr 指向已释放的内存区域，但仍被访问。
 - 此内存可能被系统回收或分配给其他程序，导致未定义行为。
 
-### 常量指针
+# 常量指针
 
 常量指针是指针指向的数据是常量，但指针本身可以改变，即指针可以指向不同的地址。
 
@@ -1803,7 +1914,7 @@ std::cout << "Value pointed by ptr: " << *ptr << std::endl;
 - `const int* ptr` 表示 `*ptr` 是只读的，不能通过指针修改值。
 - `ptr = &b` 是合法的，指针本身可以指向不同的地址。
 
-### 指针常量
+# 指针常量
 
 指针常量是指针本身是常量，不能改变指针指向的地址，但可以通过指针修改指向的数据。
 
@@ -1830,7 +1941,7 @@ std::cout << "Updated value of a: " << a << std::endl;
 - `int* const ptr` 表示 ptr 是常量，不能指向其他地址。
 - `*ptr = 15` 是合法的，可以通过指针修改指向的数据。
 
-### 常量指针常量
+# 常量指针常量
 
 常量指针常量是一个指针既是常量指针又是指针常量，则既不能通过指针修改指向的数据，也不能改变指针本身的指向。
 
@@ -1848,7 +1959,7 @@ std::cout << "Value pointed by ptr: " << *ptr << std::endl;
 // ptr = &b;  // 错误，不能修改 ptr 的指向
 ```
 
-### 数组指针
+# 数组指针
 
 数组指针是一个指针，它指向整个数组的首地址，而不是单个元素的地址。
 
@@ -1916,7 +2027,7 @@ int main() {
 }
 ```
 
-### 指针数组
+# 指针数组
 
 指针数组是一个数组，其中每个元素都是一个指针，指向某种数据类型。
 
@@ -1948,7 +2059,7 @@ for (int i = 0; i < 3; i++) {
 - fruits 是一个指针数组，每个元素指向一个字符串常量。
 - 使用 fruits[i] 获取字符串地址。
 
-### 函数指针
+# 函数指针
 
 函数指针是一个可以存储 函数地址 的指针，允许通过指针调用函数。函数指针提供了一种动态调用函数的机制，使得程序更加灵活，常用于回调机制、动态函数选择等场景。
 
@@ -2083,7 +2194,121 @@ int main() {
 }
 ```
 
-### 引用
+# 通用指针
+
+`void*` 是一种特殊的指针类型，称为 通用指针。它可以指向任何类型的数据，但不能直接解引用或进行指针运算。
+
+- 可以存储任何类型对象的地址，不需要提前知道所指向的具体类型。
+- 不带类型信息，不能直接解引用，必须先转换为具体类型。
+- 适用于需要通用性的数据结构和函数，例如动态内存分配（malloc）、通用容器等。
+
+`void*` 常用于定义通用函数参数，允许函数处理多种类型的数据。
+
+```cpp
+void printValue(void* data, char type) {
+    if (type == 'i') { // 整数类型
+        std::cout << *static_cast<int*>(data) << std::endl; // 先转换为具体类型，再解引用
+    } else if (type == 'f') { // 浮点类型
+        std::cout << *static_cast<float*>(data) << std::endl;
+    } else if (type == 'c') { // 字符类型
+        std::cout << *static_cast<char*>(data) << std::endl;
+    }
+}
+
+int main() {
+    int intVal = 42;
+    float floatVal = 3.14f;
+    char charVal = 'A';
+
+    printValue(&intVal, 'i'); // 输出：42
+    printValue(&floatVal, 'f'); // 输出：3.14
+    printValue(&charVal, 'c'); // 输出：A
+
+    return 0;
+}
+```
+
+`void*` 可以与函数指针结合，传递自定义数据到线程或回调函数。
+
+```cpp
+void threadFunction(void* arg) {
+    int* intPtr = static_cast<int*>(arg); // 转换为 int 指针
+    std::cout << "Thread received value: " << *intPtr << std::endl;
+}
+
+int main() {
+    int value = 100;
+    std::thread t(threadFunction, &value);
+
+    t.join(); // 等待线程结束
+    return 0;
+}
+```
+
+当函数需要返回分配的内存地址，但分配的内存类型可以多样时，可以使用 `void*` 作为返回值。
+
+```cpp
+void* allocateMemory(size_t size) {
+    void* ptr = malloc(size); // 动态分配内存
+    if (!ptr) {
+        std::cerr << "Memory allocation failed!" << std::endl;
+        return nullptr; // 分配失败返回空指针
+    }
+    return ptr; // 返回通用指针
+}
+
+int main() {
+    // 为 int 类型分配内存
+    int* intPtr = static_cast<int*>(allocateMemory(sizeof(int)));
+    if (intPtr) {
+        *intPtr = 42; // 使用分配的内存
+        std::cout << "Value: " << *intPtr << std::endl; // 输出：Value: 42
+        free(intPtr); // 释放内存
+    }
+
+    return 0;
+}
+```
+
+在实现类似于工厂函数的接口时，`void*` 可以作为返回值，以适配多种不同的类型。
+
+```cpp
+struct ObjectA {
+    void display() { std::cout << "This is ObjectA" << std::endl; }
+};
+
+struct ObjectB {
+    void display() { std::cout << "This is ObjectB" << std::endl; }
+};
+
+void* createObject(char type) {
+    if (type == 'A') {
+        return new ObjectA(); // 返回 ObjectA 的指针
+    } else if (type == 'B') {
+        return new ObjectB(); // 返回 ObjectB 的指针
+    }
+    return nullptr; // 未知类型返回空指针
+}
+
+int main() {
+    void* objA = createObject('A');
+    void* objB = createObject('B');
+
+    if (objA) {
+        static_cast<ObjectA*>(objA)->display(); // 输出：This is ObjectA
+        delete static_cast<ObjectA*>(objA);    // 释放内存
+    }
+
+    if (objB) {
+        static_cast<ObjectB*>(objB)->display(); // 输出：This is ObjectB
+        delete static_cast<ObjectB*>(objB);    // 释放内存
+    }
+
+    return 0;
+}
+```
+
+# 引用
 
 引用（Reference）是一个变量的别名，提供了对已有变量的直接访问，简化了指针操作，提高了代码的可读性和安全性。
 
@@ -2155,7 +2380,7 @@ int& invalid() {
 }
 ```
 
-### 常量引用
+# 常量引用
 
 常量引用用于保护原数据，防止通过引用修改内容，常用于函数参数，传递大对象时既高效又安全。
 
@@ -2171,7 +2396,7 @@ int main() {
 }
 ```
 
-### 数组引用
+# 数组引用
 
 数组引用是指对一个数组的引用，和数组指针相同，就是将指针更换为了引用。
 
@@ -2197,7 +2422,7 @@ int main() {
 }
 ```
 
-### 范围循环引用
+# 范围循环引用
 
 引用可以避免在范围循环中拷贝数据，提高效率。
 
@@ -2214,7 +2439,7 @@ for (const int& num : nums) { // 常量引用，避免修改
 std::cout << std::endl;
 ```
 
-### 引用的本质
+# 引用的本质
 
 引用是通过指针实现的一个语法糖，本质上就是一个指针常量的封装，不能改变指针指向的地址，但可以通过指针修改指向的数据。引用在底层会直接与被引用对象的地址绑定，引用操作实际上是对指针的简化。编译器会将对引用的操作转换为对指针的解引用。
 
@@ -2336,9 +2561,9 @@ int main() {
 - 编译器可以在语法层面将引用优化为直接访问变量，而指针的间接性可能会降低优化效率。
 - 引用绑定后无法更改，避免了指针可能为空或指向非法内存的情况。
 
-### 数组长度
+# 数组长度
 
-#### 原声数组
+## 原声数组
 
 使用 sizeof 操作符计算长度：
 
@@ -2384,7 +2609,7 @@ int main() {
 
 - 编译期安全，避免误将指针传递给 sizeof。
 
-#### 标准容器
+## 标准容器
 
 std::array 是一个固定大小的数组类，可以通过 size() 方法直接获取长度。
 
@@ -2400,7 +2625,7 @@ std::vector<int> vec = {1, 2, 3, 4, 5};
 std::cout << "Length of std::vector: " << vec.size() << std::endl;
 ```
 
-### 数组拷贝
+# 数组拷贝
 
 ```cpp
 int nums1[] = {3, 1, 4, 1, 5};
@@ -2415,7 +2640,7 @@ for (int i = 0; i < 5; i++) {
 }
 ```
 
-### 二维数组
+# 二维数组
 
 ```cpp
 // 完全初始化
@@ -2489,7 +2714,7 @@ delete[] arr;
 - 动态分配内存时，先为行分配指针数组，再为每行分配列数组。
 - 动态分配的二维数组需要手动释放内存。
 
-### 代码块
+# 代码块
 
 花括号 {} 会创建一个新的作用域（scope）。在这个作用域内定义的变量或对象，作用范围仅限于这个块，超出块后就会被销毁。
 

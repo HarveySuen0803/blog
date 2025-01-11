@@ -1,4 +1,4 @@
-### IOC
+# IOC
 
 Spring 框架通过 IoC（Inversion of Control，控制反转）容器优化了组件的管理方式，有效减少了代码之间的耦合度，使得开发人员可以专注于核心业务逻辑，提升了代码的可维护性、扩展性和健壮性。以下详细解释 Spring 如何通过 IoC 容器优化这些设计原则，并给出具体的实现机制。
 
@@ -29,7 +29,7 @@ IoC 支持动态代理，提升扩展性
 - 透明增强：在不修改业务代码的前提下，为 Bean 增加功能，如事务管理、方法拦截等。
 - 扩展性强：动态代理使得 Bean 可以在运行时被增强，为后续扩展提供了便利。
 
-### BeanFactory
+# BeanFactory
 
 BeanFactory 是 Spring IoC 容器的顶层接口，定义了最基本的 Bean 管理方法。它的主要职责是提供 Bean 的获取和依赖查找方法，例如 getBean、containsBean、isSingleton 等。
 
@@ -58,7 +58,7 @@ DefaultListableBeanFactory 的加载流程
 - 注册 BeanDefinition：将 BeanDefinition 存储到 beanDefinitionMap 中。
 - 创建 Bean 实例：根据需要实例化和初始化 Bean，支持依赖注入。
 
-### refresh()
+# refresh()
 
 Spring 的刷新机制在 Spring 框架中用于加载、初始化、刷新和销毁应用上下文。在 ApplicationContext 中，刷新机制的核心方法是 refresh()。这里将详细介绍 refresh() 方法的执行过程及底层源码的实现细节。
 
@@ -116,7 +116,7 @@ Spring 的刷新机制在 Spring 框架中用于加载、初始化、刷新和�
 
 - 发布 ContextRefreshedEvent 事件，通知应用上下文已经刷新完毕，可以开始处理请求。
 
-### obtainFreshBeanFactory()
+# obtainFreshBeanFactory()
 
 obtainFreshBeanFactory() 是 Spring ApplicationContext 的一个关键方法，主要作用是获取一个新的 BeanFactory 实例，用于管理 Spring 容器中的所有 BeanDefinition 和 Bean 实例。在 ApplicationContext 的生命周期中，obtainFreshBeanFactory() 方法会负责创建或刷新 BeanFactory，以确保在容器启动时得到一个全新的、干净的 BeanFactory，为后续的 BeanDefinition 注册和 Bean 实例化提供基础。
 
@@ -173,7 +173,7 @@ loadBeanDefinitions(beanFactory) 方法负责将用户定义的所有 BeanDefini
 protected abstract void loadBeanDefinitions(ConfigurableListableBeanFactory beanFactory) throws BeansException, IOException;
 ```
 
-#### 通过 ClassPathXmlApplicationContext 解析 XML Bean
+## 通过 ClassPathXmlApplicationContext 解析 XML Bean
 
 对于基于 XML 配置的 ApplicationContext 实现（如 ClassPathXmlApplicationContext），loadBeanDefinitions 方法主要负责解析 XML 配置文件，将其中的 `<bean>` 标签解析为 BeanDefinition 并注册到 BeanFactory 中。
 
@@ -213,7 +213,7 @@ protected void loadBeanDefinitions(XmlBeanDefinitionReader reader) throws BeansE
 }
 ```
 
-#### 通过 AnnotationConfigApplicationContext 解析 Annotation Bean
+## 通过 AnnotationConfigApplicationContext 解析 Annotation Bean
 
 对于基于注解的 ApplicationContext（如 AnnotationConfigApplicationContext），loadBeanDefinitions 方法会扫描带有 @Configuration、@Component 等注解的类，并将这些类解析为 BeanDefinition，注册到 BeanFactory 中。
 
@@ -266,7 +266,7 @@ public Set<BeanDefinitionHolder> doScan(String... basePackages) {
 - findCandidateComponents(basePackage)：扫描指定包路径，将符合条件的类（如带有 @Component 注解的类）解析为 BeanDefinition。
 - registerBeanDefinition(candidate)：将符合条件的类注册为 BeanDefinition。
 
-### postProcessBeanFactory(beanFactory)
+# postProcessBeanFactory(beanFactory)
 
 postProcessBeanFactory(beanFactory) 是 AbstractApplicationContext 的 refresh() 方法中一个可供子类重写的钩子方法。此方法允许在 BeanFactory 初始化后但在 BeanPostProcessor 注册之前对其进行自定义操作。通过重写此方法，开发者可以在 BeanFactory 初始化完成后对 BeanDefinition 进行修改或添加属性。
 
@@ -301,7 +301,7 @@ public class CustomApplicationContext extends AnnotationConfigApplicationContext
 }
 ```
 
-### invokeBeanFactoryPostProcessors(beanFactory) 
+# invokeBeanFactoryPostProcessors(beanFactory) 
 
 invokeBeanFactoryPostProcessors(beanFactory) 方法用于执行 BeanFactoryPostProcessor，它是 BeanFactory 的后处理器，用于在所有 BeanDefinition 加载完成后，但在 Bean 实例化之前，允许修改 BeanDefinition 的属性。
 
@@ -412,7 +412,7 @@ protected void loadBeanDefinitionsForBeanMethod(BeanMethod beanMethod) {
 
 ConfigurationClassPostPro 同时还会扫描 BeanPostProcessor 的实现类，并生成对应的 BeanDefinition。
 
-### registerBeanPostProcessors(beanFactory) 
+# registerBeanPostProcessors(beanFactory) 
 
 registerBeanPostProcessors(beanFactory) 方法用于注册所有的 BeanPostProcessor。BeanPostProcessor 是对 Bean 实例化后的增强处理器，用于在 Bean 的初始化前后对其进行拦截、增强或代理。AOP（面向切面编程）就是通过 BeanPostProcessor 实现的。
 
@@ -447,7 +447,7 @@ public static void registerBeanPostProcessors(ConfigurableListableBeanFactory be
 
 这个方法会扫描所有实现了 BeanPostProcessor 的 Bean，并调用 addBeanPostProcessor() 方法将其添加到 beanPostProcessors 列表中。之后，当每个 Bean 初始化时，Spring 会调用这些 BeanPostProcessor 的 postProcessBeforeInitialization 和 postProcessAfterInitialization 方法。
 
-### ConfigurationClassParser
+# ConfigurationClassParser
 
 ConfigurationClassParser 是 Spring 框架中用于解析配置类（带有 @Configuration、@Bean、@Import 等注解）的核心类。它的主要作用是扫描和解析这些注解，将它们转换为 Spring IoC 容器能够理解的 BeanDefinition。在解析过程中，它会扫描配置类中的 @Configuration、@Bean 和 @Import 注解，并对这些注解所代表的 Bean 进行注册。
 
@@ -504,7 +504,7 @@ processImports(configClass, currentSourceClass, imports);
 ```
 
 
-### finishBeanFactoryInitialization(beanFactory)
+# finishBeanFactoryInitialization(beanFactory)
 
 finishBeanFactoryInitialization(beanFactory) 是 refresh() 方法中的关键步骤之一，专门负责完成 Bean 的初始化。它会遍历 BeanFactory 中所有非懒加载的单例 Bean，并调用 getBean() 方法触发每个 Bean 的创建、依赖注入、初始化和增强处理。
 
@@ -585,7 +585,7 @@ protected Object initializeBean(final String beanName, final Object bean, RootBe
 }
 ```
 
-### Three-Level Cache
+# Three-Level Cache
 
 在 DefaultSingletonBeanRegistry 中，三级缓存用于保存 Bean 的不同生命周期阶段的实例：
 
@@ -686,7 +686,7 @@ protected void afterSingletonCreation(String beanName) {
 }
 ```
 
-### Spring Lifecycle
+# Spring Lifecycle
 
 创建 ApplicationContext 容器：
 
@@ -763,7 +763,7 @@ protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
 ((AbstractApplicationContext) context).close();
 ```
 
-### Bean Lifecycle
+# Bean Lifecycle
 
 Spring 创建 Bean 的过程
 
@@ -862,7 +862,7 @@ afterPropertiesSet()
 postProcessAfterInitialization()
 ```
 
-### My IOC
+# My IOC
 
 annotation/MyComponent.java
 
