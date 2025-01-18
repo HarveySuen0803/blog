@@ -707,6 +707,40 @@ int main() {
 
 std::map 的底层实现通常是红黑树，因此它具有高效的插入、删除和查找操作，时间复杂度为 O(logn)。
 
+# std::unordered_map
+
+std::map 底层基于红黑树，可以保证有序，std::unordered_map 底层基于哈希表，无法保证有序。
+
+- 性能优先，选择 std::unordered_map，适合查找和插入频繁但不需要顺序的场景。
+- 有序性优先，选择 std::map，适合需要按顺序操作或范围查询的场景
+
+```cpp
+int main() {
+    std::unordered_map<std::string, int> umap;
+
+    // 插入键值对
+    umap["Alice"] = 30;
+    umap["Bob"] = 25;
+    umap["Charlie"] = 35;
+
+    // 查找元素
+    if (umap.find("Alice") != umap.end()) {
+        std::cout << "Alice's age: " << umap["Alice"] << std::endl;
+    }
+
+    // 遍历元素（无序）
+    for (const auto& pair : umap) {
+        std::cout << pair.first << ": " << pair.second << std::endl;
+    }
+
+    return 0;
+}
+```
+
+## 底层原理
+
+std::unordered_map 底层实现是基于哈希表，键值对的存储顺序是无序的，不能保证元素按键值顺序排列。
+
 # std::multimap
 
 std::multimap 与 std::map 类似，但它允许键重复。

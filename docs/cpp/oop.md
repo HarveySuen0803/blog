@@ -344,8 +344,8 @@ public:
 栈上创建对象是指在栈内存中分配对象的空间，通常是在函数作用域内直接声明对象（非指针），它的生命周期与作用域一致。当离开作用域时，栈上对象会被自动销毁，其析构函数会自动调用。
 
 ```cpp
-Animal animal = Animal("harvey", 18);
-animal.sayHello();
+Animal animal = Animal("harvey", 18); // 此处的 animal 是对象
+animal.sayHello(); // animal 是对象，使用 "." 访问成员
 ```
 
 采用简写的方式创建对象：
@@ -372,8 +372,9 @@ Animal animal = {"harvey", 18};
 - 如果未释放，也会导致内存泄漏。
 
 ```cpp
-Animal* animal = new Animal("harvey", 18);
-animal->sayHello();
+Animal* animal = new Animal("harvey", 18); // 此处的 animal 是指针，指向堆上的对象
+animal->sayHello(); // animal 是指针，使用 "->" 访问成员
+(*animal).sayHello(); // 对 animal 进行解引用，得到具体的对象后，使用 "." 访问成员
 delete animal;
 ```
 
@@ -692,6 +693,67 @@ int main() {
 }
 ```
 
+# 拷贝赋值
+
+```cpp
+class MyClass {
+private:
+    char* data; // 指向动态分配的内存
+public:
+    // **构造函数**
+    MyClass(const char* str) {
+        data = new char[strlen(str) + 1]; // 分配内存
+        strcpy(data, str);
+        cout << "构造: " << data << endl;
+    }
+
+    // **拷贝构造**
+    MyClass(const MyClass& other) {
+        data = new char[strlen(other.data) + 1];
+        strcpy(data, other.data);
+        cout << "拷贝构造: " << data << endl;
+    }
+
+    // **拷贝赋值运算符**
+    MyClass& operator=(const MyClass& other) {
+        if (this != &other) {  // 避免自赋值
+            delete[] data;  // 释放原有资源
+            data = new char[strlen(other.data) + 1];
+            strcpy(data, other.data);
+            cout << "拷贝赋值: " << data << endl;
+        }
+        return *this;
+    }
+
+    // **析构函数**
+    ~MyClass() {
+        cout << "析构: " << (data ? data : "nullptr") << endl;
+        delete[] data;
+    }
+};
+
+int main() {
+    MyClass obj1("Hello");
+    MyClass obj2("World");
+
+    cout << "\n== 左值赋值（拷贝赋值） ==" << endl;
+    obj2 = obj1;  // **调用拷贝赋值运算符**
+
+    return 0;
+}
+```
+
+```
+构造: Hello
+构造: World
+
+== 左值赋值（拷贝赋值） ==
+拷贝赋值: Hello
+
+析构: Hello
+析构: Hello
+```
+
 # 移动构造
 
 移动构造函数 是 C++11 引入的一种特殊的构造函数，用于将一个对象的资源从一个对象“移动”到另一个对象，而不是进行传统的深拷贝。它通常与右值引用（T&&）配合使用，用于实现 移动语义，提高性能。
@@ -771,6 +833,85 @@ std::cout << "vec[1]: " << vec[1] << std::endl;
 
 - push_back(temp) 调用了拷贝构造，temp 被复制到容器中。
 - push_back(std::move(temp)) 调用了移动构造，temp 的内容直接转移到容器中，无需额外的内存分配。
+
+# 移动赋值
+
+```cpp
+class MyClass {
+private:
+    char* data;
+public:
+    // **构造函数**
+    MyClass(const char* str) {
+        data = new char[strlen(str) + 1];
+        strcpy(data, str);
+        cout << "构造: " << data << endl;
+    }
+
+    // **拷贝构造**
+    MyClass(const MyClass& other) {
+        data = new char[strlen(other.data) + 1];
+        strcpy(data, other.data);
+        cout << "拷贝构造: " << data << endl;
+    }
+
+    // **移动构造**
+    MyClass(MyClass&& other) noexcept {
+        data = other.data;
+        other.data = nullptr;  // 清空原对象
+        cout << "移动构造: " << (data ? data : "nullptr") << endl;
+    }
+
+    // **拷贝赋值**
+    MyClass& operator=(const MyClass& other) {
+        if (this != &other) {
+            delete[] data;
+            data = new char[strlen(other.data) + 1];
+            strcpy(data, other.data);
+            cout << "拷贝赋值: " << data << endl;
+        }
+        return *this;
+    }
+
+    // **移动赋值**
+    MyClass& operator=(MyClass&& other) noexcept {
+        if (this != &other) {
+            delete[] data;  // 释放当前对象的旧资源
+            data = other.data;  // 直接接管资源
+            other.data = nullptr;  // 清空右值对象
+            cout << "移动赋值: " << (data ? data : "nullptr") << endl;
+        }
+        return *this;
+    }
+
+    // **析构函数**
+    ~MyClass() {
+        cout << "析构: " << (data ? data : "nullptr") << endl;
+        delete[] data;
+    }
+};
+
+int main() {
+    MyClass obj1("Hello");
+    MyClass obj2("World");
+
+    cout << "\n== 右值赋值（移动赋值） ==" << endl;
+    obj2 = std::move(obj1);  // **调用移动赋值运算符**
+
+    return 0;
+}
+```
+
+```
+构造: Hello
+构造: World
+
+== 右值赋值（移动赋值） ==
+移动赋值: Hello
+
+析构: nullptr
+析构: Hello
+```
 
 # 访问成员
 

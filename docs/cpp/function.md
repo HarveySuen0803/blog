@@ -482,9 +482,13 @@ int main() {
 
 # std::shared_ptr
 
-std::shared_ptr 是一种共享所有权的智能指针，可以被多个指针共享同一块内存。
+std::shared_ptr 是一种共享所有权的智能指针，可以被多个指针共享同一块内存，内部使用共享引用计数 use_count 管理资源，当最后一个 shared_ptr 被销毁时，释放内存。
 
-- 内部使用引用计数（reference count）管理资源，当最后一个 shared_ptr 被销毁时，释放内存。
+每个由 std::shared_ptr 或 std::weak_ptr 管理的对象，都有一个控制块，用来跟踪引用计数和对象的状态。控制块包含以下信息：
+
+- use_count 共享引用计数器：跟踪当前有多少个 std::shared_ptr 共享同一个对象，当 use_count == 0 时，托管对象会被销毁。
+- weak_count 弱引用计数器：跟踪当前有多少个 std::weak_ptr 引用控制块，控制块本身的生命周期由 use_count 和 weak_count 共同决定，当 use_count == 0 且 weak_count == 0 时，控制块会被销毁。
+- 托管对象指针：存储了指向托管对象的原生指针，std::shared_ptr 和 std::weak_ptr 通过这个指针访问对象。
 
 ```cpp
 class MyClass {
@@ -564,7 +568,7 @@ int main() {
 
 # std::weak_ptr
 
-std::weak_ptr 是一种弱引用指针，它不增加引用计数，通常用来解决 shared_ptr 循环引用 的问题。
+std::weak_ptr 是一种弱引用指针，它不增加共享引用计数 use_count，通常用来解决 shared_ptr 循环引用 的问题。
 
 - 不管理资源，只能通过 lock() 方法获取 shared_ptr，常用于观察者模式或打破循环引用。
 

@@ -120,6 +120,28 @@ public void test1() {
 public void test2() {}
 ```
 
+下面这段代码中 log() 会加入外层 test() 的事务，log() 内部发生异常后，整个事务都会标记为异常，即将进行回滚，即使 test() 内部将 log() 包住了异常，但是依旧会发生会滚。
+
+- 这里就不能再使用 Propagation.REQUIRED 了，应该使用 Propagation.REQUIRES_NEW。
+
+```java
+@Transactional
+public void test() {
+    try {
+        self.log();
+    } catch (Exception e) {
+        log.error("failed to log, ", e.getMessage());
+    }
+    userDao.save(user);
+}
+
+@Transactional
+public void log() {
+    log.info("logging");
+    throw new RuntimeException("fake exception during logging");
+}
+```
+
 # Transaction Invalidation
 
 ## Rollback Exception

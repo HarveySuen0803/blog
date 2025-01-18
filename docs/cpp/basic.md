@@ -985,6 +985,23 @@ int main() {
 }
 ```
 
+# 匿名命名空间
+
+匿名内部命名空间（Unnamed Namespace）是一种作用域限定机制，可以使定义在其中的变量、函数、类等仅在当前翻译单元（.cpp 文件）内部可见，类似于 static 作用域，避免全局作用域污染，防止符号名称冲突。
+
+- 匿名命名空间是 static 的现代替代方案，作用类似，但适用于更多情况（如类、模板等）。
+
+```cpp
+namespace {
+    int internal_var = 42;  // 仅在当前文件可见
+    void internalFunction() {
+        std::cout << "Hello from internal function!" << std::endl;
+    }
+}
+
+static int internal_var = 42; // static 也有相同的作用
+```
+
 # 宏定义
 
 宏定义是 C++ 中的一个预处理指令，用于定义一个标识符或表达式。这些宏在程序编译前会由预处理器替换为指定的值或代码片段。宏定义类似于文本替换，编译器并不会检查宏定义的语法正确性。

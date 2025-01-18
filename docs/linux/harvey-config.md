@@ -164,7 +164,7 @@ source ~/.zshrc
 # basic denpendency
 
 ```shell
-sudo apt install -y build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libgd-dev libxml2 libxml2-dev uuid-dev libgeoip-dev net-tools ninja-build gettext cmake zip unzip curl g++ vsftpd openssh-server sudo
+sudo apt install -y build-essential libpcre3 libpcre3-dev zlib1g zlib1g-dev libssl-dev libgd-dev libxml2 libxml2-dev uuid-dev libgeoip-dev net-tools ninja-build gettext cmake zip unzip curl g++ vsftpd openssh-server
 ```
 
 # neovim

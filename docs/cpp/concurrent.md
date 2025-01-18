@@ -712,3 +712,96 @@ int main() {
     return 0;
 }
 ```
+
+# std::counting_semaphore
+
+std::counting_semaphore 表示一个计数信号量，计数器有上限，可以控制多个线程同时访问共享资源。
+
+```cpp
+std::counting_semaphore<3> semaphore(3); // 最大计数为 3，初始计数为 3
+
+void worker(int id) {
+    std::cout << "Thread " << id << " waiting to acquire semaphore...\n";
+    semaphore.acquire(); // 等待信号量
+    std::cout << "Thread " << id << " acquired semaphore.\n";
+
+    std::this_thread::sleep_for(std::chrono::seconds(2)); // 模拟工作
+    std::cout << "Thread " << id << " releasing semaphore.\n";
+
+    semaphore.release(); // 释放信号量
+}
+
+int main() {
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < 6; ++i) {
+        threads.emplace_back(worker, i); // 创建 6 个线程
+    }
+
+    for (auto& t : threads) {
+        t.join(); // 等待所有线程完成
+    }
+
+    return 0;
+}
+```
+
+```
+Thread 0 waiting to acquire semaphore...
+Thread 0 acquired semaphore.
+Thread 1 waiting to acquire semaphore...
+Thread 1 acquired semaphore.
+Thread 2 waiting to acquire semaphore...
+Thread 2 acquired semaphore.
+Thread 3 waiting to acquire semaphore...
+Thread 4 waiting to acquire semaphore...
+Thread 5 waiting to acquire semaphore...
+Thread 0 releasing semaphore.
+Thread 3 acquired semaphore.
+Thread 1 releasing semaphore.
+Thread 4 acquired semaphore.
+Thread 2 releasing semaphore.
+Thread 5 acquired semaphore.
+Thread 3 releasing semaphore.
+Thread 4 releasing semaphore.
+Thread 5 releasing semaphore.
+```
+
+# std::binary_semaphore
+
+std::binary_semaphore 表示一个二进制信号量，其计数值只有 0 或 1，常用于实现简单的线程同步或互斥。
+
+```cpp
+
+std::binary_semaphore semaphore(0); // 初始计数为 0
+
+void worker1() {
+    std::cout << "Worker 1: Doing work...\n";
+    std::this_thread::sleep_for(std::chrono::seconds(2)); // 模拟工作
+    std::cout << "Worker 1: Done, signaling worker 2.\n";
+    semaphore.release(); // 通知 worker2
+}
+
+void worker2() {
+    std::cout << "Worker 2: Waiting for worker 1 to finish...\n";
+    semaphore.acquire(); // 等待信号
+    std::cout << "Worker 2: Received signal, continuing work.\n";
+}
+
+int main() {
+    std::thread t1(worker1);
+    std::thread t2(worker2);
+
+    t1.join();
+    t2.join();
+
+    return 0;
+}
+```
+
+```
+Worker 1: Doing work...
+Worker 2: Waiting for worker 1 to finish...
+Worker 1: Done, signaling worker 2.
+Worker 2: Received signal, continuing work.
+```
