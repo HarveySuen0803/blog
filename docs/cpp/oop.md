@@ -2173,11 +2173,15 @@ std::vector<int> numbers = {5, 2, 8, 1, 3};
 
 // 使用 std::greater 仿函数实现降序排序
 std::sort(numbers.begin(), numbers.end(), std::greater<int>());
+```
 
-for (int n : numbers) {
-    std::cout << n << " ";
-}
-std::cout << std::endl;
+```cpp
+std::vector<int> nums = {5, 2, 8, 1, 6};
+
+// [](int a, int b) { return a > b; } 是一个匿名函数对象（Lambda），与 Descending 类的功能相同
+std::sort(nums.begin(), nums.end(), [](int a, int b) {
+    return a > b;  // 降序
+});
 ```
 
 在 std::remove_if 中使用仿函数：

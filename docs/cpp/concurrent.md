@@ -1,4 +1,4 @@
-### std::thread
+# std::thread
 
 以下是一个简单的多线程示例：
 
@@ -69,7 +69,7 @@ int main() {
 }
 ```
 
-### std::mutex
+# std::mutex
 
 在多线程中，多个线程可能会访问共享数据，导致数据竞争。为了解决这些问题，可以使用互斥锁（std::mutex）。
 
@@ -106,7 +106,7 @@ thread 2 increment counter to 5
 final counter: 10
 ```
 
-### std::lock_guard
+# std::lock_guard
 
 std::lock_guard 是一种 RAII 风格的锁机制，确保异常情况下也能自动释放锁。简单易用，专注于锁的基本管理，在构造时加锁，在析构时解锁。不支持锁的延迟、解锁后重新锁定或转移所有权。
 
@@ -131,7 +131,7 @@ int main() {
 }
 ```
 
-### std::unique_lock
+# std::unique_lock
 
 std::unique_lock 是一种 RAII 风格的锁机制，相比 std::lock_guard，提供了更多的锁管理灵活性。
 
@@ -243,7 +243,7 @@ int main() {
 - std::unique_lock 必须与 std::condition_variable 一起使用，因为 std::condition_variable 需要访问锁对象。
 - cv.wait(lock, predicate) 会释放锁并阻塞线程，直到条件满足。
 
-### std::call_once
+# std::call_once
 
 std::call_once 用于确保某段代码只执行一次，无论有多少线程调用它。它与 std::once_flag 配合使用，能够高效地实现单次初始化模式（One-Time Initialization），常用于初始化全局资源或配置。
 
@@ -310,7 +310,7 @@ int main() {
 }
 ```
 
-### std::async
+# std::async
 
 std::async 是一种方便的方式，可以在后台执行一个任务，并返回一个 std::future 对象，用于获取任务的结果。
 
@@ -338,7 +338,7 @@ int main() {
 }
 ```
 
-### std::future
+# std::future
 
 std::future 是一个持有异步任务结果的对象，可以用来访问任务返回值，或者检查任务是否完成。
 
@@ -370,38 +370,47 @@ wait_for：允许检查任务状态，返回以下值：
 - std::future_status::timeout：等待超时。
 - std::future_status::deferred：任务未启动。
 
-### std::packaged_task
+# std::packaged_task
 
-std::packaged_task 是一个包装器，用来将普通函数包装成异步任务，其结果可以通过 std::future 获取。
+std::packaged_task 是一个函数包装器，它可以包装任何可调用对象（普通函数、Lambda、函数对象等），并将其 异步执行的结果 通过 std::future 进行管理。
 
 ```cpp
-int compute_square(int x) {
+// 计算平方的函数
+int square(int x) {
     return x * x;
 }
 
 int main() {
-    // 用函数创建 packaged_task
-    std::packaged_task<int(int)> task(compute_square);
+    // 1. 用 std::packaged_task 包装 square 函数
+    std::packaged_task<int(int)> task(square);
 
-    // 获取 future
+    // 2. 获取 future，用于获取任务的执行结果
     std::future<int> result = task.get_future();
 
-    // 在新线程中运行任务
-    std::thread t(std::move(task), 7);
-
-    // 等待结果
-    std::cout << "Square: " << result.get() << std::endl;
-
-    t.join();
+    // 3. 在新线程中执行任务
+    std::thread t(std::move(task), 5);
     
+    // 4. 阻塞等待获取任务执行结果
+    std::cout << "5^2 = " << result.get() << std::endl;
+
+    // 5. 确保线程执行完毕，
+    t.join();
+
     return 0;
 }
 ```
 
-- std::packaged_task 是一个可调用对象，调用后会触发其内部的任务，并将结果存储在 std::future 中。
-- 与线程结合使用时，需要显式移动任务对象。
+- 这里执行 `t.join()` 是为了保证子线程完整的结束生命周期，`result.get()` 阻塞等待到了返回结果不代表子线程的生命周期结束了，这里必须执行 `t.join()`，否则会导致资源泄露或未定义行为。
 
-### std::promise
+std::packaged_task 也可以包装 Lambda 表达式：
+
+```cpp
+std::packaged_task<int(int, int)> task([](int a, int b) {
+    return a + b;
+});
+```
+
+# std::promise
 
 std::promise 是一个承诺值的容器，通常与 std::future 配合使用，用于在线程之间显式传递数据。
 
@@ -488,7 +497,7 @@ int main() {
 }
 ```
 
-### std::atomic
+# std::atomic
 
 原子操作是指通过标准库提供的 std::atomic 类型实现的线程安全操作，这些操作无需锁机制即可保证操作的原子性。在多线程编程中，原子操作用于避免竞争条件，确保多个线程对共享变量的操作不会出现数据竞态。
 
@@ -586,7 +595,7 @@ Thread added 10, previous value: 5
 Final counter value: 15
 ```
 
-### std::atomic_flag
+# std::atomic_flag
 
 std::atomic_flag 是最简单的原子类型，常用于实现自旋锁。
 
@@ -617,7 +626,7 @@ Thread 1 is in critical section.
 Thread 2 is in critical section.
 ```
 
-### std::memory_order
+# std::memory_order
 
 在现代处理器和编译器优化中，为了提高性能，可能会发生指令重排序，即代码的执行顺序可能与编写顺序不同。C++ 的 std::atomic 和 memory_order 提供了一种精细控制这种行为的机制，确保多线程程序中的可预测性和正确性。
 
