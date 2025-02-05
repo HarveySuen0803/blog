@@ -27,7 +27,7 @@ docker container run \
     --name mysql \
     --network global \
     --privileged \
-    -p 20100:3306 \
+    -p 3306:3306 \
     -v mysql-conf:/etc/mysql/conf.d \
     -v mysql-data:/var/lib/mysql \
     -v mysql-logs:/var/log/mysql \

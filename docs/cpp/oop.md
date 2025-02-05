@@ -2273,3 +2273,55 @@ int main() {
 }
 ```
 
+# 可调用对象
+
+可调用对象（Callable Object） 是指任何可以使用 () 运算符调用的对象，包括但不限于：普通函数，Lambda 表达式，函数指针，仿函数，成员函数。
+
+```cpp
+void normalFunction() {
+    std::cout << "普通函数被调用" << std::endl;
+}
+
+int main() {
+    auto lambda = []() { std::cout << "Lambda 表达式被调用" << std::endl; };
+    std::function<void()> funcObj = lambda;  // std::function 也是可调用对象
+
+    normalFunction();  // 调用普通函数
+    lambda();          // 调用 Lambda
+    funcObj();         // 调用 std::function
+
+    return 0;
+}
+```
+
+# 函数对象
+
+函数对象（Function Object, Functor）是指重载了 operator() 的类的具体实现，使其对象可以像函数一样调用。
+
+```cpp
+// Multiply 重载了 operator()
+struct Multiply {
+    int operator()(int a, int b) const {
+        return a * b;
+    }
+};
+
+int main() {
+    Multiply multiply;  // 创建函数对象
+    std::cout << multiply(3, 5) << std::endl;  // 输出 15
+}
+```
+
+std::bind 创建的函数都想本质上就是一个重载了 operator() 的匿名类的实现。
+
+```cpp
+int add(int a, int b) {
+    return a + b;
+}
+
+int main() {
+    // 创建了一个匿名类，按照 add(2, 3) 重载了 operator()，示例化该匿名类，得到 bound_func 函数对象
+    auto bound_func = std::bind(add, 2, 3);
+    std::cout << bound_func() << std::endl;
+}
+```

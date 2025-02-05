@@ -263,6 +263,22 @@ private static int getHash(Object key) {
 }
 ```
 
+# Hash Code Group
+
+哈希函数即使会发生哈希碰撞（注意是哈希函数的碰撞，而非哈希表的碰撞，哈希表会按照表容量取模，碰撞概率高），导致不同的输入，得到相同的哈希值，但是这个碰撞也会相对分散，这个特性非常重要。
+
+场景设计，一个文件中有 40 亿个单词，要求在 1G 内存的情况下，统计出频率最高的 100 个单词。在不考虑专门设计一套存储引擎的情况下，可以通过哈希分组解决这个问题。
+
+对所有的单词进行哈希函数计算，得到一个哈希值后，按照 100 取模，分配到 100 个文件里，这每一个文件就是一个桶，重复的单词会被分配到同一个桶里，即使有单词发生哈希碰撞，分配到同一个桶里也不会有影响，我们只要能保证相同的单词总是被分配到同一个桶里即可。
+
+再逐个统计每个桶里重复次数最好的一个单词，此处可采用哈希表进行统计，统计出当前桶里出现频率最高的单词，并得到她的出现频率值（控制内存在 1G 范围内即可，如果占用过高，可以分成 200 个桶），最终统计完所有的桶后，得到一个排序。
+
+[Video Explain 00:21:10](https://www.bilibili.com/video/BV13g41157hK/?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&spm_id_from=333.788.player.switch&p=12)
+
+# Hash Table Optimization
+
+哈希表扩容是一个效率较低的操作，可以采用 Copy On Write 的策略进行优化，当达到负载因子时，单独开辟一个线程去进行扩容和复制，等扩容完毕后，再将访问切到新的哈希表上。
+
 # Two Num
 
 [Problem Description](https://leetcode.cn/problems/two-sum/description/)
@@ -770,5 +786,52 @@ public static List<Integer> findDisappearedNumbers(int[] nums) {
     }
     
     return result;
+}
+```
+
+# Random Set
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501192251793.png)
+
+[Video Explain 00:54:21](https://www.bilibili.com/video/BV13g41157hK/?vd_source=2b0f5d4521fd544614edfc30d4ab38e1&spm_id_from=333.788.player.switch&p=12)
+
+```java
+public class RandomSet<K> {
+    private Map<K, Integer> keyToIdx = new HashMap<>();
+    private Map<Integer, K> idxToKey = new HashMap<>();
+
+    public RandomSet() {
+    }
+
+    public void insert(K key) {
+        int idx = keyToIdx.size();
+        keyToIdx.put(key, idx);
+        idxToKey.put(idx, key);
+    }
+
+    public void delete(K key) {
+        if (!keyToIdx.containsKey(key)) {
+            return;
+        }
+        
+        int idx = keyToIdx.get(key);
+        int lastIdx = keyToIdx.size() - 1;
+        if (idx != lastIdx) {
+            K lastKey = idxToKey.get(lastIdx);
+            keyToIdx.put(lastKey, idx);
+            idxToKey.put(idx, lastKey);
+        }
+        
+        keyToIdx.remove(key);
+        idxToKey.remove(lastIdx);
+    }
+
+    public boolean contains(K key) {
+        return keyToIdx.containsKey(key);
+    }
+
+    public K random() {
+        return idxToKey.get((int) (Math.random() * idxToKey.size()));
+    }
 }
 ```

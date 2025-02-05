@@ -410,6 +410,26 @@ std::packaged_task<int(int, int)> task([](int a, int b) {
 });
 ```
 
+---
+
+**示例：包装一个复杂模版函数**
+
+```cpp
+template<typename Func, typename... Args>
+auto submit(Func&& func, Args&&... args) -> std::future<decltype(func(args...))> {
+    using return_type = decltype(func(args...));
+    // 通过 std::packaged_task 创建了一个任务包装器，包装了一个可调用对象（注意区分可调用对象和函数对象），无参，返回值是 return_type
+    // 通过 std::make_shared 创建一个智能指针，指向任务包装器
+    // 通过 std::bind(std::forward<Func>(func), std::forward<Args>(args)...) 创建一个无参函数对象交给任务包装器，这个无参函数对象本质上就是在调用 func(args...)
+    auto task = std::make_shared<std::packaged_task<return_type()>>(
+        std::bind(std::forward<Func>(func), std::forward<Args>(args)...)
+    );
+    auto future = task->get_future();
+    // ...
+    return future;
+}
+```
+
 # std::promise
 
 std::promise 是一个承诺值的容器，通常与 std::future 配合使用，用于在线程之间显式传递数据。

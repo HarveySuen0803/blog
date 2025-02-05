@@ -13,7 +13,7 @@ C++ 从源代码到机器可执行文件的整个构建流程通常包括以下�
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412081337654.png)
 
-# 预处理
+## 预处理
 
 预处理器处理所有以 # 开头的指令（例如 `#include`, `#define`, `#ifdef`），将所有包含的头文件内容插入到源文件中，处理宏替换和条件编译。预处理的结果是一个“纯粹的 C++ 源代码”（main.i），大致如下：
 
@@ -42,7 +42,7 @@ int main() {
 }
 ```
 
-# 编译
+## 编译
 
 编译器将预处理后的代码（main.i）翻译为汇编代码。语法检查、类型检查和优化会在此阶段完成。编译后将输出一个汇编代码文件（main.s），大致如下：
 
@@ -72,7 +72,7 @@ main:
     ...
 ```
 
-# 汇编
+## 汇编
 
 汇编器将汇编代码翻译为机器代码，输出一个目标文件（main.o），包含机器指令，但尚未完成链接。可以采用 objdump 查看，大致内容如下：
 
@@ -90,7 +90,7 @@ g++ -c main.s -o main.o
 
 - 此时，main.o 包含二进制的机器指令，但函数 Math::add 和 Math::multiply 的地址还未解析。
 
-# 链接
+## 链接
 
 链接器解析外部符号，将多个目标文件（main.o 和 Math.o）结合起来，将所有未解析的符号（如 Math::add 和 Math::multiply）的引用解析为实际的内存地址，生成一个最终的可执行文件 main。
 
@@ -98,9 +98,429 @@ g++ -c main.s -o main.o
 g++ main.o Math.o -o main
 ```
 
-# 运行
+## 运行
 
 可执行文件运行时，操作系统会将程序加载到内存中，初始化栈、堆和全局变量，调用 main 函数。
+
+# 内存分区
+
+C++ 的内存分区是指程序运行时内存的组织方式，通常分为以下几个主要区域：
+
+- 代码区（Text Segment）
+- 全局区（Global Segment 或 Data Segment）
+- 栈区（Stack Segment）
+- 堆区（Heap Segment）
+
+内存分区示意图：
+
+```
++--------------------+
+|   栈区（Stack）      |  <--- 高地址
++--------------------+
+|       空间          |  动态变化
++--------------------+
+|   堆区（Heap）       |
++--------------------+
+|  全局/静态区（Global）|
+|  - 已初始化数据段     |
+|  - 未初始化数据段     |
+|  - 常量区           |
++--------------------+
+|   代码区（Code）     |  <--- 低地址
++--------------------+
+```
+
+## 代码区
+
+代码区是程序运行时内存的一部分，用于存储程序编译后的可执行机器指令。它是只读的，主要为了：
+
+- 存储程序的指令：包括函数、方法和其他可执行的代码。
+- 防止指令被修改：代码区通常是只读的，防止程序运行期间因误操作或恶意修改导致指令被改变。
+- 共享性：对于多线程或多进程程序，代码区可以被多个进程共享，以节省内存资源。
+
+以下是关于代码区的详细示例，结合 C++ 的运行情况进行说明：
+
+```cpp
+#include <iostream>
+
+void sayHello() {
+    std::cout << "Hello, world!" << std::endl;
+}
+
+void sayGoodbye() {
+    std::cout << "Goodbye, world!" << std::endl;
+}
+
+int main() {
+    sayHello();
+    sayGoodbye();
+    return 0;
+}
+```
+
+- sayHello 函数的机器指令存储在代码区。
+- sayGoodbye 函数的机器指令也存储在代码区。
+
+通过打印函数的地址可以验证它们在代码区中的位置：
+
+```cpp
+#include <iostream>
+
+void sayHello() {
+    std::cout << "Hello, world!" << std::endl;
+}
+
+void sayGoodbye() {
+    std::cout << "Goodbye, world!" << std::endl;
+}
+
+int main() {
+    std::cout << "Address of sayHello: " << (void*)sayHello << std::endl;
+    std::cout << "Address of sayGoodbye: " << (void*)sayGoodbye << std::endl;
+
+    sayHello();
+    sayGoodbye();
+    return 0;
+}
+```
+
+```
+Address of sayHello: 0x105b0f5e0
+Address of sayGoodbye: 0x105b0f620
+Hello, world!
+Goodbye, world!
+```
+
+- sayHello 和 sayGoodbye 的地址是它们在代码区的起始地址。
+- 不同的函数会分配到代码区的不同位置。
+
+尝试修改代码区内容会引发错误。以下示例说明这种情况：
+
+```cpp
+#include <iostream>
+
+void sayHello() {
+    std::cout << "Hello, world!" << std::endl;
+}
+
+int main() {
+    void* funcPtr = (void*)sayHello;
+    std::cout << "Address of sayHello: " << funcPtr << std::endl;
+
+    // 尝试直接修改代码区内容（可能导致崩溃或错误）
+    char* code = (char*)funcPtr;
+    code[0] = 0x90; // 尝试修改代码段
+
+    sayHello();
+    return 0;
+}
+```
+
+```
+Segmentation fault (core dumped)
+```
+
+- sayHello 函数存储在代码区，代码区是只读的，试图修改会触发访问权限错误。
+
+通过 fork() 创建子进程，可以观察到父进程和子进程共享同一代码区：
+
+```cpp
+#include <iostream>
+#include <unistd.h>
+
+void sayHello() {
+    std::cout << "Hello from process " << getpid() << std::endl;
+}
+
+int main() {
+    pid_t pid = fork();
+
+    if (pid == 0) {
+        // 子进程
+        sayHello();
+    } else if (pid > 0) {
+        // 父进程
+        sayHello();
+    }
+
+    return 0;
+
+```
+
+```
+Hello from process 12345
+Hello from process 12346
+```
+
+- 父进程和子进程共享 sayHello 的代码指令，代码区不会被复制。
+
+线程在调用函数时，函数的代码始终存储在代码区（Text Segment），不会移动到栈中。栈用于存储函数调用的相关信息（例如：函数的返回地址，局部变量，函数的参数等）。
+
+函数的机器指令会始终留在代码区中。调用函数时，程序通过跳转指令（例如 call 或 jmp）去执行代码区中对应的机器指令。
+
+## 全局区
+
+全局区是内存分区中的一部分，用于存储全局变量、静态变量和常量等数据。它贯穿程序的整个运行周期，由操作系统在程序启动时分配，并在程序结束时释放。
+
+全局区又可以细分为以下几个子区域：
+
+- 已初始化数据区（.data segment）：存储已初始化的全局变量和静态变量。
+- 未初始化数据区（.bss segment）：存储未初始化的全局变量和静态变量，默认为零。
+- 常量区：存储程序中的常量，包括字符串字面值和用 const 修饰的全局变量。
+
+```cpp
+int globalVar = 10; // 全局变量，已初始化，存储在已初始化数据区（.data）
+int uninitializedVar; // 全局变量，未初始化，存储在未初始化数据区（.bss）
+const int globalConst = 100; // 全局常量，已初始化，存储在常量区（可能与 .rodata 合并）
+
+void displayAddresses() {
+    static int staticVar = 20;  // 静态变量
+    std::cout << "Address of globalVar: " << &globalVar << std::endl;
+    std::cout << "Address of uninitializedVar: " << &uninitializedVar << std::endl;
+    std::cout << "Address of staticVar: " << &staticVar << std::endl;
+    std::cout << "Address of globalConst: " << &globalConst << std::endl;
+}
+```
+
+```
+Address of globalVar: 0x601040
+Address of uninitializedVar: 0x601044
+Address of staticVar: 0x601048
+Address of globalConst: 0x60104C
+```
+
+- 全局变量、静态变量和常量的地址通常在全局区内连续分布。
+
+全局区的特点：
+
+- 数据生命周期：全局区中的数据从程序启动时分配，直到程序退出才被释放，生命周期贯穿整个程序运行。
+- 全局可访问性：全局变量和静态变量在所有函数中都可访问（但作用域受限于声明位置）。
+- 默认值：未初始化的全局和静态变量默认初始化为零。
+- 线程安全：全局变量通常不是线程安全的，需注意多线程程序中的数据访问问题。
+
+## 堆区
+
+堆区是 C++ 中用来存储动态分配内存的区域，程序运行时由程序员显式分配和释放内存（如 new 和 delete）。堆区内存的大小和生命周期由程序员控制，适用于需要灵活管理内存的数据结构，如动态数组、链表和对象。
+
+堆区的特点：
+
+- 动态分配内存：使用 new 或 malloc 显式分配内存，使用 delete 或 free 释放内存。
+- 存储位置：堆区位于内存的高地址部分，与栈区分开。地址通常由操作系统或运行时库分配。
+- 生命周期：堆区内存在显式释放前一直存在，与变量作用域无关，忘记释放会导致 内存泄漏，多次释放会导致 未定义行为。
+- 灵活性：堆区适合存储大小不确定或需要动态调整的结构（如动态数组）。
+
+```cpp
+void heapExample() {
+    int* heapVar = new int(42); // 动态分配一个整型变量
+    std::cout << "Value of heapVar: " << *heapVar << std::endl;
+    std::cout << "Address of heapVar: " << heapVar << std::endl;
+    
+    delete heapVar; // 释放动态分配的内存
+}
+```
+
+```cpp
+void heapExample() {
+    int size = 5;
+    int* heapArray = new int[size]; // 动态分配一个数组
+    
+    // 初始化数组
+    for (int i = 0; i < size; i++) {
+        heapArray[i] = i * 10;
+    }
+    
+    // 输出数组内容
+    for (int i = 0; i < size; i++) {
+        std::cout << "heapArray[" << i << "] = " << heapArray[i] << std::endl;
+    }
+    
+    delete[] heapArray; // 释放动态数组内存
+}
+```
+
+```cpp
+void heapExample() {
+    Person* person = new Person("Alice", 25); // 动态分配对象
+    person->display();
+    
+    delete person; // 释放对象内存
+}
+```
+
+## 栈区
+
+栈区是程序运行时用于存储临时数据的一部分内存区域。它由编译器自动管理，主要用于存储局部变量、函数参数、返回地址以及部分中间计算结果。
+
+栈区的特点：
+
+- 自动分配与释放：栈区内存由编译器自动分配和回收，开发者无需手动管理。
+- 高效性：栈区基于栈指针的增减操作，分配和释放速度非常快。
+- 存储内容：局部变量、函数参数、返回地址。
+- 存储限制：栈的大小通常有限（例如几 MB），递归过深或过大局部变量可能导致栈溢出。
+- 生命周期：数据生命周期与作用域一致，超出作用域即释放内存。
+- 增长方向：在大多数系统中，栈区内存从高地址向低地址增长（具体依赖于架构）。
+
+```cpp
+void stackExample() {
+    int localVar = 42;    // 局部变量，存储在栈区
+    int anotherVar = 84;  // 另一个局部变量，存储在栈区
+    std::cout << "Address of localVar: " << &localVar << std::endl;
+    std::cout << "Address of anotherVar: " << &anotherVar << std::endl;
+}
+```
+
+栈区数据在函数返回后会被销毁，如果返回指向栈区数据的指针，会导致指针失效。
+
+```cpp
+int* invalidPointer() {
+    int localVar = 42; // 局部变量，存储在栈区
+    return &localVar;  // 返回栈区变量地址
+}
+
+int main() {
+    int* ptr = invalidPointer();
+    std::cout << "Dereferenced value: " << *ptr << std::endl; // 未定义行为
+    return 0;
+}
+```
+
+- 输出值可能是随机值或程序崩溃。
+- 应该使用堆区分配内存返回数据，或返回值而非指针。
+
+# 内存数据残留
+
+内存数据残留是指当程序释放或覆盖内存区域时，内存中原有的数据仍可能存在，直到被其他数据覆盖。这种问题可能导致安全隐患（如数据泄露）或意外行为（如使用未初始化变量或未正确清空的内存）。
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412041404954.png)
+
+通过初始化变量、合理管理内存和使用工具检测，可以有效减少内存数据残留问题的风险。
+
+---
+
+**未初始化变量**
+
+未初始化变量，栈区或堆区分配的变量在初始化前可能包含随机数据。
+
+```cpp
+void uninitializedVariable() {
+    int a; // a 是栈区变量，未被初始化时，其内容是栈中遗留的数据。
+    std::cout << "Value of uninitialized a: " << a << std::endl;
+}
+```
+
+---
+
+**悬垂指针**
+
+释放后访问的内存（悬垂指针），动态分配的内存被释放后，原内存内容未被清理，可能被意外访问。
+
+```cpp
+void danglingPointer() {
+    int* p = new int(42); // 动态分配内存
+    delete p;             // 释放内存
+    std::cout << "Value at dangling pointer: " << *p << std::endl;
+}
+```
+
+- 动态分配的内存被释放后，指针 p 仍指向原地址。
+- 如果此内存未被其他程序覆盖，则仍能访问残留数据。
+
+在释放内存后将指针置为 nullptr，可解决该问题：
+
+```cpp
+delete p;
+p = nullptr;
+```
+
+---
+
+**数组越界**
+
+数组或缓冲区越界访问，在数组或缓冲区范围外读取内存，可能获取到残留数据。
+
+```cpp
+void arrayOutOfBounds() {
+    int arr[3] = {1, 2, 3};
+    std::cout << "Accessing out-of-bounds memory: " << arr[5] << std::endl;
+}
+```
+
+- 数组 arr 分配的空间仅有 3 个整数，但越界访问可能读取到栈中的残留数据。
+- 数据值可能为上一次函数调用或栈帧中遗留的内容。
+
+可以使用带边界检查的容器（例如 std::vector）解决该问题：
+
+```cpp
+std::vector<int> vec = {1, 2, 3};
+std::cout << vec.at(5) << std::endl; // 抛出异常
+```
+
+---
+
+**未清理敏感数据**
+
+未清理的敏感数据，如密码或密钥在使用后未清理，可能被恶意程序利用。
+
+```cpp
+char password[16]; // 模拟存储密码
+std::strcpy(password, "mypassword1234");
+std::cout << "Password: " << password << std::endl;
+
+// 假装密码用完了
+std::cout << "Data after use: " << password << std::endl;
+```
+
+- password 使用后未清理，敏感数据仍留在内存中，可能被恶意程序读取。
+
+可以使用 std::memset 清理敏感数据：
+
+```cpp
+std::memset(password, 0, sizeof(password));
+```
+
+## 数据恢复技术
+
+数据恢复技术与内存数据残留密切相关。数据恢复的基本原理之一就是利用存储介质（内存、磁盘等）中数据未被完全清除的特点，从中提取原本认为已经被删除或覆盖的内容。
+
+在内存中，分配的空间被释放后，数据仍可能保留，直到被新数据覆盖。数据恢复工具可以直接读取这些未被覆盖的内存数据，从而恢复丢失的内容。
+
+磁盘、固态硬盘等存储设备在删除文件时，通常只是标记数据区域为空闲，并未立即清除实际数据。恢复工具通过扫描这些标记为空的数据区域，可以提取残留的内容。
+
+# 函数调用过程
+
+1. 准备调用
+
+- 将函数参数压入栈（或通过寄存器传递，具体取决于调用约定）。
+- 保存调用现场，可能包括当前栈指针（ESP 或 RSP）和其他寄存器状态。
+
+2. 跳转到代码区执行函数
+
+- CPU 根据跳转指令（如 call）将控制权转移到代码区中对应的函数入口地址。
+
+3. 在栈中创建函数调用帧
+
+- 分配栈空间，用于存储局部变量、返回地址和其他调用信息。
+
+4. 函数执行
+
+- 在代码区中逐条执行函数的机器指令。
+- 操作数（例如局部变量）会使用栈中的空间。
+
+5. 函数结束
+
+- 清理栈帧，恢复调用者的状态。
+- 跳转到调用者的下一条指令（返回地址存储在栈中）。
+
+# 地址
+
+低地址：靠近内存的起始地址，通常用于存储代码和全局变量。
+
+高地址：靠近内存的结束地址，通常用于存储局部变量（栈区）。
+
+堆区与栈区的增长方向：
+
+- 堆区：从低地址向高地址增长。
+- 栈区：从高地址向低地址增长。
 
 # 虚函数表
 

@@ -18,12 +18,14 @@ sudo mkdir -p /opt/redis
 ln -s /var/lib/docker/volumes/redis-conf/_data /opt/redis/conf
 ln -s /var/lib/docker/volumes/redis-data/_data /opt/redis/data
 ln -s /var/lib/docker/volumes/redis-logs/_data /opt/redis/logs
+```
 
+configure Redis by config file (file: config/redis.conf)
+
+```shell
 curl -LJO http://download.redis.io/redis-stable/redis.conf
 mv ./redis.conf /opt/redis/conf
 ```
-
-configure Redis (file: config/redis.conf)
 
 ```shell
 # run as a daemon in background
@@ -40,14 +42,6 @@ requirepass 111
 
 # persistent storage
 appendonly yes
-```
-
-create user
-
-```
-ACL SETUSER root +@all  on >111 ~*
-ACL SETUSER harvey +@all -@admin on >111 ~*
-ACL SETUSER bruce +@read +@write +@keyspace +ping on >111 ~*
 ```
 
 startup Redis
@@ -87,6 +81,14 @@ shutdown Redis in remote
 
 ```shell
 redis-cli -h 127.0.0.1 -p 6379 -a 111 shutdown
+```
+
+create user
+
+```
+ACL SETUSER root +@all  on >111 ~*
+ACL SETUSER harvey +@all -@admin on >111 ~*
+ACL SETUSER bruce +@read +@write +@keyspace +ping on >111 ~*
 ```
 
 # Install Redis by manual
