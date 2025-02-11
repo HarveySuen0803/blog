@@ -4,67 +4,17 @@
     "type": "split",
     "children": [
       {
-        "id": "2d46d9f1c47afa22",
+        "id": "0ed7d28ff838ef4f",
         "type": "tabs",
         "children": [
           {
-            "id": "50a441c363f51251",
+            "id": "6f9ca6368d5e26ce",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "springboot/redis.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "redis"
-            }
-          },
-          {
-            "id": "203fe58f2053de93",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "springboot/mvc.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "mvc"
-            }
-          },
-          {
-            "id": "b9f3053d7a0c0d7c",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "springboot/xxljob.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "xxljob"
-            }
-          },
-          {
-            "id": "ab18b9f227eab221",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "springboot/redis.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "redis"
+              "title": "New tab"
             }
           }
         ]
@@ -131,13 +81,12 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "springboot/redis.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of redis"
+              "title": "Outline"
             }
           }
         ]
@@ -154,34 +103,34 @@
       "graph:Open graph view": false
     }
   },
-  "active": "50a441c363f51251",
+  "active": "6f9ca6368d5e26ce",
   "lastOpenFiles": [
-    "springboot/mvc.md",
-    "springboot/elasticsearch0.md",
-    "springboot/docker0.md",
-    "springboot/devtools0.md",
-    "springboot/design-pattern0.md",
-    "springboot/cookie0.md",
-    "springboot/content-negotation0.md",
-    "springboot/bloom-filter0.md",
-    "springboot/caffine0.md",
-    "springboot/cache0.md",
-    "springboot/bean-post-processor0.md",
-    "springboot/basic0.md",
-    "springboot/aware0.md",
-    "springboot/auto-configuration0.md",
-    "springboot/async0.md",
-    "springboot/aliyun-oss0.md",
-    "springboot/aot0.md",
-    "web/mobile-web0.md",
-    "system-design/weibo0.md",
-    "system-design/realtime-message-push0.md",
-    "system-design/memory-pool0.md",
-    "system-design/distributed-replication-bus0.md",
-    "system-design/distributed-fifo-queue0.md",
-    "system-design/distributed-log-collection0.md",
-    "system-design/batch-insert0.md",
-    "tomcat/tomcat0.md",
+    "xxljob/basic.md",
+    "zookeeper/basic.md",
+    "mysql/lock.md",
+    "mysql/join.md",
+    "mysql/cte.md",
+    "mysql/index.md",
+    "mysql/exercise.md",
+    "mysql/backup.md",
+    "mysql/basic.md",
+    "mysql/api.md",
+    "mysql/architecture.md",
+    "mysql/analysis.md",
+    "network/Websocket.md",
+    "network/UDP.md",
+    "network/TCP.md",
+    "network/OSI.md",
+    "network/Model.md",
+    "network/IP.md",
+    "network/IO.md",
+    "network/Cookie.md",
+    "network/HTTP.md",
+    "network/Encryption.md",
+    "network/DNS.md",
+    "network/Connection.md",
+    "network/Basic.md",
+    "node/node.md",
     "restful",
     "cmake",
     "algorithm/image/Pasted image 20250102173733.png",
