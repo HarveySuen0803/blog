@@ -14,5 +14,6 @@
   "theme": "system",
   "nativeMenus": true,
   "showViewHeader": false,
-  "translucency": false
+  "translucency": false,
+  "showRibbon": false
 }

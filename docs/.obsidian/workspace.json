@@ -13,16 +13,77 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "clickhouse/distributed.md",
+                "file": "draft/warmup-cache.md",
                 "mode": "source",
-                "backlinks": false,
-                "source": false
+                "source": false,
+                "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "distributed"
+              "title": "warmup-cache"
+            }
+          },
+          {
+            "id": "18b53cd44404beae",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "java/log.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "log"
+            }
+          },
+          {
+            "id": "b9f3053d7a0c0d7c",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "springboot/xxljob.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "xxljob"
+            }
+          },
+          {
+            "id": "ab18b9f227eab221",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "springboot/redis.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "redis"
+            }
+          },
+          {
+            "id": "f4e2b886ff2a0d89",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "juc/threadlocal.md",
+                "mode": "source",
+                "source": false,
+                "backlinks": false
+              },
+              "icon": "lucide-file",
+              "title": "threadlocal"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -53,7 +114,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "decltype",
+                "query": "slf",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -64,7 +125,8 @@
               "title": "Search"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -85,10 +147,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "clickhouse/distributed.md"
+                "file": "java/log.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of distributed"
+              "title": "Outline of log"
             }
           }
         ]
@@ -105,11 +170,21 @@
       "graph:Open graph view": false
     }
   },
-  "active": "2efd5ac437ff7c3d",
+  "active": "18b53cd44404beae",
   "lastOpenFiles": [
+    "distributed/dubbo.md",
+    "springboot/xxljob.md",
+    "springboot/redis.md",
+    "juc/threadlocal.md",
+    "juc/threadpool.md",
+    "draft/warmup-cache.md",
+    "springboot/mybatisplus.md",
+    "springboot/mybatis.md",
+    "mybatis/MyBatis.md",
+    "springboot/auto-configuration.md",
+    "clickhouse/distributed.md",
     "clickhouse/basic.md",
     "clickhouse/storage-engine.md",
-    "clickhouse/distributed.md",
     "system-design/distributed-replication-bus.md",
     "data-structure/lsm-tree.md",
     "springboot/mvc.md",
@@ -120,19 +195,9 @@
     "cpp/pointer.md",
     "system-design/memory-pool.md",
     "cpp/reference.md",
-    "springboot/mybatisplus.md",
-    "springboot/redis.md",
     "linux/harvey-config.md",
     "linux/shell.md",
-    "springboot/mybatis.md",
     "cpp/function.md",
-    "environment/VsCode.md",
-    "java/annotation.md",
-    "redis/basic.md",
-    "springboot/aop.md",
-    "cpp/concurrent.md",
-    "spring/aop.md",
-    "springboot/basic.md",
     "restful",
     "cmake",
     "algorithm/image/Pasted image 20250102173733.png",
