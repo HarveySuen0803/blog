@@ -31,6 +31,7 @@ startup project
 ```shell
 docker container run \
     --name nacos \
+    --network global \
     --privileged \
     -p 8848:8848 \
     -p 9848:9848 \

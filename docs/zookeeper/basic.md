@@ -46,6 +46,7 @@ docker image pull zookeeper:3.9.2-jre-17
 ```shell
 docker container run \
 		--name zookeeper \
+    --network global \
 		--privileged \
 		-e TZ="Asia/Shanghai" \
 		-p 2181:2181 \
