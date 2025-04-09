@@ -122,6 +122,30 @@ int main() {
 }
 ```
 
+# 依赖参数类型
+
+在模板编程中，当一个类型名称依赖于模板参数（也叫“依赖名”）时，编译器无法直接判断该名称是否表示一个类型，因此必须用 typename 明确指出它是一个类型
+
+```cpp
+template<typename Container>
+void printFirstElement(const Container& c) {
+    // 注意：由于 Container::const_iterator 依赖于模板参数 Container，
+    // 因此必须加 typename 来表明它是一个类型。
+    if (!c.empty()) {
+        typename Container::const_iterator it = c.begin();
+        std::cout << "First element: " << *it << std::endl;
+    }
+}
+
+int main() {
+    std::vector<int> vec = {10, 20, 30};
+    printFirstElement(vec);
+    return 0;
+}
+```
+
+在 printFirstElement 中，Container::const_iterator 是一个依赖于模板参数 Container 的类型。由于编译器在解析模板时无法确定它是否为类型，所以必须使用 typename 关键字。
+
 # 折叠表达式
 
 折叠表达式（Fold Expressions） 是 C++17 引入的特性，旨在 简化可变参数模板的递归展开。

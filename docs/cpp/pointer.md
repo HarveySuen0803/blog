@@ -523,6 +523,251 @@ int main() {
 }
 ```
 
+# std::unique_ptr
+
+std::unique_ptr 是一个独占所有权的智能指针，确保某块内存只有一个指针拥有，生命周期由这个指针控制。
+
+- 不可复制，但可以转移所有权，自动释放资源。
+
+```cpp
+class MyClass {
+public:
+    MyClass() { std::cout << "MyClass Constructor" << std::endl; }
+    ~MyClass() { std::cout << "MyClass Destructor" << std::endl; }
+    void sayHello() { std::cout << "Hello from MyClass!" << std::endl; }
+};
+
+int main() {
+    std::unique_ptr<MyClass> ptr1 = std::make_unique<MyClass>(); // 创建智能指针
+    ptr1->sayHello();
+
+    // std::unique_ptr<MyClass> ptr2 = ptr1; // 错误：unique_ptr 不支持复制
+
+    std::unique_ptr<MyClass> ptr2 = std::move(ptr1); // 转移所有权
+    if (!ptr1) {
+        std::cout << "ptr1 is now nullptr" << std::endl;
+    }
+    ptr2->sayHello();
+
+    return 0; // 离开作用域时，ptr2 自动释放内存
+}
+```
+
+# std::shared_ptr
+
+std::shared_ptr 是一种共享所有权的智能指针，可以被多个指针共享同一块内存，内部使用共享引用计数 use_count 管理资源，当最后一个 shared_ptr 被销毁时，释放内存。
+
+每个由 std::shared_ptr 或 std::weak_ptr 管理的对象，都有一个控制块，用来跟踪引用计数和对象的状态。控制块包含以下信息：
+
+- use_count 共享引用计数器：跟踪当前有多少个 std::shared_ptr 共享同一个对象，当 use_count == 0 时，托管对象会被销毁。
+- weak_count 弱引用计数器：跟踪当前有多少个 std::weak_ptr 引用控制块，控制块本身的生命周期由 use_count 和 weak_count 共同决定，当 use_count == 0 且 weak_count == 0 时，控制块会被销毁。
+- 托管对象指针：存储了指向托管对象的原生指针，std::shared_ptr 和 std::weak_ptr 通过这个指针访问对象。
+
+```cpp
+class MyClass {
+public:
+    MyClass() { std::cout << "MyClass Constructor" << std::endl; }
+    ~MyClass() { std::cout << "MyClass Destructor" << std::endl; }
+};
+
+int main() {
+    std::shared_ptr<MyClass> ptr1 = std::make_shared<MyClass>(); // 创建 shared_ptr
+    std::shared_ptr<MyClass> ptr2 = ptr1; // 共享所有权
+
+    std::cout << "Use count: " << ptr1.use_count() << std::endl; // 引用计数为 2
+
+    ptr1.reset(); // ptr1 放弃所有权
+    std::cout << "Use count after ptr1.reset(): " << ptr2.use_count() << std::endl;
+
+    return 0; // 离开作用域时，ptr2 释放内存
+}
+```
+
+---
+
+**示例：数据结构中共享节点**
+
+std::shared_ptr 常用于图或链表等数据结构中，多个节点可能共享相同的子节点。
+
+```cpp
+class Node {
+public:
+    int value;
+    std::vector<std::shared_ptr<Node>> children;
+
+    Node(int val) : value(val) { std::cout << "Node created: " << val << "\n"; }
+    ~Node() { std::cout << "Node destroyed: " << value << "\n"; }
+};
+
+int main() {
+    auto root = std::make_shared<Node>(1);
+    auto child1 = std::make_shared<Node>(2);
+    auto child2 = std::make_shared<Node>(3);
+
+    root->children.push_back(child1);
+    root->children.push_back(child2);
+
+    // child1 和 child2 也可以单独使用
+    std::cout << "Root's children count: " << root->children.size() << "\n";
+    return 0; // 所有节点在这里被释放
+}
+```
+
+---
+
+**示例：工厂模式和多模块共享**
+
+当对象由一个工厂函数创建，并在多个模块中共享时，std::shared_ptr 是理想选择。
+
+```cpp
+class Resource {
+public:
+    Resource() { std::cout << "Resource acquired\n"; }
+    ~Resource() { std::cout << "Resource released\n"; }
+};
+
+std::shared_ptr<Resource> createResource() {
+    return std::make_shared<Resource>();
+}
+
+int main() {
+    auto resource1 = createResource();
+    auto resource2 = resource1; // 共享同一资源
+
+    std::cout << "Use count: " << resource1.use_count() << "\n"; // 引用计数
+    return 0;
+}
+```
+
+# std::weak_ptr
+
+std::weak_ptr 是一种弱引用指针，它不增加共享引用计数 use_count，通常用来解决 shared_ptr 循环引用 的问题。
+
+- 不管理资源，只能通过 lock() 方法获取 shared_ptr，常用于观察者模式或打破循环引用。
+
+```cpp
+class Node {
+public:
+    std::shared_ptr<Node> next; // 循环引用
+    std::weak_ptr<Node> prev;   // 弱引用，避免循环引用
+
+    ~Node() { std::cout << "Node Destructor" << std::endl; }
+};
+
+int main() {
+    std::shared_ptr<Node> node1 = std::make_shared<Node>();
+    std::shared_ptr<Node> node2 = std::make_shared<Node>();
+
+    node1->next = node2;       // node1 指向 node2
+    node2->prev = node1;       // node2 弱引用 node1
+
+    return 0; // 离开作用域时，内存正常释放
+}
+```
+
+---
+
+**示例：解决循环引用问题**
+
+```cpp
+class A;
+class B;
+
+class A {
+public:
+    std::shared_ptr<B> b_ptr; // 循环引用
+    ~A() { std::cout << "A Destructor" << std::endl; }
+};
+
+class B {
+public:
+    std::shared_ptr<A> a_ptr; // 循环引用
+    ~B() { std::cout << "B Destructor" << std::endl; }
+};
+
+int main() {
+    std::shared_ptr<A> a = std::make_shared<A>();
+    std::shared_ptr<B> b = std::make_shared<B>();
+
+    a->b_ptr = b;
+    b->a_ptr = a;
+
+    return 0; // 循环引用导致内存泄漏，将 A 或 B 其中一个引用换成 std::weak_ptr 即可解决问题
+}
+```
+
+# std::enable_shared_from_this
+
+std::enable_shared_from_this 是 C++ 标准库中提供的一个辅助模板类，用于使一个对象能够安全地生成一个指向自身的 std::shared_ptr。这在某些场景中非常有用，比如你希望在类的成员函数中获取一个共享指针，确保对象在后续使用中不会被意外销毁。
+
+```cpp
+class MyClass : public std::enable_shared_from_this<MyClass> {
+public:
+    // 一个成员函数，用于获取指向自身的 shared_ptr
+    std::shared_ptr<MyClass> getShared() {
+        // 返回一个共享指针，与管理该对象的 shared_ptr 共用相同的引用计数
+        return shared_from_this();
+    }
+
+    void sayHello() {
+        std::cout << "Hello from MyClass!" << std::endl;
+    }
+};
+
+int main() {
+    // 正确的方式：通过 std::make_shared 创建对象，此时对象由 shared_ptr 管理
+    std::shared_ptr<MyClass> obj = std::make_shared<MyClass>();
+
+    // 在成员函数内部通过 shared_from_this 获取一个新的 shared_ptr
+    std::shared_ptr<MyClass> objShared = obj->getShared();
+
+    // 两个 shared_ptr 指向相同的对象，并共享引用计数
+    std::cout << "obj.use_count() = " << obj.use_count() << std::endl; // 输出 2
+    std::cout << "objShared.use_count() = " << objShared.use_count() << std::endl; // 同样输出 2
+
+    // 调用对象的成员函数
+    objShared->sayHello();
+
+    return 0;
+}
+```
+
+如果对象没有由 std::shared_ptr 管理，那么调用 shared_from_this() 会导致未定义行为。
+
+```cpp
+MyClass obj; // 对象在栈上创建
+// 下面调用将导致错误，因为 obj 没有被 std::shared_ptr 管理
+std::shared_ptr<MyClass> ptr = obj.getShared();
+```
+
+假设你需要在异步操作中延长对象的生命周期，可以这样使用：
+
+```cpp
+class Worker : public std::enable_shared_from_this<Worker> {
+public:
+    void doWork() {
+        // 启动一个异步线程，并传递 shared_ptr 给 lambda 表达式
+        std::shared_ptr<Worker> self = shared_from_this();
+        std::thread([self]() {
+            // 模拟长时间操作
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+            std::cout << "Worker completed work." << std::endl;
+        }).detach();
+    }
+};
+
+int main() {
+    {
+        std::shared_ptr<Worker> worker = std::make_shared<Worker>();
+        worker->doWork();
+    } // 此处 worker 超出作用域，引用计数减少，但是异步线程也持有了当前对象的 std::shared_ptr，所以当前对象不会销毁
+
+    // 主线程等待，确保异步任务有足够时间完成
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+    return 0;
+}
+```
+
 # 指针问题
 
 ## Lambda 捕获外部变量不当导致的问题

@@ -4,71 +4,56 @@
     "type": "split",
     "children": [
       {
-        "id": "0ed7d28ff838ef4f",
+        "id": "c1a3752f335aee08",
         "type": "tabs",
         "children": [
           {
-            "id": "17db00420f688fa9",
+            "id": "b9ca1011e2e1478f",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "clickhouse/storage-engine.md",
+                "file": "draft/clickhouse.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "storage-engine"
+              "title": "clickhouse"
             }
           },
           {
-            "id": "fc820d6a9f1cd30f",
+            "id": "51c5a0a11e15d038",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "springboot/ioc.md",
+                "file": "clickhouse/ttl.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "ioc"
+              "title": "ttl"
             }
           },
           {
-            "id": "5406be8e110f6856",
+            "id": "0870f0ecdd39c265",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "system-design/service-preprocess.md",
+                "file": "cpp/container.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "service-preprocess"
-            }
-          },
-          {
-            "id": "b2f1ca69f3e6bfc1",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "springboot/mvc.md",
-                "mode": "source",
-                "source": false,
-                "backlinks": false
-              },
-              "icon": "lucide-file",
-              "title": "mvc"
+              "title": "container"
             }
           }
         ],
-        "currentTab": 2
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -99,7 +84,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "slf",
+                "query": "typename",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -132,13 +117,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "system-design/service-preprocess.md",
+                "file": "clickhouse/ttl.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of service-preprocess"
+              "title": "Outline of ttl"
             }
           }
         ]
@@ -155,34 +140,34 @@
       "graph:Open graph view": false
     }
   },
-  "active": "5406be8e110f6856",
+  "active": "51c5a0a11e15d038",
   "lastOpenFiles": [
-    "springboot/aop.md",
-    "system-design/service-preprocess.md",
-    "springboot/ioc.md",
-    "springboot/mvc.md",
+    "draft/clickhouse.md",
+    "cpp/container.md",
+    "cpp/function.md",
+    "clickhouse/ttl.md",
+    "cpp/basic.md",
     "clickhouse/storage-engine.md",
-    "clickhouse/basic.md",
+    "clickhouse/skip-index.md",
+    "clickhouse/profile-events.md",
+    "cpp/template.md",
+    "clickhouse/build.md",
+    "clickhouse/storage-policy.md",
     "mysql/basic.md",
-    "vue/router.md",
-    "typescript/Basic.md",
-    "draft/warmup-cache.md",
-    "zookeeper/basic.md",
-    "vue/basic.md",
-    "distributed/nacos.md",
-    "draft/warmup-cache-demo.md",
-    "draft/graduation.md",
-    "redis/basic.md",
-    "clickhouse/distributed.md",
-    "redis/basic0.md",
-    "xxljob/basic.md",
-    "mysql/lock.md",
-    "mysql/join.md",
-    "mysql/cte.md",
-    "mysql/index.md",
-    "mysql/exercise.md",
-    "mysql/backup.md",
-    "mysql/api.md",
+    "cpp/type.md",
+    "clickhouse/basic.md",
+    "cpp/standard_attribute.md",
+    "cpp/pointer.md",
+    "cpp/principle.md",
+    "nodiscard.md",
+    "cpp/oop.md",
+    "data-structure/lsm-tree.md",
+    "cpp/reference.md",
+    "distributed/transaction.md",
+    "netty/basic.md",
+    "netty/option.md",
+    "netty/protocol.md",
+    "cpp/concurrent.md",
     "restful",
     "cmake",
     "algorithm/image/Pasted image 20250102173733.png",

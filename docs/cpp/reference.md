@@ -70,6 +70,19 @@ int& invalid() {
 }
 ```
 
+引用是需要区分好对象和指针：
+
+```cpp
+Animal* animal = new Animal("Dog", 5);
+const auto & animalRef = *animal; // animal 是指针，需要通过 * 解引用得到具体的对象
+
+Animal animal("Dog", 5);
+const auto & animalRef = animal; // animal 是对象，可以直接引用
+
+int num = 10;
+const auto & numRef = num;
+```
+
 # 引用参数
 
 指针作为函数参数时，传递的只是指针的拷贝，但指针指向的对象仍然是原来的对象。

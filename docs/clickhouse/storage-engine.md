@@ -39,30 +39,36 @@ INSERT INTO users VALUES ('2024-01-05', 1, 'Alice', 23),
 ```
 /var/lib/clickhouse/data/default/users/
 ├── 202401/  # 分区目录（2024 年 1 月）
-│   ├── all_1_1_0/  # `part` 1
-│   │   ├── user_id.bin  → [1, 2]，存储 user_id 列数据
-│   │   ├── name.bin     → ['Alice', 'Bob']，存储 name 列数据
-│   │   ├── age.bin      → [23, 25]，存储 age 列数据
-│   │   ├── primary.idx  → [1]，稀疏索引（一级索引），帮助定位到数据块
-│   │   ├── user_id.mrk2 → [(0, 0), (4, 32)]，user_id 的 Mark 索引（二级索引），帮助偏移到数据块
-│   │   ├── count.txt    → 2 行，记录行数
-│   │   ├── checksums.txt    → 校验信息
-│   │   ├── columns.txt      → 表结构
-│   │   ├── minmax_date.txt  → 2024-01-05 ~ 2024-01-10
-│   ├── format_version.txt  # 存储格式版本
-│   ├── partition.dat  # 该分区的元数据
+│   ├── all_1_1_0/           # `part` 1
+│   │   ├── user_id.bin      # [1, 2]，存储 user_id 列数据
+│   │   ├── name.bin         # ['Alice', 'Bob']，存储 name 列数据
+│   │   ├── age.bin          # [23, 25]，存储 age 列数据
+│   │   ├── primary.idx      # [1]，稀疏索引（一级索引），帮助定位到数据块
+│   │   ├── user_id.mrk2     # [(0, 0), (4, 32)]，user_id 的 Mark 索引（二级索引），帮助偏移到数据块
+│   │   ├── count.txt        # 2 行，记录行数
+│   │   ├── checksums.txt    # 校验信息
+│   │   ├── columns.txt      # 表结构
+│   │   ├── minmax_date.txt  # 2024-01-05 ~ 2024-01-10
+│   │   ├── partition.dat    # 分区信息
+│   │   ├── metadata_version.txt   # 元数据版本
+│   │   ├── txn_version      # 事务版本
+│   ├── format_version.txt   # 存储格式版本
+│   ├── partition.dat        # 分区信息
 │
 ├── 202402/  # 分区目录（2024 年 2 月）
-│   ├── all_2_2_0/  # `part` 2
-│   │   ├── user_id.bin  → [3, 4]
-│   │   ├── name.bin     → ['Charlie', 'David']
-│   │   ├── age.bin      → [22, 30]
-│   │   ├── primary.idx  → [3]
-│   │   ├── user_id.mrk2 → [(0, 0), (4, 32)]
-│   │   ├── count.txt    → 2 行
+│   ├── all_2_2_0/           # `part` 2
+│   │   ├── user_id.bin      # [3, 4]
+│   │   ├── name.bin         # ['Charlie', 'David']
+│   │   ├── age.bin          # [22, 30]
+│   │   ├── primary.idx      # [3]
+│   │   ├── user_id.mrk2     # [(0, 0), (4, 32)]
+│   │   ├── count.txt        # 2 行
 │   │   ├── checksums.txt
 │   │   ├── columns.txt
-│   │   ├── minmax_date.txt  → 2024-02-15 ~ 2024-02-20
+│   │   ├── minmax_date.txt  # 2024-02-15 ~ 2024-02-20
+│   │   ├── partition.dat
+│   │   ├── metadata_version.txt
+│   │   ├── txn_version
 │   ├── format_version.txt
 │   ├── partition.dat
 │
@@ -86,6 +92,8 @@ MergeTree 的合并过程 和 LSM-Tree 的 Compaction 原理基本一致。
 ## 索引设计
 
 MergeTree 索引为稀疏索引，它并不索引单条数据，而是索引一定范围的数据。也就是从已排序的全量数据中，间隔性的选取一些数据记录主键字段的值来生成 primary.idx 索引文件，从而加快表查询效率。间隔设置参数为 index_granularity。
+
+- 稀疏索引 需要保证 源数据 和 索引 采用相同的排序策略，并且很难高效的解决新增数据的问题（需要大范围变更索引结构），所以 MergeTree 内部是在生成和合并 Part 的时候，才会为该 Part 生成一个稀疏索引，并且后续也不会修改该 Part，所以非常有效的避免了稀疏索引的更新问题。
 
 ![image.png](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/20250126194537.png)
 

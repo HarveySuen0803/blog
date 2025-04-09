@@ -8,7 +8,7 @@ C++ 从源代码到机器可执行文件的整个构建流程通常包括以下�
 - 链接（Linking）
 
 ```
-源代码（.cpp） --> 预处理器 --> 编译器 --> 汇编器 --> 链接器 --> 可执行文件
+源代码 --> 预处理器 --> 编译器 --> 汇编器 --> 链接器 --> 可执行文件
 ```
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412081337654.png)
@@ -92,7 +92,11 @@ g++ -c main.s -o main.o
 
 ## 链接
 
-链接器解析外部符号，将多个目标文件（main.o 和 Math.o）结合起来，将所有未解析的符号（如 Math::add 和 Math::multiply）的引用解析为实际的内存地址，生成一个最终的可执行文件 main。
+链接器解析外部符号，将多个目标文件（main.o 和 Math.o）结合起来，解析不同目标文件之间的符号引用（如 Math::add，Math::multiply），生成最终的可执行文件（main）或者共享库。
+
+- 符号解析：将每个目标文件中未定义（外部引用）的符号与其他目标文件或库中相应的定义匹配。
+- 重定位：调整目标文件中代码和数据的地址，以便在可执行文件中正确运行。
+- 符号合并：将重复的符号（例如内联函数、模板实例化等）合并，生成唯一的符号。
 
 ```shell
 g++ main.o Math.o -o main
@@ -478,13 +482,161 @@ std::cout << "Data after use: " << password << std::endl;
 std::memset(password, 0, sizeof(password));
 ```
 
-## 数据恢复技术
+---
+
+**数据恢复技术**
 
 数据恢复技术与内存数据残留密切相关。数据恢复的基本原理之一就是利用存储介质（内存、磁盘等）中数据未被完全清除的特点，从中提取原本认为已经被删除或覆盖的内容。
 
 在内存中，分配的空间被释放后，数据仍可能保留，直到被新数据覆盖。数据恢复工具可以直接读取这些未被覆盖的内存数据，从而恢复丢失的内容。
 
 磁盘、固态硬盘等存储设备在删除文件时，通常只是标记数据区域为空闲，并未立即清除实际数据。恢复工具通过扫描这些标记为空的数据区域，可以提取残留的内容。
+
+# 动态链接库
+
+共享库（动态链接库）是编译后生成的独立文件，其中包含了函数、类、数据等代码实体。它们可以被多个程序共享使用，避免重复代码存储，同时使得代码更新更加灵活（只需更新共享库而不必重新编译所有依赖它的应用程序）。
+
+- 在 Windows 上常见的动态链接库后缀为 .dll。
+- 在 Linux 上常见的动态链接库后缀为 .so（Shared Object）。
+
+静态链接：编译器在构建可执行文件时，把库中需要的代码复制到可执行文件中。这样生成的可执行文件体积较大，并且更新库后需要重新编译应用程序。
+
+动态链接：可执行文件在运行时加载共享库。多个程序可以共享同一份库代码，这样更新库时不需要重新编译所有依赖该库的程序（前提是接口没有改变）。
+
+动态链接涉及到编译器、链接器和加载器的协同工作：
+
+- 编译阶段：程序编译时，只需要知道库中函数和数据的声明（通常在头文件中），但不会包含具体实现代码。
+- 链接阶段：链接器将应用程序与共享库关联，但不将库代码复制到可执行文件中，而是保存库的引用。
+- 运行阶段：当程序启动或运行到需要库的代码时，动态链接器根据可执行文件中的符号引用，在运行时加载相应的共享库并解析这些符号。
+
+# 符号的可见性
+
+当我们在共享库中定义函数或变量时，有两种“可见性”的概念：
+
+- 外部可见（Externally Visible / Exported Symbols）：外部程序可以链接到该共享库导出的符号并调用相应的功能。
+    - 例如，一个图形库可能导出一个 draw() 函数，让应用程序调用它来绘图。
+- 内部可见（Internally Visible / Hidden Symbols）：这些符号仅在共享库内部使用，不会被导出给外部应用程序。
+    - 例如，库内部实现细节或者辅助函数，不希望用户直接调用。这可以减少符号冲突，也有助于编译器做更多优化。
+
+通过 GCC，Clang 提供的 `__attribute__((visibility("default")))` 可以设置符号的可见性，制哪些函数和数据能够被外部访问。
+
+假设你在写一个共享库，并且你希望只有 publicFunction 能够被外部调用，而 internalHelper 只用于库内部：
+
+```cpp
+// publicFunction.cpp
+
+#include <iostream>
+
+// 这个函数将导出到共享库外部，外部程序可以链接调用
+__attribute__((visibility("default")))
+void publicFunction() {
+    std::cout << "This is a public function." << std::endl;
+    internalHelper();
+}
+
+// 这个函数标记为 hidden，仅在库内部使用
+__attribute__((visibility("hidden")))
+void internalHelper() {
+    std::cout << "This is an internal helper function." << std::endl;
+}
+```
+
+在编译时，只有 publicFunction 会出现在共享库的导出符号表中，而 internalHelper 则不会。这减少了外部符号数量，也降低了符号冲突风险。
+
+# 符号的链接
+
+符号的链接（Symbol Linkage）决定了变量、函数或类在程序的不同翻译单元（translation unit）之间的可见性。
+
+- 外部链接（External Linkage）
+- 内部链接（Internal Linkage）
+- 无链接（No Linkage）
+
+![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501171116550.png)
+
+---
+
+**外部链接（External Linkage）**
+
+默认情况下，非 static 的全局变量和函数具有外部链接，外部链接的符号可以在多个翻译单元（多个 .cpp 文件）中被访问。
+
+```cpp
+// file1.cpp
+
+int globalVar = 42;  // 具有外部链接（默认）
+void showMessage() {  // 具有外部链接（默认）
+    std::cout << "Hello from file1!" << std::endl;
+}
+```
+
+```cpp
+// file2.cpp
+
+// 使用 extern 关键字声明 file1.cpp 中的变量和函数
+extern int globalVar;
+extern void showMessage();
+
+int main() {
+    std::cout << "globalVar = " << globalVar << std::endl; // 访问 file1.cpp 的变量
+    showMessage(); // 调用 file1.cpp 的函数
+    return 0;
+}
+```
+
+---
+
+**内部链接（Internal Linkage）**
+
+使用 static 关键字修饰的全局变量或函数具有内部链接，内部链接的符号只能在定义它的那个翻译单元（.cpp 文件）中使用，不能被其他翻译单元访问，这主要用于避免名称冲突，以及隐藏实现细节。
+
+```cpp
+// file1.cpp
+
+static int internalVar = 100;  // 具有内部链接
+static void internalFunction() {  // 具有内部链接
+    std::cout << "Hello from internal function in file1!" << std::endl;
+}
+
+void publicFunction() {
+    std::cout << "This is a public function in file1" << std::endl;
+}
+```
+
+```cpp
+// file2.cpp
+
+// extern int internalVar;  // ❌ 错误：internalVar 在 file1.cpp 内部，不可访问
+// extern void internalFunction();  // ❌ 错误：internalFunction 在 file1.cpp 内部，不可访问
+
+extern void publicFunction();  // ✅ 这个可以访问，因为它没有 static 修饰
+
+int main() {
+    // std::cout << "internalVar = " << internalVar << std::endl;  // ❌ 错误
+    // internalFunction();  // ❌ 错误
+    publicFunction();  // ✅ 正确
+    return 0;
+}
+```
+
+---
+
+**无链接（No Linkage）**
+
+局部变量（定义在函数内部的变量）和 constexpr 变量具有无链接，无链接的符号只能在它们定义的作用域内使用，不能跨翻译单元使用。
+
+```cpp
+void testFunction() {
+    int localVar = 10;  // 这是一个局部变量，具有无链接
+    static int staticLocalVar = 20;  // 也是无链接
+    std::cout << "localVar = " << localVar << std::endl;
+    std::cout << "staticLocalVar = " << staticLocalVar << std::endl;
+}
+
+int main() {
+    testFunction();
+    // std::cout << localVar << std::endl;  // ❌ 错误：无法访问局部变量
+    return 0;
+}
+```
 
 # 函数调用过程
 
@@ -842,98 +994,3 @@ Destructor
 ```
 
 - 直接在 `main()` 的栈空间创建具名对象。
-
-# 符号链接
-
-符号的链接（Symbol Linkage）决定了变量、函数或类在程序的不同翻译单元（translation unit）之间的可见性。
-
-- 外部链接（External Linkage）
-- 内部链接（Internal Linkage）
-- 无链接（No Linkage）
-
-![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202501171116550.png)
-
----
-
-**外部链接（External Linkage）**
-
-默认情况下，非 static 的全局变量和函数具有外部链接，外部链接的符号可以在多个翻译单元（多个 .cpp 文件）中被访问。
-
-```cpp
-// file1.cpp
-
-int globalVar = 42;  // 具有外部链接（默认）
-void showMessage() {  // 具有外部链接（默认）
-    std::cout << "Hello from file1!" << std::endl;
-}
-```
-
-```cpp
-// file2.cpp
-
-// 使用 extern 关键字声明 file1.cpp 中的变量和函数
-extern int globalVar;
-extern void showMessage();
-
-int main() {
-    std::cout << "globalVar = " << globalVar << std::endl; // 访问 file1.cpp 的变量
-    showMessage(); // 调用 file1.cpp 的函数
-    return 0;
-}
-```
-
----
-
-**内部链接（Internal Linkage）**
-
-使用 static 关键字修饰的全局变量或函数具有内部链接，内部链接的符号只能在定义它的那个翻译单元（.cpp 文件）中使用，不能被其他翻译单元访问，这主要用于避免名称冲突，以及隐藏实现细节。
-
-```cpp
-// file1.cpp
-
-static int internalVar = 100;  // 具有内部链接
-static void internalFunction() {  // 具有内部链接
-    std::cout << "Hello from internal function in file1!" << std::endl;
-}
-
-void publicFunction() {
-    std::cout << "This is a public function in file1" << std::endl;
-}
-```
-
-```cpp
-// file2.cpp
-
-// extern int internalVar;  // ❌ 错误：internalVar 在 file1.cpp 内部，不可访问
-// extern void internalFunction();  // ❌ 错误：internalFunction 在 file1.cpp 内部，不可访问
-
-extern void publicFunction();  // ✅ 这个可以访问，因为它没有 static 修饰
-
-int main() {
-    // std::cout << "internalVar = " << internalVar << std::endl;  // ❌ 错误
-    // internalFunction();  // ❌ 错误
-    publicFunction();  // ✅ 正确
-    return 0;
-}
-```
-
----
-
-**无链接（No Linkage）**
-
-局部变量（定义在函数内部的变量）和 constexpr 变量具有无链接，无链接的符号只能在它们定义的作用域内使用，不能跨翻译单元使用。
-
-```cpp
-void testFunction() {
-    int localVar = 10;  // 这是一个局部变量，具有无链接
-    static int staticLocalVar = 20;  // 也是无链接
-    std::cout << "localVar = " << localVar << std::endl;
-    std::cout << "staticLocalVar = " << staticLocalVar << std::endl;
-}
-
-int main() {
-    testFunction();
-    // std::cout << localVar << std::endl;  // ❌ 错误：无法访问局部变量
-    return 0;
-}
-```

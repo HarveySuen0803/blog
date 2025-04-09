@@ -115,6 +115,8 @@ set Nacos client config (module. user-service)
 server.port=8001
 spring.application.name=user-service
 
+spring.cloud.nacos.discovery.ip=127.0.0.1
+spring.cloud.nacos.discovery.port=8848
 spring.cloud.nacos.discovery.server-addr=127.0.0.1:8848
 spring.cloud.nacos.discovery.username=nacos
 spring.cloud.nacos.discovery.password=nacos

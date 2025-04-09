@@ -225,6 +225,41 @@ threads.emplace_back(std::move(thread)); // 编译成功，接收到右值，尝
 threads.emplace_back(std::make_unique<std::thread>())); // 编译成功，接收到右值，尝试调用移动构造成功
 ```
 
+```cpp
+class Person {
+public:
+    Person(std::string name, int age) {
+        std::cout << "Constructor called: " << name << ", " << age << std::endl;
+    }
+
+    Person(const Person& other) {
+        std::cout << "Copy constructor called" << std::endl;
+    }
+
+    Person(Person&& other) {
+        std::cout << "Move constructor called" << std::endl;
+    }
+};
+
+int main() {
+    Person p("Alice", 30);
+    
+    std::vector<Person> v;
+    
+    v.emplace_back(p); // 调用拷贝构造
+    v.emplace_back(Person("Alice", 30)); // 调用移动构造
+    v.emplace_back(std::move(p)); // 调用移动构造
+    
+    v.push_back(p); // 调用拷贝构造
+    v.push_back(Person("Alice", 30)); // 调用移动构造
+    v.push_back(std::move(p)); // 调用移动构造
+    
+    // emplace_back 相比 push_back 提供了一个更加高效简洁的接口，
+    // 可以在插入元素时，根据类型原地构造对象，避免了拷贝和移动的过程
+    v.emplace_back("Alice", 30); // 原地构造对象
+}
+```
+
 # std::deque
 
 std::deque（双端队列）是一个支持高效地在头部和尾部插入或删除元素的容器。

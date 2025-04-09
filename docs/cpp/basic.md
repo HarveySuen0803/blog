@@ -107,6 +107,7 @@ int main() {
 
 - 当 v2 = v1 时，调用拷贝构造函数，拷贝了 v1 的数据。
 - 当 v3 = std::move(v1) 时，调用移动构造函数，转移了 v1 的数据，而不是拷贝，性能更高。
+    - 可以理解 std::move(v1) 就是拿出 v1 指向的右值，而 v3 想要接受右值，就只能通过 MyVector&& other 这个右值引用。
 
 右值引用在标准容器中用于高效插入临时对象，避免不必要的对象构造。
 
@@ -192,7 +193,7 @@ int main() {
     }
 
     // 转移文件句柄的所有权到 f2
-    File f2 = std::move(f1); // 调用移动构造函数
+    File f2 = std::move(f1); // f2 还没创建，并且接受到的是右值，所以调用移动构造函数
     if (!f1.is_open()) {
         std::cout << "File f1 is no longer open after move" << std::endl;
     }
@@ -202,7 +203,7 @@ int main() {
 
     // 转移文件句柄的所有权到 f3
     File f3;
-    f3 = std::move(f2); // 调用移动赋值运算符
+    f3 = std::move(f2); // f3 已经创建，并且接受到的是右值，所以调用移动赋值运算符
     if (!f2.is_open()) {
         std::cout << "File f2 is no longer open after move" << std::endl;
     }
@@ -288,6 +289,31 @@ using namespace std;
 
 int main() {
     cout << "Using directive example" << endl;
+    return 0;
+}
+```
+
+前导的 :: 表示全局作用域，确保我们引用的是全局命名空间中的类型。
+
+```cpp
+// 在全局作用域中定义 UInt128 类型
+struct UInt128 {
+    // 定义细节...
+};
+
+namespace MyNamespace {
+    // 如果在 MyNamespace 中有同名的类型，可能会引起混淆
+    struct UInt128 {
+        // 另一个定义...
+    };
+
+    // 这里我们使用全局作用域中的 UInt128，而不是 MyNamespace 中的 UInt128
+    using GlobalUInt128 = ::UInt128;
+}
+
+int main() {
+    // GlobalUInt128 指代全局定义的 UInt128
+    GlobalUInt128 value;
     return 0;
 }
 ```
@@ -474,6 +500,8 @@ Compiling this file...
 
 constexpr 用于表示一个表达式或函数的值可以在编译时计算，它可以用来定义常量、函数或构造函数，使程序更加高效，同时提供编译时的类型检查。
 
+constexpr 提供编译期计算能力，但编译器可能对非 constexpr 的代码也进行类似的优化。即使不用 constexpr，只要程序中出现常量表达式，编译器也可能在编译时优化。
+
 ## 编译期常量
 
 ```cpp
@@ -558,10 +586,6 @@ int main() {
 - Circle 类的构造函数和 getArea 成员函数都是 constexpr。
 - 当 Circle 对象在编译时创建时，相关计算也会在编译期完成。
 - 同一个 constexpr 函数在运行时仍然可以使用。
-
-## 编译器优化
-
-constexpr 提供编译期计算能力，但编译器可能对非 constexpr 的代码也进行类似的优化。即使不用 constexpr，只要程序中出现常量表达式，编译器也可能在编译时优化。
 
 # inline
 
@@ -824,4 +848,3 @@ Child process received: Hello from parent process!
 
 - 父进程通过管道的写端发送消息，子进程通过读端接收消息。
 - 不需要的管道端在两个进程中都被关闭，以确保通信单向性。
-

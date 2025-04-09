@@ -607,6 +607,19 @@ int main() {
 - 使用 explicit 修饰类型转换操作符，禁止隐式类型转换。
 - 必须通过 static_cast 或其他显式方式调用类型转换操作符。
 
+# 创建对象
+
+```cpp
+MyClass obj1; // 调用构造函数
+
+MyClass obj2 = obj1; // 调用拷贝构造函数
+
+MyClass obj3 = std::move(obj2); // obj3 还没创建，接受到右值时，调用移动构造函数
+
+MyClass obj4;
+MyClass obj4 = std::move(obj3); // obj4 已经创建，接受到右值时，调用移动赋值函数
+```
+
 # 拷贝构造
 
 拷贝构造函数是一种特殊构造函数，用于创建一个对象，并用同类的另一个对象对其初始化。通常用于对象的拷贝操作。

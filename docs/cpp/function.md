@@ -1,4 +1,4 @@
-### system
+# system
 
 system() 是一个标准 C 函数，用于在程序中调用操作系统的命令。
 
@@ -28,7 +28,7 @@ if (result == 0) {
 }
 ```
 
-### std::move
+# std::move
 
 std::move 是“移动语义”的核心工具，它不进行深拷贝，而是将资源的“所有权”从一个对象转移到另一个对象，从而减少额外的拷贝操作。
 
@@ -53,7 +53,7 @@ for (const auto& s : vec) {
 - vec.push_back(std::move(str) 转移了 str 的资源到 vec，避免了额外的内存分配和数据拷贝。
 - 移动语义将 str 的底层内存直接交给了 vec，此时 str 变为空状态（内容未定义，但安全）。
 
-### std::copy
+# std::copy
 
 std::copy 是一个高效的复制算法，用于将一段数据从一个范围复制到另一个范围。相比手动循环，它使用了底层优化，特别是对于内存连续存储的容器。
 
@@ -76,7 +76,7 @@ std::copy 的实现利用了 memmove 或 memcpy 来优化性能，尤其是当�
 - 如果容器的内存非连续（例如，std::list），则会逐元素调用赋值操作。
 - 如果元素是复杂类型（例如，自定义类），则会逐元素调用拷贝构造函数，因为这些类型无法直接使用 memcpy 或 memmove 进行字节复制。
 
-### memcpy
+# memcpy
 
 memcpy 用于复制内存的字节块，源和目标内存区域不能重叠，如果存在重叠，会导致未定义行为。通常比 memmove 更快，因为它不需要额外的重叠检查。
 
@@ -91,7 +91,7 @@ std::cout << "Source: " << src << std::endl;
 std::cout << "Destination: " << dest << std::endl;
 ```
 
-### memmove
+# memmove
 
 memmove 用于复制内存的字节块，支持源和目标内存区域重叠的情况，如果发生重叠，会确保数据的正确性。较 memcpy 稍慢，因为需要处理重叠检查。
 
@@ -104,7 +104,7 @@ memmove(str + 5, str, 10);
 std::cout << "Result: " << str << std::endl;
 ```
 
-### std::sort
+# std::sort
 
 对范围内的元素按升序排序（默认）。可以提供自定义比较函数或仿函数。
 
@@ -123,7 +123,7 @@ for (int n : numbers) {
 std::cout << std::endl;
 ```
 
-### std::stable_sort
+# std::stable_sort
 
 稳定排序，相同值的元素相对位置不变。
 
@@ -149,7 +149,7 @@ int main() {
 }
 ```
 
-### std::find
+# std::find
 
 在范围中查找第一个匹配的元素。
 
@@ -165,7 +165,7 @@ if (it != numbers.end()) {
 }
 ```
 
-### std::find_if
+# std::find_if
 
 查找第一个满足条件的元素。
 
@@ -183,7 +183,7 @@ if (it != numbers.end()) {
 }
 ```
 
-### std::binary_search
+# std::binary_search
 
 检查范围内是否存在某元素（适用于已排序范围）。
 
@@ -197,7 +197,71 @@ if (std::binary_search(numbers.begin(), numbers.end(), 3)) {
 }
 ```
 
-### std::reverse
+# std::lower_bound
+
+在已排序的整型数组中查找：
+
+```cpp
+std::vector<int> vec = {1, 3, 3, 5, 7, 9};
+
+// 查找第一个不小于 3 的元素
+auto it = std::lower_bound(vec.begin(), vec.end(), 3);
+if (it != vec.end()) {
+    std::cout << "第一个不小于 3 的元素是: " << *it << std::endl;
+} else {
+    std::cout << "没有找到满足条件的元素" << std::endl;
+}
+
+// 查找第一个不小于 4 的元素（注意 4 不在序列中，但 lower_bound 会返回第一个大于 4 的元素）
+auto it2 = std::lower_bound(vec.begin(), vec.end(), 4);
+if (it2 != vec.end()) {
+    std::cout << "第一个不小于 4 的元素是: " << *it2 << std::endl;
+} else {
+    std::cout << "没有找到满足条件的元素" << std::endl;
+}
+```
+
+在自定义类型中使用自定义比较器：
+
+```cpp
+struct Person {
+    std::string name;
+    int age;
+};
+
+// 自定义比较函数：比较两个人的年龄
+bool cmp(const Person& a, const Person& b) {
+    return a.age < b.age;
+}
+
+int main() {
+    std::vector<Person> persons = {
+        {"Alice", 30},
+        {"Bob", 25},
+        {"Charlie", 35},
+        {"David", 28}
+    };
+
+    // 由于 lower_bound 要求序列必须有序，所以先按年龄排序
+    std::sort(persons.begin(), persons.end(), cmp);
+
+    // 现在 persons 按年龄排序为: Bob (25), David (28), Alice (30), Charlie (35)
+    // 查找第一个年龄不小于 30 的人
+    Person target{"", 30}; // 只需要设置 age 字段即可
+    auto it = std::lower_bound(persons.begin(), persons.end(), target, cmp);
+
+    if (it != persons.end()) {
+        std::cout << "第一个年龄不小于 30 的人是: " 
+                  << it->name << ", 年龄: " << it->age << std::endl;
+    } else {
+        std::cout << "没有找到满足条件的人" << std::endl;
+    }
+
+    return 0;
+}
+```
+
+# std::reverse
 
 反转范围内的元素。
 
@@ -212,7 +276,7 @@ for (int n : numbers) {
 std::cout << std::endl;
 ```
 
-### std::replace
+# std::replace
 
 将范围内满足条件的元素替换为新值。
 
@@ -227,7 +291,7 @@ for (int n : numbers) {
 std::cout << std::endl;
 ```
 
-### std::remove
+# std::remove
 
 移除范围内的元素（逻辑删除）。
 
@@ -243,7 +307,7 @@ for (int n : numbers) {
 std::cout << std::endl;
 ```
 
-### std::count
+# std::count
 
 统计范围内元素的个数。
 
@@ -255,7 +319,7 @@ int count = std::count(numbers.begin(), numbers.end(), 2);
 std::cout << "Count of 2: " << count << std::endl;
 ```
 
-### std::count_if
+# std::count_if
 
 统计满足条件的元素个数。
 
@@ -269,7 +333,7 @@ int count = std::count_if(numbers.begin(), numbers.end(), [](int n) {
 std::cout << "Count of numbers greater than 3: " << count << std::endl;
 ```
 
-### std::transform
+# std::transform
 
 对范围内的每个元素应用操作，并将结果存储到另一范围。
 
@@ -287,7 +351,7 @@ for (int n : results) {
 std::cout << std::endl;
 ```
 
-### std::accumulate
+# std::accumulate
 
 计算范围内元素的累计值。
 
@@ -299,7 +363,7 @@ int sum = std::accumulate(numbers.begin(), numbers.end(), 0);
 std::cout << "Sum: " << sum << std::endl;
 ```
 
-### std::fill
+# std::fill
 
 将一个范围内的所有元素赋值为指定的值。
 
@@ -315,7 +379,7 @@ for (int n : numbers) {
 std::cout << std::endl;
 ```
 
-### std::set_union
+# std::set_union
 
 计算两个集合的并集，将结果存储在目标范围中，要求输入集合必须是有序的。
 
@@ -343,7 +407,7 @@ for (int n : result) {
 std::cout << std::endl;
 ```
 
-### std::set_intersection
+# std::set_intersection
 
 计算两个集合的交集，将结果存储在目标范围中，要求输入集合必须是有序的。
 
@@ -371,7 +435,7 @@ for (int n : result) {
 std::cout << std::endl;
 ```
 
-### std::set_difference
+# std::set_difference
 
 计算第一个集合中不属于第二个集合的元素（差集），将结果存储在目标范围中，要求输入集合必须是有序的。
 
@@ -399,7 +463,7 @@ for (int n : result) {
 std::cout << std::endl;
 ```
 
-### std::set_symmetric_difference
+# std::set_symmetric_difference
 
 计算两个集合中非公共元素的集合（对称差集），将结果存储在目标范围中，要求输入集合必须是有序的。
 
@@ -431,7 +495,7 @@ std::cout << std::endl;
 Symmetric Difference: 1 2 5 6
 ```
 
-### std::includes
+# std::includes
 
 检查一个集合是否是另一个集合的子集，要求输入集合必须是有序的。
 
@@ -447,179 +511,6 @@ if (is_subset) {
     std::cout << "set2 is a subset of set1." << std::endl;
 } else {
     std::cout << "set2 is not a subset of set1." << std::endl;
-}
-```
-
-# std::unique_ptr
-
-std::unique_ptr 是一个独占所有权的智能指针，确保某块内存只有一个指针拥有，生命周期由这个指针控制。
-
-- 不可复制，但可以转移所有权，自动释放资源。
-
-```cpp
-class MyClass {
-public:
-    MyClass() { std::cout << "MyClass Constructor" << std::endl; }
-    ~MyClass() { std::cout << "MyClass Destructor" << std::endl; }
-    void sayHello() { std::cout << "Hello from MyClass!" << std::endl; }
-};
-
-int main() {
-    std::unique_ptr<MyClass> ptr1 = std::make_unique<MyClass>(); // 创建智能指针
-    ptr1->sayHello();
-
-    // std::unique_ptr<MyClass> ptr2 = ptr1; // 错误：unique_ptr 不支持复制
-
-    std::unique_ptr<MyClass> ptr2 = std::move(ptr1); // 转移所有权
-    if (!ptr1) {
-        std::cout << "ptr1 is now nullptr" << std::endl;
-    }
-    ptr2->sayHello();
-
-    return 0; // 离开作用域时，ptr2 自动释放内存
-}
-```
-
-# std::shared_ptr
-
-std::shared_ptr 是一种共享所有权的智能指针，可以被多个指针共享同一块内存，内部使用共享引用计数 use_count 管理资源，当最后一个 shared_ptr 被销毁时，释放内存。
-
-每个由 std::shared_ptr 或 std::weak_ptr 管理的对象，都有一个控制块，用来跟踪引用计数和对象的状态。控制块包含以下信息：
-
-- use_count 共享引用计数器：跟踪当前有多少个 std::shared_ptr 共享同一个对象，当 use_count == 0 时，托管对象会被销毁。
-- weak_count 弱引用计数器：跟踪当前有多少个 std::weak_ptr 引用控制块，控制块本身的生命周期由 use_count 和 weak_count 共同决定，当 use_count == 0 且 weak_count == 0 时，控制块会被销毁。
-- 托管对象指针：存储了指向托管对象的原生指针，std::shared_ptr 和 std::weak_ptr 通过这个指针访问对象。
-
-```cpp
-class MyClass {
-public:
-    MyClass() { std::cout << "MyClass Constructor" << std::endl; }
-    ~MyClass() { std::cout << "MyClass Destructor" << std::endl; }
-};
-
-int main() {
-    std::shared_ptr<MyClass> ptr1 = std::make_shared<MyClass>(); // 创建 shared_ptr
-    std::shared_ptr<MyClass> ptr2 = ptr1; // 共享所有权
-
-    std::cout << "Use count: " << ptr1.use_count() << std::endl; // 引用计数为 2
-
-    ptr1.reset(); // ptr1 放弃所有权
-    std::cout << "Use count after ptr1.reset(): " << ptr2.use_count() << std::endl;
-
-    return 0; // 离开作用域时，ptr2 释放内存
-}
-```
-
----
-
-**示例：数据结构中共享节点**
-
-std::shared_ptr 常用于图或链表等数据结构中，多个节点可能共享相同的子节点。
-
-```cpp
-class Node {
-public:
-    int value;
-    std::vector<std::shared_ptr<Node>> children;
-
-    Node(int val) : value(val) { std::cout << "Node created: " << val << "\n"; }
-    ~Node() { std::cout << "Node destroyed: " << value << "\n"; }
-};
-
-int main() {
-    auto root = std::make_shared<Node>(1);
-    auto child1 = std::make_shared<Node>(2);
-    auto child2 = std::make_shared<Node>(3);
-
-    root->children.push_back(child1);
-    root->children.push_back(child2);
-
-    // child1 和 child2 也可以单独使用
-    std::cout << "Root's children count: " << root->children.size() << "\n";
-    return 0; // 所有节点在这里被释放
-}
-```
-
----
-
-**示例：工厂模式和多模块共享**
-
-当对象由一个工厂函数创建，并在多个模块中共享时，std::shared_ptr 是理想选择。
-
-```cpp
-class Resource {
-public:
-    Resource() { std::cout << "Resource acquired\n"; }
-    ~Resource() { std::cout << "Resource released\n"; }
-};
-
-std::shared_ptr<Resource> createResource() {
-    return std::make_shared<Resource>();
-}
-
-int main() {
-    auto resource1 = createResource();
-    auto resource2 = resource1; // 共享同一资源
-
-    std::cout << "Use count: " << resource1.use_count() << "\n"; // 引用计数
-    return 0;
-}
-```
-
-# std::weak_ptr
-
-std::weak_ptr 是一种弱引用指针，它不增加共享引用计数 use_count，通常用来解决 shared_ptr 循环引用 的问题。
-
-- 不管理资源，只能通过 lock() 方法获取 shared_ptr，常用于观察者模式或打破循环引用。
-
-```cpp
-class Node {
-public:
-    std::shared_ptr<Node> next; // 循环引用
-    std::weak_ptr<Node> prev;   // 弱引用，避免循环引用
-
-    ~Node() { std::cout << "Node Destructor" << std::endl; }
-};
-
-int main() {
-    std::shared_ptr<Node> node1 = std::make_shared<Node>();
-    std::shared_ptr<Node> node2 = std::make_shared<Node>();
-
-    node1->next = node2;       // node1 指向 node2
-    node2->prev = node1;       // node2 弱引用 node1
-
-    return 0; // 离开作用域时，内存正常释放
-}
-```
-
----
-
-**示例：解决循环引用问题**
-
-```cpp
-class A;
-class B;
-
-class A {
-public:
-    std::shared_ptr<B> b_ptr; // 循环引用
-    ~A() { std::cout << "A Destructor" << std::endl; }
-};
-
-class B {
-public:
-    std::shared_ptr<A> a_ptr; // 循环引用
-    ~B() { std::cout << "B Destructor" << std::endl; }
-};
-
-int main() {
-    std::shared_ptr<A> a = std::make_shared<A>();
-    std::shared_ptr<B> b = std::make_shared<B>();
-
-    a->b_ptr = b;
-    b->a_ptr = a;
-
-    return 0; // 循环引用导致内存泄漏，将 A 或 B 其中一个引用换成 std::weak_ptr 即可解决问题
 }
 ```
 
@@ -766,3 +657,71 @@ int main() {
     return 0;
 }
 ```
+
+# std::tie 
+
+std::tie 的主要作用是将多个变量绑定到一个 tuple（元组）中，生成一个由这些变量引用构成的 tuple。这样可以方便地进行函数返回值的拆解、多变量赋值以及进行对象之间的比较
+
+示例 1：利用 std::tie 拆解函数返回的 std::pair：
+
+```cpp
+std::pair<int, std::string> getPair() {
+    return std::make_pair(42, "Hello, world!");
+}
+
+int main() {
+    int number;
+    std::string text;
+    std::tie(number, text) = getPair();  // 将 pair 中的值分别赋给 number 和 text
+
+    std::cout << "Number: " << number << "\nText: " << text << std::endl;
+    return 0;
+}
+```
+
+示例 2：使用 std::ignore 忽略不需要的返回值
+
+```cpp
+std::tuple<int, double, std::string> getData() {
+    return std::make_tuple(1, 3.14, "example");
+}
+
+int main() {
+    int id;
+    std::string info;
+    // 忽略第二个返回值（double 类型）
+    std::tie(id, std::ignore, info) = getData();
+
+    std::cout << "ID: " << id << "\nInfo: " << info << std::endl;
+    return 0;
+}
+```
+
+示例 3：利用 std::tie 进行多个变量的比较
+
+```cpp
+struct Student {
+    std::string name;
+    int score;
+};
+
+// 重载小于运算符，利用 std::tie 进行字典序比较
+bool operator<(const Student &a, const Student &b) {
+    return std::tie(a.score, a.name) < std::tie(b.score, b.name);
+}
+
+int main() {
+    Student s1{"Alice", 90};
+    Student s2{"Bob", 85};
+
+    if (s1 < s2) {
+        std::cout << s1.name << " is ranked lower than " << s2.name << std::endl;
+    } else {
+        std::cout << s1.name << " is ranked higher than or equal to " << s2.name << std::endl;
+    }
+    return 0;
+}
+```
+
+- 在这个例子中，我们通过重载 operator<，使用 std::tie(a.score, a.name) 和 std::tie(b.score, b.name) 将两个学生对象的分数和姓名打包成 tuple。然后直接利用 tuple 的内置比较规则（先比较分数，若相等再比较姓名）来实现学生对象的排序逻辑。
+

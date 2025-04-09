@@ -455,7 +455,7 @@ int main() {
 
 # reinterpret_cast
 
-reinterpret_cast 提供了更底层、更直接的类型转换功能，不进行类型检查，主要用于底层系统编程或操作硬件地址，使用不当可能导致未定义行为，因此需要谨慎使用。
+reinterpret_cast 提供了更底层、更直接的类型转换功能，不进行类型检查，用于将一种类型的对象“按位重解释”为另一种完全不同的类型。它主要用于指针之间、指针与整型之间、函数指针之间的转换，但并不保证转换后的结果是有意义或安全的。它只是改变编译器对内存中数据的解释方式，使用不当可能导致未定义行为，因此需要谨慎使用。
 
 ```cpp
 int number = 42;
@@ -469,4 +469,16 @@ int* new_int_ptr = reinterpret_cast<int*>(void_ptr);
 
 // 解引用指针
 cout << "Value: " << *new_int_ptr << endl;  // 输出：42
+```
+
+```cpp
+// 将 int* 转换为 char*，以便按字节访问内存
+char* bytePtr = reinterpret_cast<char*>(&number);
+
+std::cout << "Memory bytes of number: ";
+for (size_t i = 0; i < sizeof(number); ++i) {
+    // 输出每个字节的十六进制表示
+    std::cout << "0x" << std::hex << std::setw(2) << std::setfill('0')
+              << (static_cast<unsigned int>(static_cast<unsigned char>(bytePtr[i]))) << " ";
+}
 ```
