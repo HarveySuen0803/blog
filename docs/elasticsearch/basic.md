@@ -34,19 +34,13 @@ sudo ln -s /var/lib/docker/volumes/elasticsearch-plugin/_data /opt/elasticsearch
 sudo ln -s /var/lib/docker/volumes/elasticsearch-log/_data /opt/elasticsearch/log
 ```
 
-set ElasticSearch network
-
-```shell
-docker network create localhost
-```
-
 startup ElasticSearch
 
 ```shell
 docker container run \
     --name elasticsearch \
+    --network global \
     --privileged \
-    --network localhost \
     -p 9200:9200 \
     -p 9300:9300 \
     -e ES_JAVA_OPTS="-Xms512m -Xmx512m" \

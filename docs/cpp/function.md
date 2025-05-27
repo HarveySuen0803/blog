@@ -660,9 +660,9 @@ int main() {
 
 # std::tie 
 
-std::tie 的主要作用是将多个变量绑定到一个 tuple（元组）中，生成一个由这些变量引用构成的 tuple。这样可以方便地进行函数返回值的拆解、多变量赋值以及进行对象之间的比较
+std::tie 的主要作用是将多个变量绑定到一个 tuple（元组）中，生成一个由这些变量引用构成的 tuple。这样可以方便地进行函数返回值的拆解、多变量赋值以及进行对象之间的比较。
 
-示例 1：利用 std::tie 拆解函数返回的 std::pair：
+示例 1，利用 std::tie 拆解函数返回的 std::pair：
 
 ```cpp
 std::pair<int, std::string> getPair() {
@@ -679,7 +679,7 @@ int main() {
 }
 ```
 
-示例 2：使用 std::ignore 忽略不需要的返回值
+示例 2，使用 std::ignore 忽略不需要的返回值：
 
 ```cpp
 std::tuple<int, double, std::string> getData() {
@@ -697,7 +697,7 @@ int main() {
 }
 ```
 
-示例 3：利用 std::tie 进行多个变量的比较
+示例 3，利用 std::tie 进行多个变量的比较：
 
 ```cpp
 struct Student {
@@ -725,3 +725,231 @@ int main() {
 
 - 在这个例子中，我们通过重载 operator<，使用 std::tie(a.score, a.name) 和 std::tie(b.score, b.name) 将两个学生对象的分数和姓名打包成 tuple。然后直接利用 tuple 的内置比较规则（先比较分数，若相等再比较姓名）来实现学生对象的排序逻辑。
 
+# std::conditional_t
+
+td::conditional_t 可以根据一个编译时布尔条件来选择两个类型之一。这是一种编译期的条件类型选择机制，属于模板元编程的范畴。
+
+```cpp
+std::conditional_t<条件, 条件为真时的类型, 条件为假时的类型>
+```
+
+示例 1，根据数据类型大小选择合适的容器类型：
+
+```cpp
+template <typename T>
+using appropriate_container = std::conditional_t<
+    sizeof(T) <= 8,
+    std::vector<T>,    // 小型对象，使用vector
+    std::list<T>       // 大型对象，使用list
+>;
+
+// 使用示例
+appropriate_container<int> int_container;     // 是 std::vector<int>
+appropriate_container<LargeStruct> large_container;  // 是 std::list<LargeStruct>
+```
+
+示例 2，根据平台选择合适的整数类型：
+
+```cpp
+using platform_size_t = std::conditional_t<
+    sizeof(void*) == 8,
+    uint64_t,  // 64位系统
+    uint32_t   // 32位系统
+>;
+```
+
+示例 3，在模板参数包中使用：
+
+```cpp
+template <bool UseDouble, typename... Args>
+auto calculate_sum(Args... args) {
+    using result_type = std::conditional_t<UseDouble, double, int>;
+    return static_cast<result_type>(0 + ... + args);
+}
+
+// 使用示例
+auto sum1 = calculate_sum<false>(1, 2, 3);  // 返回int
+auto sum2 = calculate_sum<true>(1, 2, 3);   // 返回double
+```
+
+# std::optional
+
+std::optional 就类似于 Java Optional 是一个“可选”类型，它要么包含一个类型为 T 的值，要么不包含任何值（称为空状态）。
+
+```cpp
+std::optional<int> a;                 // 默认构造，a 为空
+std::optional<int> b = std::nullopt;  // 显式置为空
+std::optional<int> c = 42;            // 包含值 42
+std::optional<int> d{ std::in_place, 7 }; // 直接在可选对象内部就地构造
+
+std::cout << "a.has_value() = " << a.has_value() << "\n"; // 0
+std::cout << "c.has_value() = " << c.has_value() << "\n"; // 1
+```
+
+```cpp
+std::optional<std::string> optName = "Alice";
+
+if (optName) {
+    // 方法1：operator*
+    std::cout << "*optName = " << *optName << "\n";
+    // 方法2：value()
+    std::cout << "optName.value() = " << optName.value() << "\n";
+    // 方法3：operator->
+    std::cout << "length = " << optName->size() << "\n";
+}
+
+// value_or：当 optional 为空时，返回一个默认值
+std::optional<std::string> emptyName;
+std::cout << "emptyName.value_or(\"N/A\") = " << emptyName.value_or("N/A") << "\n";
+```
+
+```cpp
+std::optional<double> opt;
+
+// emplace：就地构造
+opt.emplace(3.14);
+std::cout << "after emplace, value = " << *opt << "\n";
+
+// 赋值新值
+opt = 2.718;
+std::cout << "after assign, value = " << *opt << "\n";
+
+// 置为空
+opt.reset();
+std::cout << "after reset, has_value = " << opt.has_value() << "\n";
+```
+
+当函数可能“有结果”或“无结果”时，使用 std::optional 比用特殊值更安全、可读。
+
+```cpp
+std::optional<size_t> find_first_digit(const std::string& s) {
+    for (size_t i = 0; i < s.size(); ++i) {
+        if (std::isdigit(static_cast<unsigned char>(s[i])))
+            return i;
+    }
+    return std::nullopt;
+}
+
+int main() {
+    auto pos = find_first_digit("abc9xyz");
+    if (pos) {
+        std::cout << "digit at index " << *pos << "\n";
+    } else {
+        std::cout << "no digit found\n";
+    }
+}
+```
+
+std::optional 允许可选地引用一个已有对象，但有一些限制（比如不能 emplace，只能用引用或 nullopt 构造）。
+
+```cpp
+int x = 10;
+std::optional<int&> refOpt = x;
+if (refOpt) {
+    *refOpt = 20; // 直接修改 x
+}
+std::cout << "x = " << x << "\n"; // 20
+```
+
+可以对 optional 直接做结构化绑定来访问值或默认值。
+
+```cpp
+std::optional<std::pair<int,int>> maybe_pair(bool ok) {
+    if (ok) return std::make_pair(1, 2);
+    else    return std::nullopt;
+}
+
+int main() {
+    auto [a, b] = maybe_pair(true).value_or(std::pair{0,0});
+    std::cout << "a=" << a << ", b=" << b << "\n";
+}
+```
+
+# std::swap
+
+对于基本类型，std::swap 完全等价于三次赋值，但写法更简洁、语义更清晰。
+
+```cpp
+int x = 5, y = 10;
+std::cout << "交换前：x = " << x << ", y = " << y << "\n";
+
+std::swap(x, y);
+
+std::cout << "交换后：x = " << x << ", y = " << y << "\n";
+```
+
+```
+交换前：x = 5, y = 10
+交换后：x = 10, y = 5
+```
+
+当你为自定义类型实现了更高效的交换逻辑时，可以在该类型的命名空间里提供一个重载版本，让 ADL 优先选用。
+
+- ADL：编译器会在参数类型对应的命名空间（此例中为 MyNS）中查找同名的 swap，优先使用自定义版本。
+
+```cpp
+namespace MyNS {
+    struct Buffer {
+        int* data;
+        size_t size;
+
+        // 构造、析构略...
+    };
+
+    // 专门化 swap：只交换指针与大小，效率极高
+    inline void swap(Buffer& a, Buffer& b) noexcept {
+        std::swap(a.data, b.data);   // 复用已有的指针交换
+        std::swap(a.size, b.size);
+    }
+}
+
+int main() {
+    MyNS::Buffer buf1{/*data=*/new int[100], /*size=*/100};
+    MyNS::Buffer buf2{/*data=*/new int[200], /*size=*/200};
+
+    // 通过 ADL，会调用 MyNS::swap 而非 std::swap<T>
+    using std::swap;
+    swap(buf1, buf2);
+
+    std::cout << "buf1.size=" << buf1.size
+              << ", buf2.size=" << buf2.size << "\n";
+    return 0;
+}
+```
+
+标准库容器（如 std::vector、std::string、std::map 等）都提供了成员函数 swap，并且在其内部对 std::swap 进行了特化，以实现指针或句柄互换，而非元素逐个复制。
+
+```cpp
+std::vector<int> a = {1,2,3}, b = {4,5};
+
+std::cout << "交换前：a.size=" << a.size() << ", b.size=" << b.size() << "\n";
+a.swap(b);           // 调用了 vector::swap
+// 或者 std::swap(a, b); （同样会调用 vector 的特化版本）
+
+std::cout << "交换后：a.size=" << a.size() << ", b.size=" << b.size() << "\n";
+```
+
+在模版函数中 “优雅地” 调用 swap，既能保证对内置类型和标准容器使用 std::swap，又能利用用户为自定义类型提供的高效重载。
+
+```cpp
+template<typename T>
+void mySwap(T& a, T& b) {
+    // 将 std::swap 带入当前作用域，使得在后续的未限定名称调用 swap(...) 时，
+    // 如果找不到更匹配的重载，可以回退到这个名字
+    using std::swap;
+    // 这里是不带命名空间前缀的调用，编译器会先用 ADL 在 T 的命名空间中查找是否有 swap(T&,T&) 的更特殊重载，
+    // 如果找到了，就调用用户自定义的高效版本；否则再调用 std::swap<T>(a,b)
+    swap(a, b);
+}
+
+int main() {
+    int x = 1, y = 2;
+    
+    // ADL 在全局和 std 中都没找到冲突的 swap(int,int)，最终调用 std::swap<int>(x,y)。
+    mySwap(x, y); 
+
+    std::vector<int> a = {1,2,3}, b = {4,5};
+    // 标准库为 vector 提供了特化版本 std::swap(std::vector&,std::vector&)，最终调用标准库提供的特化版本
+    mySwap(a, b);
+}
+```

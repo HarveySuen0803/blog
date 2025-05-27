@@ -926,6 +926,47 @@ int main() {
 析构: Hello
 ```
 
+# 继承构造函数
+
+可以使用 using Base::Base 的语法继承父类的所有构造器。
+
+```cpp
+class Person {
+public:
+    Person(std::string name, int age) {
+        std::cout << "Person: " << name << ", " << age << std::endl;
+    }
+};
+
+class Student : public Person {
+public:
+    using Person::Person; // 继承所有构造函数
+};
+
+int main() {
+    Student s("Tom", 20); // ✅ OK，自动调用 Person(std::string, int)
+}
+```
+
+这里 Student 没有构造器，并且没有使用 using 继承 Person 的构造器，即编译器报错。
+
+```cpp
+class Person {
+public:
+    Person(std::string name, int age) {
+        std::cout << "Person: " << name << ", " << age << std::endl;
+    }
+};
+
+class Student : public Person {
+    // ❌ 没有 using，也没有构造函数
+};
+
+int main() {
+    Student s("Tom", 20); // ❌ 编译错误：Student 没有匹配的构造函数
+}
+```
+
 # 访问成员
 
 ```cpp
@@ -968,6 +1009,180 @@ Global value: 100
 ```
 
 ![](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/202412062102182.png)
+
+# 初始化器
+
+C++20 借鉴 C23，支持按名字指定成员初始化，顺序可任意：
+
+```cpp
+struct Color { int r, g, b, a; };
+
+// 只设置部分成员
+Color c1{ .g = 128, .r = 255 };  
+// 等价于：r=255, g=128, b=0, a=0
+
+// 任意顺序
+Color c2{ .a = 200, .b = 50, .r = 10 };  
+// 其余成员零初始化
+```
+
+# 聚合初始化
+
+聚合初始化使用一对花括号 {…}，按成员声明顺序逐个提供初始值。
+
+```cpp
+truct Point { 
+    int x; 
+    int y; 
+};
+
+// 传统方式
+Point p1 = { 10, 20 };   // p1.x = 10, p1.y = 20
+
+// C++11 统一初始化
+Point p2{ 30, 40 };      // p2.x = 30, p2.y = 40
+```
+
+- 若初始器列表中元素 少于 成员数，则剩余成员 零初始化（内置类型为 0）。
+- 若元素 多于 成员数，则编译错误。
+
+数组也是聚合理性，本质上也是采用的聚合初始化，未显式初始化的元素会被置为 0。
+
+```cpp
+int a1[5] = { 1, 2, 3 };  // 等价于 {1,2,3,0,0}
+int a2[]   = { 4, 5, 6 };  // 编译器自动推断大小为 3
+```
+
+---
+
+嵌套聚合初始化。
+
+```cpp
+struct Rect {
+    Point topLeft;
+    Point bottomRight;
+};
+
+Rect r = { {0,0}, {100,100} };
+// 等同于：
+// r.topLeft.x = 0;  r.topLeft.y = 0;
+// r.bottomRight.x = 100;  r.bottomRight.y = 100;
+```
+
+对于多层嵌套的聚合，如果最内层依次只有一个聚合，也可省略中间的 {}。
+
+```cpp
+Rect r2 = {  {0,0}, {100,100} };  
+// 更省略也合法（但可读性差）：
+Rect r3 = { 0,0, 100,100 };
+```
+
+---
+
+如果聚合成员提供了默认成员初始化器，聚合初始化时，未显式赋值的成员会使用它们的默认值。
+
+```cpp
+struct Config {
+    int width  = 800;
+    int height = 600;
+    bool fullscreen = false;
+};
+
+// 部分初始化
+Config cfg1 = { 1024, 768 };    
+// cfg1.width=1024, cfg1.height=768, cfg1.fullscreen=false
+
+// 全部使用默认
+Config cfg2 = {};  
+// cfg2.width=800, cfg2.height=600, cfg2.fullscreen=false
+```
+
+std::array 在 C++11 起即为聚合类型，可直接使用聚合初始化。
+
+```cpp
+std::array<int,4> arr = { 1, 2, 3, 4 };
+// C++17 以后可以省略模板参数，利用 CTAD（类模板参数推导）：
+std::array arr2{ 5, 6, 7, 8 };
+```
+
+---
+
+传递参数时可以用 {…} 构造一个匿名的 initializer_list 作为参数传递。
+
+```cpp
+void print_list(std::initializer_list<int> list) {
+    std::cout << "size = " << list.size() << "\n";
+    for (int x : list)   // 可用范围 for
+        std::cout << x << " ";
+    std::cout << "\n";
+}
+
+int main() {
+    print_list({1, 2, 3, 5, 8});  // 直接传花括号
+    // 输出：
+    // size = 5
+    // 1 2 3 5 8 
+}
+```
+
+initializer_list 可以搭配模版类型推导使用。
+
+```cpp
+template<typename T>
+void foo(std::initializer_list<T> list) {
+    for (const auto &e : list) 
+        std::cout << e << " ";
+}
+
+int main() {
+    foo({10, 20, 30});      // T 推导为 int
+    // foo({"a","b"});      // 错误：无法统一推导成同一 T
+}
+```
+
+构造函数也可以接收 initializer_list。
+
+```cpp
+struct A {
+    A(int);                            // (1)
+    A(std::initializer_list<int>);     // (2)
+};
+
+A a2( 42 );    // 调用 (1)：括号初始化，不是 initializer_list
+A a1{ 42 };    // 调用 (2)：initializer_list 版本
+```
+
+- {} 初始化会优先匹配 initializer_list 构造，其次才考虑其他构造函数。
+
+结合这些特性，可以在构造对象时，实现下面这种复杂的嵌套构造。
+
+```cpp
+class Config {
+public:
+    Config(std::initializer_list<std::pair<std::string, int>> opts) {
+        std::cout << "Config with " << opts.size() << " options\n";
+        for (auto &p : opts)
+            std::cout << "  " << p.first << " = " << p.second << "\n";
+    }
+    // 其它构造略…
+};
+
+int main() {
+    Config cfg{ 
+        {"width",  1024}, 
+        {"height", 768}, 
+        {"depth",  24} 
+    };
+
+    // 也可用于临时列表：
+    std::vector<int> v = {1,2,3,4};
+    for (int x : {10,20,30}) 
+        std::cout << x << " ";  // 10 20 30
+    std::cout << "\n";
+}
+```
+
+- 把每一对 {name,value} 构造成 std::pair<std::string,int>，再收集到 initializer_list。
 
 # 常函数
 

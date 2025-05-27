@@ -27,6 +27,7 @@ sudo ln -s /var/lib/docker/volumes/minio-data-4/_data /opt/minio/data-4
 ```shell
 docker container run \
     --name minio \
+    --network global \
     --privileged \
     -p 9000:9000 \
     -p 9001:9001 \
