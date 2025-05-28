@@ -227,3 +227,26 @@ users.xml
   "version": 4
 }
 ```
+
+# Cursor Ignore
+
+```
+# Add directories or file patterns to ignore during indexing (e.g. foo/ or *.csv)
+
+benchmark/
+build/
+cmake/
+contrib/
+docker/
+packages/
+programs/
+rust/
+tests/
+utils/
+data/
+logs/
+
+.cache/
+.github/
+.cursor/
+```
