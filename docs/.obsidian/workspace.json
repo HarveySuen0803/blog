@@ -4,11 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "52bdb6d0fe1078e1",
+        "id": "3b20af21ad39290b",
         "type": "tabs",
         "children": [
           {
-            "id": "f93db16bcb781ad5",
+            "id": "43eb317f2fe1288a",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -69,8 +69,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "09a176cbda932313",
@@ -109,15 +108,15 @@
       "graph:Open graph view": false
     }
   },
-  "active": "f93db16bcb781ad5",
+  "active": "43eb317f2fe1288a",
   "lastOpenFiles": [
-    "draft/clickhouse-support.md",
-    "clickhouse/promot.md",
     "clickhouse/env.md",
-    "draft/clickhouse.md",
+    "git/git.md",
     "linux/harvey-config.md",
+    "cpp/basic.md",
     "draft/warmup-cache.md",
     "juc/threadlocal.md",
+    "draft/clickhouse.md",
     "springboot/mybatisplus.md",
     "minio/Minio.md",
     "draft/warmup-cache-demo.md",
@@ -128,10 +127,10 @@
     "clickhouse/source-code.md",
     "clickhouse/storage-engine.md",
     "elasticsearch/basic.md",
+    "draft/clickhouse-support.md",
     "vue/router.md",
     "distributed/skywalking.md",
     "vue/component.md",
-    "cpp/basic.md",
     "rabbitmq/basic.md",
     "mysql/analysis.md",
     "cpp/function.md",
