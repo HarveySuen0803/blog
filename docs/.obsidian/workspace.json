@@ -13,13 +13,13 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "linux/harvey-config.md",
+                "file": "clickhouse/env.md",
                 "mode": "source",
                 "source": false,
                 "backlinks": false
               },
               "icon": "lucide-file",
-              "title": "harvey-config"
+              "title": "env"
             }
           }
         ]
@@ -86,13 +86,13 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "linux/harvey-config.md",
+                "file": "clickhouse/env.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Outline of harvey-config"
+              "title": "Outline of env"
             }
           }
         ]
@@ -111,9 +111,13 @@
   },
   "active": "f93db16bcb781ad5",
   "lastOpenFiles": [
+    "draft/clickhouse-support.md",
+    "clickhouse/promot.md",
+    "clickhouse/env.md",
+    "draft/clickhouse.md",
+    "linux/harvey-config.md",
     "draft/warmup-cache.md",
     "juc/threadlocal.md",
-    "draft/clickhouse.md",
     "springboot/mybatisplus.md",
     "minio/Minio.md",
     "draft/warmup-cache-demo.md",
@@ -124,7 +128,6 @@
     "clickhouse/source-code.md",
     "clickhouse/storage-engine.md",
     "elasticsearch/basic.md",
-    "draft/clickhouse-support.md",
     "vue/router.md",
     "distributed/skywalking.md",
     "vue/component.md",
@@ -134,9 +137,6 @@
     "cpp/function.md",
     "cpp/container.md",
     "clickhouse/fun.md",
-    "redis/basic.md",
-    "clickhouse/basic.md",
-    "clickhouse/ttl.md",
     "restful",
     "cmake",
     "algorithm/image/Pasted image 20250102173733.png",
