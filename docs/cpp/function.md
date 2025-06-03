@@ -91,6 +91,77 @@ std::cout << "Source: " << src << std::endl;
 std::cout << "Destination: " << dest << std::endl;
 ```
 
+![image.png](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/20250529151624.png)
+
+---
+
+大多数编译器（如 GCC、Clang、MSVC）在面对常量长度的小数据块复制时，会自动内联 memcpy 为几条 MOV 指令。
+
+```
+# 编译前
+int a[4], b[4];
+memcpy(a, b, 16);
+
+# 编译器内联优化后，没有函数调用开销，没有条件跳转，几乎是“裸奔”速度。
+mov rax, QWORD PTR [rsi]
+mov QWORD PTR [rdi], rax
+mov rax, QWORD PTR [rsi+8]
+mov QWORD PTR [rdi+8], rax
+```
+
+---
+
+对于大数据块（比如 >64 字节），memcpy 会采用 SIMD 指令（AVX、SSE、NEON）一次性拷贝 128/256/512 位数据。
+
+```
+# AVX2 加速实现（256 bit）
+vmovdqu ymm0, [rsi]       ; 从 src 加载 32 字节到寄存器 ymm0
+vmovdqu [rdi], ymm0       ; 将寄存器内容写入到 dest
+```
+
+- AVX2 加速实现（256 bit），每条指令完成一次 32 字节的拷贝，多个寄存器 + 循环 + 预取可极大并发执行。
+- 现代处理器甚至使用 AVX-512，一次性复制 64 字节。
+
+---
+
+大多数实现中，memcpy 会先处理未对齐的起始部分（字节到齐），然后使用对齐读写指令（如 movaps, vmovaps）批量复制，最后处理剩余不足一组长度的尾部。
+
+对齐访问在 CPU 中通常更快，因为避免了额外的总线周期或 cache miss。
+
+```
+[头部未对齐] → [AVX块拷贝部分] → [尾部剩余字节]
+```
+
+---
+
+在一些库（如 glibc）中，若数据很大（>2MB），会使用 non-temporal store，告诉 CPU 这些数据不需要放进 cache，直接写回内存。
+
+这是用如 movntdq 指令实现的，避免大量数据污染 L1/L2 cache。
+
+---
+
+现代 libc 实现（glibc、musl、bionic）会根据长度选择最佳路径，这让所有场景都尽量快而不浪费。
+
+```cpp
+if (len < 16) {
+  copy_bytewise();
+} else if (len < 128) {
+  copy_16_bytes_loop();
+} else if (len < 2MB) {
+  simd_copy_loop();  // AVX/SSE
+} else {
+  non_temporal_copy();  // movntdq
+}
+```
+
+---
+
+因为数据在 L1/L2 cache 中读取和写入，memcpy 具有以下优势：
+
+- 拷贝操作多在 缓存层内完成，远快于内存加载；
+- 使用预读指令（prefetch） 提前加载数据；
+- 内存带宽大时，多核并发搬运数据。
+
 # memmove
 
 memmove 用于复制内存的字节块，支持源和目标内存区域重叠的情况，如果发生重叠，会确保数据的正确性。较 memcpy 稍慢，因为需要处理重叠检查。
@@ -102,6 +173,22 @@ char str[] = "Overlapping Example";
 memmove(str + 5, str, 10);
 
 std::cout << "Result: " << str << std::endl;
+```
+
+![image.png](https://note-sun.oss-cn-shanghai.aliyuncs.com/image/20250529151912.png)
+
+memcpy 不进行数据重叠检测，速度更快，但存数据重叠的安全问题。
+
+```cpp
+char buffer[10] = "abcdefghi";
+memcpy(buffer + 2, buffer, 5);  // ❌ src 与 dest 有重叠，结果未定义
+```
+
+memmove 会进行数据重叠检测，这里检测到重叠，并且 dest > src 后，就会从后往前拷贝，防止数据覆盖。
+
+```cpp
+char buffer[10] = "abcdefghi";
+memmove(buffer + 2, buffer, 5);  // ✅ 安全：从后往前拷贝
 ```
 
 # std::sort
