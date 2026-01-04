@@ -485,7 +485,7 @@ var require_heap = __commonJS({
         array[pos] = newitem;
         return _siftdown(array, startpos, pos, cmp);
       };
-      Heap = function() {
+      Heap = (function() {
         Heap2.push = heappush;
         Heap2.pop = heappop;
         Heap2.replace = heapreplace;
@@ -546,7 +546,7 @@ var require_heap = __commonJS({
         Heap2.prototype.has = Heap2.prototype.contains;
         Heap2.prototype.copy = Heap2.prototype.clone;
         return Heap2;
-      }();
+      })();
       (function(root, factory) {
         if (typeof define === "function" && define.amd) {
           return define([], factory);
@@ -631,10 +631,10 @@ var require_coreJsData = __commonJS({
 var require_isMasked = __commonJS({
   "node_modules/lodash/_isMasked.js"(exports, module) {
     var coreJsData = require_coreJsData();
-    var maskSrcKey = function() {
+    var maskSrcKey = (function() {
       var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || "");
       return uid ? "Symbol(src)_1." + uid : "";
-    }();
+    })();
     function isMasked(func) {
       return !!maskSrcKey && maskSrcKey in func;
     }
@@ -1256,14 +1256,14 @@ var require_get = __commonJS({
 var require_defineProperty = __commonJS({
   "node_modules/lodash/_defineProperty.js"(exports, module) {
     var getNative = require_getNative();
-    var defineProperty = function() {
+    var defineProperty = (function() {
       try {
         var func = getNative(Object, "defineProperty");
         func({}, "", {});
         return func;
       } catch (e) {
       }
-    }();
+    })();
     module.exports = defineProperty;
   }
 });
@@ -1974,7 +1974,7 @@ var require_cytoscape_cjs = __commonJS({
     } : function() {
       return Date.now();
     };
-    var raf = function() {
+    var raf = (function() {
       if (_window) {
         if (_window.requestAnimationFrame) {
           return function(fn2) {
@@ -2001,7 +2001,7 @@ var require_cytoscape_cjs = __commonJS({
           }, 1e3 / 60);
         }
       };
-    }();
+    })();
     var requestAnimationFrame = function requestAnimationFrame2(fn2) {
       return raf(fn2);
     };
@@ -2213,7 +2213,7 @@ var require_cytoscape_cjs = __commonJS({
       }
       obj[propName] = value;
     };
-    var ObjectMap = function() {
+    var ObjectMap = (function() {
       function ObjectMap2() {
         _classCallCheck(this, ObjectMap2);
         this._obj = {};
@@ -2247,10 +2247,10 @@ var require_cytoscape_cjs = __commonJS({
         }
       }]);
       return ObjectMap2;
-    }();
+    })();
     var Map$1 = typeof Map !== "undefined" ? Map : ObjectMap;
     var undef = "undefined";
-    var ObjectSet = function() {
+    var ObjectSet = (function() {
       function ObjectSet2(arrayOrObjectSet) {
         _classCallCheck(this, ObjectSet2);
         this._obj = /* @__PURE__ */ Object.create(null);
@@ -2315,7 +2315,7 @@ var require_cytoscape_cjs = __commonJS({
         }
       }]);
       return ObjectSet2;
-    }();
+    })();
     var Set$1 = (typeof Set === "undefined" ? "undefined" : _typeof(Set)) !== undef ? Set : ObjectSet;
     var Element = function Element2(cy, params) {
       var restore = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : true;
@@ -7081,7 +7081,7 @@ var require_cytoscape_cjs = __commonJS({
     }].sort(function(a, b) {
       return descending(a.selector, b.selector);
     });
-    var lookup = function() {
+    var lookup = (function() {
       var selToFn = {};
       var s;
       for (var i2 = 0; i2 < stateSelectors.length; i2++) {
@@ -7089,7 +7089,7 @@ var require_cytoscape_cjs = __commonJS({
         selToFn[s.selector] = s.matches;
       }
       return selToFn;
-    }();
+    })();
     var stateSelectorMatches = function stateSelectorMatches2(sel, ele) {
       return lookup[sel](ele);
     };
@@ -12085,7 +12085,7 @@ var require_cytoscape_cjs = __commonJS({
       };
       return f;
     }
-    var generateSpringRK4 = /* @__PURE__ */ function() {
+    var generateSpringRK4 = /* @__PURE__ */ (function() {
       function springAccelerationForState(state) {
         return -state.tension * state.x - state.friction * state.v;
       }
@@ -12141,7 +12141,7 @@ var require_cytoscape_cjs = __commonJS({
           return path[percentComplete * (path.length - 1) | 0];
         };
       };
-    }();
+    })();
     var cubicBezier = function cubicBezier2(t1, p1, t2, p2) {
       var bezier = generateCubicBezier(t1, p1, t2, p2);
       return function(start, end, percent) {
@@ -13186,6 +13186,7 @@ var require_cytoscape_cjs = __commonJS({
         warn("Do not assign mappings to elements without corresponding data (i.e. ele `" + ele.id() + "` has no mapping for property `" + prop.name + "` with data field `" + prop.field + "`); try a `[" + prop.field + "]` selector to limit scope to elements with `" + prop.field + "` defined");
       };
       switch (prop.mapped) {
+        // flatten the property if mapped
         case types.mapData: {
           var fields = prop.field.split(".");
           var fieldVal = _p.data;
@@ -13246,6 +13247,7 @@ var require_cytoscape_cjs = __commonJS({
           prop = flatProp;
           break;
         }
+        // direct mapping
         case types.data: {
           var _fields = prop.field.split(".");
           var _fieldVal = _p.data;
@@ -13283,6 +13285,7 @@ var require_cytoscape_cjs = __commonJS({
         }
         case void 0:
           break;
+        // just set the property
         default:
           return false;
       }
@@ -16084,7 +16087,7 @@ var require_cytoscape_cjs = __commonJS({
         var _p = this._private;
         var container = _p.container;
         var cy = this;
-        return _p.sizeCache = _p.sizeCache || (container ? function() {
+        return _p.sizeCache = _p.sizeCache || (container ? (function() {
           var style = cy.window().getComputedStyle(container);
           var val = function val2(name) {
             return parseFloat(style.getPropertyValue(name));
@@ -16093,7 +16096,7 @@ var require_cytoscape_cjs = __commonJS({
             width: container.clientWidth - val("padding-left") - val("padding-right"),
             height: container.clientHeight - val("padding-top") - val("padding-bottom")
           };
-        }() : {
+        })() : {
           // fallback if no container (not 0 b/c can be used for dividing etc)
           width: 1,
           height: 1
@@ -23064,7 +23067,7 @@ var require_cytoscape_cjs = __commonJS({
         };
       }
     };
-    var ElementTextureCacheLookup = function() {
+    var ElementTextureCacheLookup = (function() {
       function ElementTextureCacheLookup2(getKey2) {
         var doesEleInvalidateKey = arguments.length > 1 && arguments[1] !== void 0 ? arguments[1] : falsify;
         _classCallCheck(this, ElementTextureCacheLookup2);
@@ -23235,7 +23238,7 @@ var require_cytoscape_cjs = __commonJS({
         }
       }]);
       return ElementTextureCacheLookup2;
-    }();
+    })();
     var minTxrH = 25;
     var txrStepH = 50;
     var minLvl$1 = -4;
@@ -26894,22 +26897,4 @@ var require_cytoscape_cjs = __commonJS({
   }
 });
 export default require_cytoscape_cjs();
-/*! Bundled license information:
-
-cytoscape/dist/cytoscape.cjs.js:
-  (*!
-  Embeddable Minimum Strictly-Compliant Promises/A+ 1.1.1 Thenable
-  Copyright (c) 2013-2014 Ralf S. Engelschall (http://engelschall.com)
-  Licensed under The MIT License (http://opensource.org/licenses/MIT)
-  *)
-  (*!
-  Event object based on jQuery events, MIT license
-  
-  https://jquery.org/license/
-  https://tldrlegal.com/license/mit-license
-  https://github.com/jquery/jquery/blob/master/src/event.js
-  *)
-  (*! Bezier curve function generator. Copyright Gaetan Renaudeau. MIT License: http://en.wikipedia.org/wiki/MIT_License *)
-  (*! Runge-Kutta spring physics function generator. Adapted from Framer.js, copyright Koen Bok. MIT License: http://en.wikipedia.org/wiki/MIT_License *)
-*/
 //# sourceMappingURL=cytoscape.js.map

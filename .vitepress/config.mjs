@@ -47,6 +47,10 @@ export default withMermaid({
     './docs/.vscode'
   ],
   themeConfig: {
+    docFooter: {
+      prev: false,
+      next: false
+    },
     outline: [1, 6],
     logo: '/vitepress-logo-mini.svg',
     nav: [

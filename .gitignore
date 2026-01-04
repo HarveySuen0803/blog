@@ -1,30 +1,21 @@
 .DS_Store
 Thumbs.db
 
-.*.swp
-.swp
-
 *.log
-*.log.*
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
 
 node_modules/
 
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
+dist/
 .vitepress/dist
 .vitepress/cache
-
-dist/
-
-docs/draft/
-docs/work/
-docs/bili/
-docs/.obsidian
 
 .env
 .env.*
 
 .vscode/
+*.swp
 
+docs/
