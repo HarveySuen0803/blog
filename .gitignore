@@ -9,8 +9,8 @@ pnpm-debug.log*
 node_modules/
 
 dist/
-.vitepress/dist
-.vitepress/cache
+.vitepress/dist/
+.vitepress/cache/
 
 .env
 .env.*
