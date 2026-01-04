@@ -24,7 +24,7 @@ features:
     details: A rookie learning Java for two and a half years
   - icon:
       src: cpp.png
-    link: /docs/cpp/baisc
+    link: /docs/cpp/basic
     details: A rookie learning Cpp for two and a half years
   - icon:
       src: clickhouse.png
