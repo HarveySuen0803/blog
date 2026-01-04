@@ -28,7 +28,7 @@ features:
     details: A rookie learning Cpp for two and a half years
   - icon:
       src: clickhouse.png
-    link: docs/clickHouse/basic
+    link: /docs/clickHouse/basic
     details: A rookie learning ClickHouse for two and a half years
   - icon:
       src: twitter.png
