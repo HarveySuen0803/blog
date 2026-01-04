@@ -19,11 +19,12 @@ yarn-error.log*
 dist/
 
 docs/draft/
+docs/work/
+docs/bili/
+docs/.obsidian
 
 .env
 .env.*
 
 .vscode/
-.idea/
 
-docs/.obsidian
