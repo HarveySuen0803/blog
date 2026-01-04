@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
   # Triggered when docs repo notifies this repo
   repository_dispatch:
-    types: [docs-updated]
+    # types: [docs-updated]
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
