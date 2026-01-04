@@ -23,13 +23,13 @@ features:
     link: /docs/java/basic
     details: A rookie learning Java for two and a half years
   - icon:
-      src: javascript.png
-    link: /docs/vue/basic
-    details: A rookie learning Web for two and a half years
+      src: cpp.png
+    link: /docs/cpp/baisc
+    details: A rookie learning Cpp for two and a half years
   - icon:
-      src: linux.png
-    link: docs/linux/basic
-    details: A rookie learning Linux for two and a half years
+      src: clickhouse.png
+    link: docs/clickHouse/basic
+    details: A rookie learning ClickHouse for two and a half years
   - icon:
       src: twitter.png
     link: /docs/algorithm/sort
